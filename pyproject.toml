@@ -1,6 +1,6 @@
 [project]
 name = "raglight"
-version = "2.2.0"
+version = "2.1.0"
 description = "RAGLight is a lightweight and modular Python library for implementing Retrieval-Augmented Generation (RAG). It enhances the capabilities of Large Language Models (LLMs) by combining document retrieval with natural language inference."
 authors = [
     {name = "Bessouat40",email = "roman.bessouat@orange.fr"}
@@ -28,7 +28,6 @@ dependencies = [
     "typer==0.16.0",
     "rich==14.0.0",
     "quo==2023.5.1",
-    "questionary==2.0.1",
 ]
 [project.scripts]
 raglight = "raglight.cli.main:app"
