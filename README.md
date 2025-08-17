@@ -1,3 +1,5 @@
+[![MSeeP.ai Security Assessment Badge](https://mseep.net/pr/bessouat40-raglight-badge.png)](https://mseep.ai/app/bessouat40-raglight)
+
 # RAGLight
 
 ![License](https://img.shields.io/github/license/Bessouat40/RAGLight)
