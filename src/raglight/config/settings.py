@@ -23,7 +23,7 @@ class Settings:
     DEFAULT_POSTGRE_PORT = os.environ.get("DEFAULT_POSTGRE_PORT", 5432)
     DEFAULT_POSTGRE_DATABASE = os.environ.get("DEFAULT_POSTGRE_DATABASE", "ai_db")
     DEFAULT_POSTGRE_USER = os.environ.get("DEFAULT_POSTGRE_USER", "postgres")
-    DEFAULT_POSTGRE_PASSWORD = os.environ.get("DEFAULT_POSTGRE_PASSWORD", "postgres")
+    DEFAULT_POSTGRE_PASSWORD = os.environ.get("DEFAULT_POSTGRE_PASSWORD", "")
 
     OLLAMA = "Ollama"
     MISTRAL = "Mistral"
