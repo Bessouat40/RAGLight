@@ -18,6 +18,13 @@ class Settings:
         )
 
     CHROMA = "Chroma"
+    POSTGRE = "Postgre"
+    DEFAULT_POSTGRE_HOST = os.environ.get("DEFAULT_POSTGRE_HOST", "localhost")
+    DEFAULT_POSTGRE_PORT = os.environ.get("DEFAULT_POSTGRE_PORT", 5432)
+    DEFAULT_POSTGRE_DATABASE = os.environ.get("DEFAULT_POSTGRE_DATABASE", "ai_db")
+    DEFAULT_POSTGRE_USER = os.environ.get("DEFAULT_POSTGRE_USER", "postgres")
+    DEFAULT_POSTGRE_PASSWORD = os.environ.get("DEFAULT_POSTGRE_PASSWORD", "postgres")
+
     OLLAMA = "Ollama"
     MISTRAL = "Mistral"
     VLLM = "vLLM"
