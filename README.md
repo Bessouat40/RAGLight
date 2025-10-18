@@ -202,6 +202,7 @@ For embeddings models, you can use these providers :
 For your vector store, you can use :
 
 - Chroma (`Settings.CHROMA`)
+- Postgres (`Settings.POSTGRES`)
 
 ## Quick Start 🚀
 

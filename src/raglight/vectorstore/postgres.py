@@ -11,12 +11,12 @@ from ..embeddings.embeddings_model import EmbeddingsModel
 from enum import auto
 from langchain_postgres import PGVector
 
-class PostgreVS(VectorStore):
+class PostgresVS(VectorStore):
     """
-    Concrete implementation for PostgreVDB.
+    Concrete implementation for PostgresVDB.
 
     It inherits the main ingestion logic from the base VectorStore class and
-    only implements the Postgre-specific methods for adding documents and
+    only implements the Postgres-specific methods for adding documents and
     performing searches.
     """
 
@@ -25,15 +25,15 @@ class PostgreVS(VectorStore):
         collection_name: str,
         embeddings_model: EmbeddingsModel,
         persist_directory: str = None,
-        host: str = Settings.DEFAULT_POSTGRE_HOST,
-        port: int = Settings.DEFAULT_POSTGRE_PORT,
-        database: str = Settings.DEFAULT_POSTGRE_DATABASE,
-        user: str = Settings.DEFAULT_POSTGRE_DATABASE,
-        password: str = Settings.DEFAULT_POSTGRE_DATABASE
+        host: str = Settings.POSTGRES_HOST,
+        port: int = Settings.POSTGRES_PORT,
+        database: str = Settings.POSTGRES_DATABASE,
+        user: str = Settings.POSTGRES_USER,
+        password: str = Settings.POSTGRES_PASSWORD
         
     ) -> None:
         """
-        Initializes a PostgreVS instance.
+        Initializes a PostgresVS instance.
         """
         super().__init__(persist_directory, embeddings_model)
 
@@ -60,11 +60,11 @@ class PostgreVS(VectorStore):
             )
         else:
             raise ValueError(
-                "Invalid configuration for PostgreVS: "
+                "Invalid configuration for PostgresVS: "
                 "You must either:\n"
-                "  • Provide both host and port (for PostgreDB), OR\n"
-                "  • Provide both user and password  (for PostgreDB).\n"
-                "  • Provide exist database   (for PostgreDB).\n"
+                "  • Provide both host and port (for PostgresDB), OR\n"
+                "  • Provide both user and password  (for PostgreDsB).\n"
+                "  • Provide exist database   (for PostgresDB).\n"
 
                 f"Received -> host={host}, port={port}, user={user}, password={'*' * len(password) if password else None}, database={database}"
             )
@@ -72,14 +72,14 @@ class PostgreVS(VectorStore):
     @override
     def add_documents(self, documents: List[Document]) -> None:
         """
-        Implements the logic to add documents specifically to the main PostgreDB collection,
+        Implements the logic to add documents specifically to the main PostgresDB collection,
         using batching for efficiency.
         """
         if not documents:
             return
 
         # logging.info(
-        #     f"⏳ Adding {len(documents)} document chunks to PostgreDB collection '{self.vector_store._collection_name}'..."
+        #     f"⏳ Adding {len(documents)} document chunks to PostgresDB collection '{self.vector_store._collection_name}'..."
         # )
         self.vector_store.add_documents(documents=documents)
         logging.info("✅ Documents successfully added to the main collection.")
@@ -87,14 +87,14 @@ class PostgreVS(VectorStore):
     @override
     def add_class_documents(self, documents: List[Document]) -> None:
         """
-        Implements the logic to add class signature documents to the dedicated PostgreDB
+        Implements the logic to add class signature documents to the dedicated PostgresDB
         collection for classes.
         """
         if not documents:
             return
 
         logging.info(
-            f"⏳ Adding {len(documents)} class documents to PostgreDB collection '{self.vector_store_classes._collection_name}'..."
+            f"⏳ Adding {len(documents)} class documents to PostgresDB collection '{self.vector_store_classes._collection_name}'..."
         )
         self.vector_store_classes.add_documents(documents=documents)
         logging.info("✅ Class documents successfully added to the class collection.")
@@ -108,7 +108,7 @@ class PostgreVS(VectorStore):
         collection_name: str = None,
     ) -> List[Document]:
         """
-        Implements similarity search using the main PostgreDB client.
+        Implements similarity search using the main PostgresDB client.
         """
         return self.vector_store.similarity_search(question, k=k, filter=filter)
 
@@ -121,6 +121,6 @@ class PostgreVS(VectorStore):
         collection_name: str = None,
     ) -> List[Document]:
         """
-        Implements similarity search using the dedicated class PostgreDB client.
+        Implements similarity search using the dedicated class PostgresDB client.
         """
         pass

@@ -8,3 +8,9 @@ class TestsConfig:
     SYSTEM_PROMPT = "/Users/labess40/dev/RAGLight/systemPrompt.txt"
     COLLECTION_NAME = "grece"
     DATA_PATH = "/Users/labess40/Desktop/nutrition/grece"
+    OLLAMA_EMBEDDING_MODEL="nomic-embed-text:v1.5"
+    POSTGRES_HOST = "192.168.1.103"
+    POSTGRES_PORT=5432
+    POSTGRES_DATABASE="ai_db"
+    POSTGRES_USER=""
+    POSTGRES_PASSWORD=""

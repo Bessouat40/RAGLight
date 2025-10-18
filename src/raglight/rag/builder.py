@@ -13,6 +13,7 @@ from ..llm.mistral_model import MistralModel
 from ..llm.openai_model import OpenAIModel
 from ..vectorstore.vector_store import VectorStore
 from ..vectorstore.chroma import ChromaVS
+from ..vectorstore.postgres import PostgresVS
 from ..config.settings import Settings
 from .rag import RAG
 from ..rat.rat import RAT
@@ -119,6 +120,8 @@ class Builder:
             )
         elif type == Settings.CHROMA:
             self.vector_store = ChromaVS(embeddings_model=self.embeddings, **kwargs)
+        elif type == Settings.POSTGRES:
+            self.vector_store = PostgresVS(embeddings_model=self.embeddings, **kwargs)
         else:
             raise ValueError(f"Unknown VectorStore type: {type}")
         logging.info("✅ VectorStore created")
