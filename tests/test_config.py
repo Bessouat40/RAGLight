@@ -8,7 +8,8 @@ class TestsConfig:
     TEST_SYSTEM_PROMPT = "tests/prompts/prompt.txt"
     COLLECTION_NAME = "grece"
     # DATA_PATH = "/Users/labess40/Desktop/nutrition/grece"
-    DATA_PATH = "/home/danesh/Documents/system.out"
+    DEFAULT_OLLAMA_CLIENT = "http://192.168.1.103:11434"
+    DATA_PATH = "/home/danesh/Documents/Out"
     OLLAMA_EMBEDDING_MODEL="nomic-embed-text:v1.5"
     POSTGRES_HOST = "192.168.1.103"
     POSTGRES_PORT=5432

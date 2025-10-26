@@ -40,6 +40,7 @@ class OllamaEmbeddingsModel(EmbeddingsModel):
             OllamaEmbeddings: The loaded Ollama embeddings model.
         """
         return OllamaEmbeddings(model=self.model_name, base_url=self.api_base)
+    
     def embed_documents(self, documents: list[str]) -> list[list[float]]:
         """
         Embeds a list of documents using the loaded Ollama embeddings model.

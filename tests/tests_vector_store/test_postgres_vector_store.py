@@ -8,6 +8,7 @@ from ..test_config import TestsConfig
 class TestVectorStore(unittest.TestCase):
     def setUp(self):
         model_embeddings = TestsConfig.OLLAMA_EMBEDDING_MODEL
+        ollama_client= TestsConfig.DEFAULT_OLLAMA_CLIENT
         collection_name = TestsConfig.COLLECTION_NAME
         self.data_path = TestsConfig.DATA_PATH
 
@@ -17,7 +18,7 @@ class TestVectorStore(unittest.TestCase):
         self.user = TestsConfig.POSTGRES_USER
         self.password = TestsConfig.POSTGRES_PASSWORD
 
-        embeddings = OllamaEmbeddingsModel(model_embeddings)
+        embeddings = OllamaEmbeddingsModel(model_embeddings, api_base=ollama_client)
         self.store = PostgresVS(
             embeddings_model=embeddings,
             collection_name=collection_name,

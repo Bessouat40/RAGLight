@@ -11,6 +11,7 @@ from ..embeddings.embeddings_model import EmbeddingsModel
 from enum import auto
 from langchain_postgres import PGVector
 
+
 class PostgresVS(VectorStore):
     """
     Concrete implementation for PostgresVDB.
@@ -29,8 +30,7 @@ class PostgresVS(VectorStore):
         port: int = Settings.POSTGRES_PORT,
         database: str = Settings.POSTGRES_DATABASE,
         user: str = Settings.POSTGRES_USER,
-        password: str = Settings.POSTGRES_PASSWORD
-        
+        password: str = Settings.POSTGRES_PASSWORD,
     ) -> None:
         """
         Initializes a PostgresVS instance.
@@ -44,14 +44,14 @@ class PostgresVS(VectorStore):
         connection_string = f"postgresql://{user}:{password}@{host}:{port}/{database}"
 
         if host and port:
-            
+
             self.vector_store = PGVector(
                 collection_name=collection_name,
                 connection=connection_string,
                 embeddings=embeddings_model,
                 use_jsonb=True,
             )
-            
+
             self.vector_store_classes = PGVector(
                 collection_name=f"{collection_name}_classes",
                 connection=connection_string,
@@ -65,7 +65,6 @@ class PostgresVS(VectorStore):
                 "  • Provide both host and port (for PostgresDB), OR\n"
                 "  • Provide both user and password  (for PostgreDsB).\n"
                 "  • Provide exist database   (for PostgresDB).\n"
-
                 f"Received -> host={host}, port={port}, user={user}, password={'*' * len(password) if password else None}, database={database}"
             )
 
@@ -110,6 +109,26 @@ class PostgresVS(VectorStore):
         """
         Implements similarity search using the main PostgresDB client.
         """
+        connection_string = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+        if collection_name and collection_name != self.vector_store._collection_name:
+            if self.host and self.port:
+                vector_store = PGVector(
+                    collection_name=collection_name,
+                    connection=connection_string,
+                    embeddings=self.embeddings_model,
+                    use_jsonb=True,
+                )
+            else:
+                raise ValueError(
+                    "Invalid configuration for PostgresVS: "
+                    "You must either:\n"
+                    "  • Provide both host and port (for PostgresDB), OR\n"
+                    "  • Provide both user and password  (for PostgreDsB).\n"
+                    "  • Provide exist database   (for PostgresDB).\n"
+                    f"Received -> host={self.host}, port={self.port}, user={self.user}, password={'*' * len(self.password) if self.password else None}, database={self.database}"
+                )
+            return vector_store.similarity_search(question, k=k, filter=filter)
+
         return self.vector_store.similarity_search(question, k=k, filter=filter)
 
     @override
@@ -123,4 +142,24 @@ class PostgresVS(VectorStore):
         """
         Implements similarity search using the dedicated class PostgresDB client.
         """
-        pass
+        connection_string = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+        if collection_name and collection_name != self.vector_store._collection_name:
+            if self.host and self.port:
+                vector_store = PGVector(
+                    collection_name=f"{collection_name}_classes",
+                    connection=connection_string,
+                    embeddings=self.embeddings_model,
+                    use_jsonb=True,
+                )
+            else:
+                raise ValueError(
+                    "Invalid configuration for PostgresVS: "
+                    "You must either:\n"
+                    "  • Provide both host and port (for PostgresDB), OR\n"
+                    "  • Provide both user and password  (for PostgreDsB).\n"
+                    "  • Provide exist database   (for PostgresDB).\n"
+                    f"Received -> host={self.host}, port={self.port}, user={self.user}, password={'*' * len(self.password) if self.password else None}, database={self.database}"
+                )
+            return vector_store.similarity_search(question, k=k, filter=filter)
+
+        return self.vector_store.similarity_search(question, k=k, filter=filter)
