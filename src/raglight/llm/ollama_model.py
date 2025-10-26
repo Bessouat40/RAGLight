@@ -105,6 +105,7 @@ class OllamaModel(LLM):
                     "content": new_input,
                 },
             ],
+            options=self.options,
             stream=True,
         )
         for chunk in response:

@@ -11,9 +11,9 @@ git clone git@github.com:Bessouat40/RAGLight.git
 Install environment and dependencies using :
 
 ```bash
-uv sync
+make install
 ```
 
 ## Running Tests
 
-Simply run `python3 -m unittest` to run all tests.
+Simply run `make test` to run all tests.

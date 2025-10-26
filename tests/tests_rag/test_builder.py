@@ -27,7 +27,7 @@ class TestRAGBuilder(unittest.TestCase):
 
 class TestRATBuilder(unittest.TestCase):
     @patch("raglight.rag.builder.ChromaVS")
-    def test_builder_rag(self, mock_chroma):
+    def test_builder_rat(self, mock_chroma):
         mock_chroma_instance = MagicMock()
         mock_chroma.return_value = mock_chroma_instance
 

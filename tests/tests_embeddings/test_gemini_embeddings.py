@@ -1,5 +1,5 @@
 import unittest
-from ...src.raglight.embeddings.gemini_embeddings import GeminiEmbeddingsModel
+from raglight.embeddings.gemini_embeddings import GeminiEmbeddingsModel
 from ..test_config import TestsConfig
 
 

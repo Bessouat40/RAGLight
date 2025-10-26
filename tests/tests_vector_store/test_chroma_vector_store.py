@@ -1,13 +1,12 @@
 import unittest
-from ...src.raglight.vectorstore.chroma import ChromaVS
-from ...src.raglight.embeddings.huggingface_embeddings import HuggingfaceEmbeddingsModel
+from raglight.vectorstore.chroma import ChromaVS
+from raglight.embeddings.huggingface_embeddings import HuggingfaceEmbeddingsModel
 from ..test_config import TestsConfig
 
 
 class TestVectorStore(unittest.TestCase):
     def setUp(self):
         persist_directory = TestsConfig.CHROMA_PERSIST_DIRECTORY_INGESTION
-        model_embeddings = TestsConfig.HUGGINGFACE_EMBEDDINGS
         collection_name = TestsConfig.COLLECTION_NAME
         self.data_path = TestsConfig.DATA_PATH
         embeddings = HuggingfaceEmbeddingsModel(TestsConfig.HUGGINGFACE_EMBEDDINGS)
