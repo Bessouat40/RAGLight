@@ -34,6 +34,7 @@ dependencies = [
     "pydantic>=2.11.7",
     "google-genai>=1.2.0",
     "langchain-postgres==0.0.16",
+    "psycopg2_binary==2.9.11",
 ]
 [project.scripts]
 raglight = "raglight.cli.main:app"

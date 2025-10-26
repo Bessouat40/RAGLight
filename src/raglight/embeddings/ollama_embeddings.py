@@ -40,3 +40,26 @@ class OllamaEmbeddingsModel(EmbeddingsModel):
             OllamaEmbeddings: The loaded Ollama embeddings model.
         """
         return OllamaEmbeddings(model=self.model_name, base_url=self.api_base)
+    def embed_documents(self, documents: list[str]) -> list[list[float]]:
+        """
+        Embeds a list of documents using the loaded Ollama embeddings model.
+
+        Args:
+            documents (list[str]): List of documents (strings) to embed.
+
+        Returns:
+            list[list[float]]: List of embedding vectors.
+        """
+        return self.model.embed_documents(documents)
+    
+    def embed_query(self, question) -> str:
+        """
+        Embeds a list of documents using the loaded Ollama embeddings model.
+
+        Args:
+            documents (list[str]): List of documents (strings) to embed.
+
+        Returns:
+            list[list[float]]: List of embedding vectors.
+        """
+        return self.model.embed_query(question)

@@ -7,10 +7,11 @@ class TestsConfig:
     CHROMA_PERSIST_DIRECTORY_INGESTION = "/Users/labess40/dev/RAGLight/chromaDb2"
     SYSTEM_PROMPT = "/Users/labess40/dev/RAGLight/systemPrompt.txt"
     COLLECTION_NAME = "grece"
-    DATA_PATH = "/Users/labess40/Desktop/nutrition/grece"
+    # DATA_PATH = "/Users/labess40/Desktop/nutrition/grece"
+    DATA_PATH = "/home/danesh/Documents/system.out"
     OLLAMA_EMBEDDING_MODEL="nomic-embed-text:v1.5"
     POSTGRES_HOST = "192.168.1.103"
     POSTGRES_PORT=5432
     POSTGRES_DATABASE="ai_db"
-    POSTGRES_USER=""
+    POSTGRES_USER="postgres"
     POSTGRES_PASSWORD=""

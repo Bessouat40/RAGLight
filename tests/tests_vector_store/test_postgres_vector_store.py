@@ -1,19 +1,31 @@
 import unittest
+
+from raglight.embeddings.ollama_embeddings import OllamaEmbeddingsModel
+from raglight.vectorstore.postgres import PostgresVS
+
 from ..test_config import TestsConfig
-
-from ...src.raglight.embeddings.ollama_embeddings import OllamaEmbeddingsModel
-from ...src.raglight.vectorstore.postgres import PostgresVS
-
 
 class TestVectorStore(unittest.TestCase):
     def setUp(self):
         model_embeddings = TestsConfig.OLLAMA_EMBEDDING_MODEL
         collection_name = TestsConfig.COLLECTION_NAME
         self.data_path = TestsConfig.DATA_PATH
+
+        self.host = TestsConfig.POSTGRES_HOST
+        self.port = TestsConfig.POSTGRES_PORT
+        self.darabase = TestsConfig.POSTGRES_DATABASE
+        self.user = TestsConfig.POSTGRES_USER
+        self.password = TestsConfig.POSTGRES_PASSWORD
+
         embeddings = OllamaEmbeddingsModel(model_embeddings)
         self.store = PostgresVS(
             embeddings_model=embeddings,
             collection_name=collection_name,
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password,
+            database=self.darabase,
         )
 
     def test_ingest(self):
