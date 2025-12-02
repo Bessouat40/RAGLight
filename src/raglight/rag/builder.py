@@ -15,11 +15,13 @@ from ..vectorstore.vector_store import VectorStore
 from ..vectorstore.chroma import ChromaVS
 from ..config.settings import Settings
 from .rag import RAG
+from .graph_rag import GraphRAG
 from ..rat.rat import RAT
 from ..embeddings.embeddings_model import EmbeddingsModel
 from ..embeddings.huggingface_embeddings import HuggingfaceEmbeddingsModel
 from ..embeddings.gemini_embeddings import GeminiEmbeddingsModel
 from ..llm.gemini_model import GeminiModel
+from langchain_community.graphs import Neo4jGraph
 
 
 class Builder:
@@ -47,6 +49,8 @@ class Builder:
         self.reasoning_llm: Optional[LLM] = None
         self.rag: Optional[RAG] = None
         self.rat: Optional[RAT] = None
+        self.graph_store: Optional[Neo4jGraph] = None
+        self.graph_rag: Optional[GraphRAG] = None
 
     def with_embeddings(self, type: str, **kwargs) -> Builder:
         """
@@ -154,6 +158,30 @@ class Builder:
         logging.info("✅ LLM created")
         return self
 
+    def with_graph_store(
+        self,
+        uri: str,
+        username: str,
+        password: str,
+        database: Optional[str] = None,
+    ) -> Builder:
+        """
+        Configures the Neo4j graph store for Graph RAG.
+
+        Args:
+            uri (str): The Neo4j connection URI.
+            username (str): Username for authentication.
+            password (str): Password for authentication.
+            database (Optional[str]): Optional database name.
+        """
+
+        logging.info("⏳ Creating a Neo4j Graph store...")
+        self.graph_store = Neo4jGraph(
+            url=uri, username=username, password=password, database=database
+        )
+        logging.info("✅ Neo4j Graph store created")
+        return self
+
     def with_reasoning_llm(self, type: str, **kwargs) -> Builder:
         """
         Configures the reasoning large language model (LLM) for RAT pipelines.
@@ -205,6 +233,38 @@ class Builder:
         )
         logging.info("✅ RAG pipeline created")
         return self.rag
+
+    def build_graph_rag(
+        self, cypher_prompt: Optional[str] = None, stream: bool = False
+    ) -> GraphRAG:
+        """
+        Builds the Graph RAG pipeline using the configured LLM and Neo4j graph.
+
+        Args:
+            cypher_prompt (Optional[str]): Custom prompt guiding Cypher generation.
+            stream (bool): Enable streaming generation when supported by the LLM.
+
+        Returns:
+            GraphRAG: The configured Graph RAG pipeline instance.
+
+        Raises:
+            ValueError: If the Neo4j graph store or LLM is not configured.
+        """
+
+        if self.graph_store is None:
+            raise ValueError("Graph store is required for Graph RAG")
+        if self.llm is None:
+            raise ValueError("LLM is required")
+
+        logging.info("⏳ Building the Graph RAG pipeline...")
+        self.graph_rag = GraphRAG(
+            llm=self.llm,
+            graph=self.graph_store,
+            cypher_prompt=cypher_prompt,
+            stream=stream,
+        )
+        logging.info("✅ Graph RAG pipeline created")
+        return self.graph_rag
 
     def build_rat(self, reflection: int = 1, k: int = Settings.DEFAULT_K) -> RAT:
         """
