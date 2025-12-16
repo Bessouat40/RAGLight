@@ -1,0 +1,15 @@
+:root {
+  --bg-color: #ffffff;
+  --text-color: #1f2933;
+  --border-color: #d1d5da;
+  --code-bg: #f6f8fa;
+  --link-color: #0b69a3;
+}
+
+html[data-theme="dark"] {
+  --bg-color: #0f1720;
+  --text-color: #e5e7eb;
+  --border-color: #2d3642;
+  --code-bg: #1f2937;
+  --link-color: #4ea8de;
+}

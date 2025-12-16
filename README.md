@@ -573,3 +573,19 @@ docker run --add-host=host.docker.internal:host-gateway docker-raglight
 ```
 
 We use `--add-host` flag to allow Ollama call.
+
+## Documentation site (frontend)
+
+A Vue 3 + Vite site in `frontend/` renders the README and examples as developer-focused docs.
+
+### Build locally
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+### Deploy to GitHub Pages
+- Ensure `base` in `frontend/vite.config.ts` matches the repository name (default is `/RAGLight/`).
+- Run `npm run build` to generate the `dist/` folder.
+- Publish the `dist/` folder to GitHub Pages (for example by pushing it to a `gh-pages` branch or configuring GitHub Pages to serve from that folder).
