@@ -31,7 +31,6 @@ dependencies = [
     "langchain-ollama==1.0.1",
     "langchain-openai>=1.1.6",
     "langchain-mistralai>=1.1.1",
-    "google-generativeai>=0.8.6",
     "google-genai>=1.57.0",
     "langchain-google-genai>=4.1.3",
     "langchain-mcp-adapters==0.2.1",

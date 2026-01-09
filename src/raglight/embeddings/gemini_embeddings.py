@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import Optional, List, Any
 from typing_extensions import override
 
-import google.generativeai as genai
+from google.genai import Client
+from google.genai import types
 
 from ..config.settings import Settings
 from .embeddings_model import EmbeddingsModel
@@ -30,8 +31,10 @@ class GeminiEmbeddingsModel(EmbeddingsModel):
         Configures the Google GenAI library.
         Returns the module reference as the 'client'.
         """
-        genai.configure(api_key=Settings.GEMINI_API_KEY)
-        return genai
+        return Client(
+            api_key=Settings.GEMINI_API_KEY,
+            http_options=types.HttpOptions(base_url=self.api_base),
+        )
 
     @override
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
