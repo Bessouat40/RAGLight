@@ -102,7 +102,7 @@ def prompt_github_sources() -> List[GitHubSource]:
     github_sources: List[GitHubSource] = []
     if typer.confirm(
         "Do you want to add a GitHub repository as a knowledge source?",
-        default=False,
+        default=True,
     ):
         console.print(
             "[cyan]Enter GitHub repository URLs (one per line, press Enter twice to finish):[/cyan]"
