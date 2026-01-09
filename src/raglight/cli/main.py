@@ -5,7 +5,7 @@ import logging
 import os
 import questionary
 import shutil
-from typing import List
+from typing import List, Optional
 
 from raglight.rag.builder import Builder
 from raglight.config.settings import Settings
@@ -74,6 +74,25 @@ def print_llm_response(response: str):
 def select_with_arrows(message, choices, default=None):
     """Prompt the user to select from a list using arrow keys."""
     return questionary.select(message, choices=choices, default=default).ask()
+
+
+def prompt_local_source() -> Optional[Path]:
+    console.print("[bold cyan]\n--- 📂 Step 1: Data Source ---[/bold cyan]")
+    cwd = os.getcwd()
+    if not typer.confirm(
+        "Do you want to use a local folder as a knowledge source?", default=True
+    ):
+        return None
+    data_path_str = typer.prompt(
+        "Enter the path to the directory with your documents", default=cwd
+    )
+    data_path = Path(data_path_str)
+    if not data_path.is_dir():
+        console.print(
+            f"[bold red]❌ Error: The path '{data_path_str}' is not a valid directory.[/bold red]"
+        )
+        raise typer.Exit(code=1)
+    return data_path
 
 
 def prompt_github_sources() -> List[GitHubSource]:
@@ -156,15 +175,11 @@ def interactive_chat_command():
         "[magenta]I will guide you through setting up your RAG pipeline.[/magenta]"
     )
 
-    console.print("[bold cyan]\n--- 📂 Step 1: Data Source ---[/bold cyan]")
-    cwd = os.getcwd()
-    data_path_str = typer.prompt(
-        f"Enter the path to the directory with your documents)", default=cwd
-    )
-    data_path = Path(data_path_str)
-    if not data_path.is_dir():
+    data_path = prompt_local_source()
+    github_sources = prompt_github_sources()
+    if not data_path and not github_sources:
         console.print(
-            f"[bold red]❌ Error: The path '{data_path_str}' is not a valid directory.[/bold red]"
+            "[bold red]❌ Error: No data sources provided. Please add a local folder or GitHub repository.[/bold red]"
         )
         raise typer.Exit(code=1)
 
@@ -207,8 +222,6 @@ def interactive_chat_command():
     console.print(
         f"[green]✅ Will ignore {len(ignore_folders)} folders during indexing[/green]"
     )
-
-    github_sources = prompt_github_sources()
 
     console.print("[bold cyan]\n--- 💾 Step 2: Vector Database ---[/bold cyan]")
     db_path = typer.prompt(
@@ -317,7 +330,10 @@ def interactive_chat_command():
 
         if should_index:
             vector_store = builder.build_vector_store()
-            vector_store.ingest(data_path=str(data_path), ignore_folders=ignore_folders)
+            if data_path:
+                vector_store.ingest(
+                    data_path=str(data_path), ignore_folders=ignore_folders
+                )
             ingest_github_sources(vector_store, github_sources, ignore_folders)
             console.print("[bold green]✅ Indexing complete.[/bold green]")
         else:
@@ -379,15 +395,11 @@ def interactive_chat_command():
         "[magenta]I will guide you through setting up your RAG pipeline.[/magenta]"
     )
 
-    console.print("[bold cyan]\n--- 📂 Step 1: Data Source ---[/bold cyan]")
-    cwd = os.getcwd()
-    data_path_str = typer.prompt(
-        f"Enter the path to the directory with your documents)", default=cwd
-    )
-    data_path = Path(data_path_str)
-    if not data_path.is_dir():
+    data_path = prompt_local_source()
+    github_sources = prompt_github_sources()
+    if not data_path and not github_sources:
         console.print(
-            f"[bold red]❌ Error: The path '{data_path_str}' is not a valid directory.[/bold red]"
+            "[bold red]❌ Error: No data sources provided. Please add a local folder or GitHub repository.[/bold red]"
         )
         raise typer.Exit(code=1)
 
@@ -430,8 +442,6 @@ def interactive_chat_command():
     console.print(
         f"[green]✅ Will ignore {len(ignore_folders)} folders during indexing[/green]"
     )
-
-    github_sources = prompt_github_sources()
 
     console.print("[bold cyan]\n--- 💾 Step 2: Vector Database ---[/bold cyan]")
     db_path = typer.prompt(
@@ -535,9 +545,10 @@ def interactive_chat_command():
         agenticRag = AgenticRAGPipeline(config, vector_store_config)
 
         if should_index:
-            agenticRag.get_vector_store().ingest(
-                data_path=str(data_path), ignore_folders=ignore_folders
-            )
+            if data_path:
+                agenticRag.get_vector_store().ingest(
+                    data_path=str(data_path), ignore_folders=ignore_folders
+                )
             ingest_github_sources(
                 agenticRag.get_vector_store(), github_sources, ignore_folders
             )
