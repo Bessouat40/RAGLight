@@ -67,11 +67,12 @@ LLM_PROVIDERS = [
     "OpenAI",
     "LmStudio",
     "Mistral",
+    "MiniMax",
     "GoogleGemini",
     "AWSBedrock",
 ]
 # Providers that require an API base URL
-PROVIDERS_WITH_API_BASE = {"Ollama", "OpenAI", "LmStudio", "Mistral"}
+PROVIDERS_WITH_API_BASE = {"Ollama", "OpenAI", "LmStudio", "Mistral", "MiniMax"}
 
 
 @st.cache_data(ttl=60)

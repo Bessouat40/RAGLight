@@ -239,6 +239,7 @@ def interactive_chat_command():
         Settings.OPENAI,
         Settings.LMSTUDIO,
         Settings.GOOGLE_GEMINI,
+        Settings.MINIMAX,
     ]
     k_choices = ["5", "10", "15"]
 
@@ -481,6 +482,7 @@ def interactive_agentic_chat_command():
         Settings.OPENAI,
         Settings.LMSTUDIO,
         Settings.GOOGLE_GEMINI,
+        Settings.MINIMAX,
     ]
     k_choices = ["5", "10", "15"]
 
@@ -605,6 +607,8 @@ def interactive_agentic_chat_command():
         api_key = Settings.OPENAI_API_KEY
     elif llm_provider == Settings.GOOGLE_GEMINI:
         api_key = Settings.GEMINI_API_KEY
+    elif llm_provider == Settings.MINIMAX:
+        api_key = Settings.MINIMAX_API_KEY
 
     try:
         console.print("[bold cyan]\n--- ⏳ Indexing Documents ---[/bold cyan]")

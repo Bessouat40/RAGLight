@@ -12,6 +12,7 @@ from ..embeddings.openai_embeddings import OpenAIEmbeddingsModel
 from ..llm.lmstudio_model import LMStudioModel
 from ..llm.mistral_model import MistralModel
 from ..llm.openai_model import OpenAIModel
+from ..llm.minimax_model import MiniMaxModel
 from ..vectorstore.vector_store import VectorStore
 from ..config.settings import Settings
 from .rag import RAG
@@ -176,6 +177,8 @@ class Builder:
             self.llm = OpenAIModel(**kwargs)
         elif type == Settings.GOOGLE_GEMINI:
             self.llm = GeminiModel(**kwargs)
+        elif type == Settings.MINIMAX:
+            self.llm = MiniMaxModel(**kwargs)
         elif type == Settings.AWS_BEDROCK:
             from ..llm.bedrock_model import BedrockModel
 

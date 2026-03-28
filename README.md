@@ -72,6 +72,7 @@ Designed for simplicity and flexibility, RAGLight provides modular components to
 > - OpenAI API
 > - Mistral API
 > - AWS Bedrock
+> - MiniMax API
 >
 > If you use LMStudio, you need to have the model you want to use loaded in LMStudio.
 > If you use AWS Bedrock, configure your AWS credentials (env vars, `~/.aws/credentials`, or IAM role) — no extra install needed.
@@ -79,7 +80,7 @@ Designed for simplicity and flexibility, RAGLight provides modular components to
 ## Features
 
 - **Embeddings Model Integration**: Plug in your preferred embedding models (e.g., HuggingFace **all-MiniLM-L6-v2**) for compact and efficient vector embeddings.
-- **LLM Agnostic**: Seamlessly integrates with different LLMs from different providers (Ollama, LMStudio, Mistral, OpenAI, Google Gemini, AWS Bedrock).
+- **LLM Agnostic**: Seamlessly integrates with different LLMs from different providers (Ollama, LMStudio, Mistral, OpenAI, Google Gemini, AWS Bedrock, MiniMax).
 - **RAG Pipeline**: Combines document retrieval and language generation in a unified workflow.
 - **Agentic RAG Pipeline**: Use Agent to improve your RAG performances.
 - 🔌 **MCP Integration**: Add external tool capabilities (e.g. code execution, database access) via MCP servers.
@@ -87,7 +88,7 @@ Designed for simplicity and flexibility, RAGLight provides modular components to
 - **Extensible Architecture**: Easily swap vector stores, embedding models, or LLMs to suit your needs.
 - 🔍 **Hybrid Search (BM25 + Semantic + RRF)**: Combine keyword-based BM25 retrieval with dense vector search using Reciprocal Rank Fusion for best-of-both-worlds results.
 - ✍️ **Query Reformulation**: Automatically rewrites follow-up questions into standalone queries using conversation history, improving retrieval accuracy in multi-turn conversations.
-- 💬 **Conversation History**: Full multi-turn history supported across all providers (Ollama, OpenAI, Mistral, LMStudio, Gemini, Bedrock) with optional `max_history` cap.
+- 💬 **Conversation History**: Full multi-turn history supported across all providers (Ollama, OpenAI, Mistral, LMStudio, Gemini, Bedrock, MiniMax) with optional `max_history` cap.
 - ⚡ **Streaming Output**: Token-by-token streaming via `generate_streaming()` on all providers — drop-in alongside `generate()` with no extra configuration.
 - ☁️ **AWS Bedrock**: Use Claude, Titan, Llama and other Bedrock models for both LLM inference and embeddings.
 - 📊 **Langfuse Observability (v3+)**: Trace every RAG call end-to-end — retrieve, rerank, and generate — directly in your Langfuse dashboard.
@@ -322,7 +323,7 @@ All server settings are read from `RAGLIGHT_*` environment variables. Copy `exam
 | Variable                       | Default                  | Description                                                                |
 | ------------------------------ | ------------------------ | -------------------------------------------------------------------------- |
 | `RAGLIGHT_LLM_MODEL`           | `llama3`                 | LLM model name                                                             |
-| `RAGLIGHT_LLM_PROVIDER`        | `Ollama`                 | LLM provider (`Ollama`, `Mistral`, `OpenAI`, `LmStudio`, `GoogleGemini`)   |
+| `RAGLIGHT_LLM_PROVIDER`        | `Ollama`                 | LLM provider (`Ollama`, `Mistral`, `OpenAI`, `LmStudio`, `GoogleGemini`, `MiniMax`) |
 | `RAGLIGHT_LLM_API_BASE`        | `http://localhost:11434` | LLM API base URL                                                           |
 | `RAGLIGHT_EMBEDDINGS_MODEL`    | `all-MiniLM-L6-v2`       | Embeddings model name                                                      |
 | `RAGLIGHT_EMBEDDINGS_PROVIDER` | `HuggingFace`            | Embeddings provider (`HuggingFace`, `Ollama`, `OpenAI`, `GoogleGemini`)    |
@@ -357,6 +358,8 @@ You can set several environment variables to change **RAGLight** settings :
 **Provider credentials & URLs**
 
 - `MISTRAL_API_KEY` if you want to use Mistral API
+- `MINIMAX_API_KEY` if you want to use MiniMax API
+- `MINIMAX_CLIENT_URL` if you have a custom MiniMax URL (defaults to `https://api.minimax.io/v1`)
 - `OLLAMA_CLIENT_URL` if you have a custom Ollama URL
 - `LMSTUDIO_CLIENT` if you have a custom LMStudio URL
 - `OPENAI_CLIENT_URL` if you have a custom OpenAI URL or vLLM URL
@@ -381,6 +384,7 @@ For your LLM inference, you can use these providers :
 - OpenAI (`Settings.OPENAI`)
 - Google Gemini (`Settings.GOOGLE_GEMINI`)
 - AWS Bedrock (`Settings.AWS_BEDROCK`)
+- MiniMax (`Settings.MINIMAX`)
 
 ### Embeddings
 
@@ -914,7 +918,7 @@ for chunk in rag.generate_streaming("Explain the retrieval pipeline"):
 print()
 ```
 
-Streaming is supported by all providers: **Ollama**, **OpenAI**, **vLLM**, **LMStudio**, **Mistral**, **Google Gemini**, and **AWS Bedrock**. Conversation history is updated automatically at the end of the stream.
+Streaming is supported by all providers: **Ollama**, **OpenAI**, **vLLM**, **LMStudio**, **Mistral**, **Google Gemini**, **AWS Bedrock**, and **MiniMax**. Conversation history is updated automatically at the end of the stream.
 
 ---
 

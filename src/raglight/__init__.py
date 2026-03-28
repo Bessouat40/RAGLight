@@ -29,6 +29,7 @@ from .llm.llm import LLM
 from .llm.ollama_model import OllamaModel
 from .llm.lmstudio_model import LMStudioModel
 from .llm.mistral_model import MistralModel
+from .llm.minimax_model import MiniMaxModel
 
 from .rag.rag import RAG
 from .rag.simple_rag_api import RAGPipeline

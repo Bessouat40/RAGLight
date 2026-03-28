@@ -24,6 +24,7 @@ class Settings:
     VLLM = "vLLM"
     OPENAI = "OpenAI"
     GOOGLE_GEMINI = "GoogleGemini"
+    MINIMAX = "MiniMax"
     AWS_BEDROCK = "AWSBedrock"
     AWS_DEFAULT_REGION = os.environ.get("AWS_REGION", "us-east-1")
     AWS_BEDROCK_LLM_MODEL = "anthropic.claude-3-5-sonnet-20241022-v2:0"
@@ -37,6 +38,11 @@ class Settings:
         "MISTRAL_CLIENT_URL", "https://api.mistral.ai/v1"
     )
     MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
+    MINIMAX_API_KEY = os.environ.get("MINIMAX_API_KEY", "")
+    DEFAULT_MINIMAX_CLIENT = os.environ.get(
+        "MINIMAX_CLIENT_URL", "https://api.minimax.io/v1"
+    )
+    MINIMAX_LLM_MODEL = "MiniMax-M2.7"
     LMSTUDIO = "LmStudio"
     HUGGINGFACE = "HuggingFace"
     DEFAULT_LLM = "llama3.2:1b"
