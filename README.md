@@ -84,6 +84,11 @@ Designed for simplicity and flexibility, RAGLight provides modular components to
 - **Agentic RAG Pipeline**: Use Agent to improve your RAG performances.
 - 🔌 **MCP Integration**: Add external tool capabilities (e.g. code execution, database access) via MCP servers.
 - **Flexible Document Support**: Ingest and index various document types (e.g., PDF, TXT, DOCX, Python, Javascript, ...).
+- **Advanced PDF Ingestion (Docling)**: High-fidelity PDF parsing using IBM's Docling, with support for:
+  - 📊 **Structural Recognition**: Accurate layout and table extraction.
+  - ➗ **Formula Extraction**: Conversion of mathematical formulas to LaTeX.
+  - 💻 **Code Recognition**: Identification and extraction of code snippets across 56 languages.
+  - 📈 **Chart Recognition**: Extraction of structured data from various chart types.
 - **Extensible Architecture**: Easily swap vector stores, embedding models, or LLMs to suit your needs.
 - 🔍 **Hybrid Search (BM25 + Semantic + RRF)**: Combine keyword-based BM25 retrieval with dense vector search using Reciprocal Rank Fusion for best-of-both-worlds results.
 - ✍️ **Query Reformulation**: Automatically rewrites follow-up questions into standalone queries using conversation history, improving retrieval accuracy in multi-turn conversations.
@@ -647,11 +652,11 @@ print(response)
 
 RAGLight ships with built-in document processors based on file extension:
 
-- `pdf` → `PDFProcessor`
+- `pdf` → `DoclingPDFProcessor` (default if `docling` is installed) or `PDFProcessor` (fallback)
 - `py`, `js`, `ts`, `java`, `cpp`, `cs` → `CodeProcessor`
 - `txt`, `md`, `html` → `TextProcessor`
 
-You can override these defaults using the `custom_processors` argument when building your vector store. This is especially useful if you want to handle certain file types with a custom logic, such as using a **Vision-Language Model (VLM)** for PDFs with diagrams and images. RAGLight provides a VLM based Processor too.
+You can override these defaults using the `custom_processors` argument when building your vector store. This is especially useful if you want to use a **Vision-Language Model (VLM)** for PDFs with diagrams and images, or if you prefer the faster (but less detailed) `PDFProcessor` over the advanced `DoclingPDFProcessor`.
 
 #### Register the Custom Processor in the Builder
 
