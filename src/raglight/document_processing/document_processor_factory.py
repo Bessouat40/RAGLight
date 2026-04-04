@@ -5,6 +5,13 @@ from .pdf_processor import PDFProcessor
 from .code_processor import CodeProcessor
 from .text_processor import TextProcessor
 
+try:
+    from .docling_pdf_processor import DoclingPDFProcessor
+
+    HAS_DOCLING = True
+except ImportError:
+    HAS_DOCLING = False
+
 
 class DocumentProcessorFactory:
     """
@@ -18,7 +25,7 @@ class DocumentProcessorFactory:
         # Default processors
         self._processors: Dict[str, DocumentProcessor] = {
             # PDF files
-            "pdf": PDFProcessor(),
+            "pdf": DoclingPDFProcessor() if HAS_DOCLING else PDFProcessor(),
             # Code files
             "py": CodeProcessor(),
             "js": CodeProcessor(),

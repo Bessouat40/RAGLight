@@ -37,6 +37,7 @@ dependencies = [
     "python-multipart==0.0.20",
     "streamlit>=1.40.0",
     "langchain-aws==1.2.1",
+    "docling>=2.15.1",
 ]
 [project.optional-dependencies]
 langfuse = ["langfuse==4.0.0"]
