@@ -500,6 +500,16 @@ def interactive_agentic_chat_command():
         llm_base_url = cfg.llm_api_base
         llm_model = cfg.llm_model
         k = cfg.k
+        mcp_urls_env = cfg.mcp_urls
+        mcp_config = {}
+        if mcp_urls_env:
+            for idx, url in enumerate(mcp_urls_env.split(",")):
+                url = url.strip()
+                if url:
+                    mcp_config[f"mcp_server_{idx}"] = {
+                        "url": url,
+                        "transport": "sse"
+                    }
 
         console.print("[bold magenta]🚀 RAGLight Agentic Chat[/bold magenta]")
         console.print(
@@ -582,6 +592,31 @@ def interactive_agentic_chat_command():
             )
         )
 
+        console.print("[bold blue]\n--- 🔌 Step 4: MCP Servers ---[/bold blue]")
+        mcp_config = {}
+        if typer.confirm(
+            "Do you want to configure an MCP server?", default=False
+        ):
+            mcp_url = typer.prompt(
+                "What is the URL of your MCP server? (e.g. http://127.0.0.1:8001/sse)"
+            )
+            if mcp_url:
+                mcp_config["mcp_server_0"] = {
+                    "url": mcp_url,
+                    "transport": "sse"
+                }
+            idx = 1
+            while typer.confirm(
+                "Do you want to add another MCP server?", default=False
+            ):
+                mcp_url = typer.prompt("What is the URL of your MCP server?")
+                if mcp_url:
+                    mcp_config[f"mcp_server_{idx}"] = {
+                        "url": mcp_url,
+                        "transport": "sse"
+                    }
+                    idx += 1
+
     # ── Step 2: Knowledge base ─────────────────────────────────────────────────
     env_data_path = os.environ.get("RAGLIGHT_DATA_PATH")
     if env_data_path:
@@ -636,6 +671,7 @@ def interactive_agentic_chat_command():
             max_steps=4,
             api_key=api_key,
             api_base=llm_base_url,
+            mcp_config=mcp_config if mcp_config else None,
         )
 
         agenticRag = AgenticRAGPipeline(config, vector_store_config)
