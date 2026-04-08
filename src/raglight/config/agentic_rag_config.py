@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 
-from mcp import StdioServerParameters
 from ..config.settings import Settings
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from ..models.data_source_model import DataSource
 
 
@@ -14,7 +13,7 @@ class AgenticRAGConfig:
     model: str = field(default=Settings.DEFAULT_LLM)
     num_ctx: int = field(default=8192)
     k: int = field(default=5)
-    mcp_config: Optional[List[StdioServerParameters]] = field(default=None)
+    mcp_config: Optional[Dict[str, Dict[str, Any]]] = field(default=None)
     verbosity_level: int = field(default=2)
     max_steps: int = field(default=4)
     system_prompt: str = field(default=Settings.DEFAULT_AGENT_PROMPT)

@@ -46,7 +46,12 @@ config = AgenticRAGConfig(
     k=10,
     system_prompt=Settings.DEFAULT_AGENT_PROMPT,
     knowledge_base=knowledge_base,
-    mcp_config=[{"url": "http://127.0.0.1:8001/sse"}],
+    mcp_config={
+        "mcp_server_0": {
+            "url": "http://127.0.0.1:8001/sse",
+            "transport": "sse"
+        }
+    },
     max_steps=2,
     api_key=Settings.OPENAI_API_KEY,  # os.environ.get('OPENAI_API_KEY')
     ignore_folders=Settings.DEFAULT_IGNORE_FOLDERS,  # Use custom ignore folders
