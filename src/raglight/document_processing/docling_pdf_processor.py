@@ -9,6 +9,32 @@ from docling.document_converter import PdfFormatOption
 from .document_processor import DocumentProcessor
 
 
+def _set_pipeline_option_if_supported(
+    pipeline_options: PdfPipelineOptions, option_name: str, value: bool
+) -> None:
+    """
+    Safely set a Docling PdfPipelineOptions field when available.
+
+    Older Docling versions may not expose newer enrichment flags.
+    """
+    model_fields = getattr(type(pipeline_options), "model_fields", None)
+    if isinstance(model_fields, dict) and option_name not in model_fields:
+        logging.info(
+            "Docling option '%s' is not available in this version, skipping.",
+            option_name,
+        )
+        return
+
+    try:
+        setattr(pipeline_options, option_name, value)
+    except (AttributeError, ValueError) as e:
+        logging.warning(
+            "Unable to set Docling option '%s' (continuing without it): %s",
+            option_name,
+            e,
+        )
+
+
 class DoclingPDFProcessor(DocumentProcessor):
     """
     Advanced PDF processor using IBM's Docling for high-fidelity document parsing.
@@ -18,10 +44,18 @@ class DoclingPDFProcessor(DocumentProcessor):
 
     def __init__(self):
         pipeline_options = PdfPipelineOptions()
-        pipeline_options.do_table_structure = True
-        pipeline_options.do_formula_enrichment = True
-        pipeline_options.do_code_enrichment = True
-        pipeline_options.do_chart_extraction = True
+        _set_pipeline_option_if_supported(
+            pipeline_options, option_name="do_table_structure", value=True
+        )
+        _set_pipeline_option_if_supported(
+            pipeline_options, option_name="do_formula_enrichment", value=True
+        )
+        _set_pipeline_option_if_supported(
+            pipeline_options, option_name="do_code_enrichment", value=True
+        )
+        _set_pipeline_option_if_supported(
+            pipeline_options, option_name="do_chart_extraction", value=True
+        )
 
         self.converter = DocumentConverter(
             format_options={

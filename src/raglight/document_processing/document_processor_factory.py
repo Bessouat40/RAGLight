@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional
 
 from .document_processor import DocumentProcessor
@@ -13,6 +14,19 @@ except ImportError:
     HAS_DOCLING = False
 
 
+def _build_default_pdf_processor() -> DocumentProcessor:
+    if not HAS_DOCLING:
+        return PDFProcessor()
+
+    try:
+        return DoclingPDFProcessor()
+    except Exception as e:
+        logging.warning(
+            "Docling initialization failed, falling back to PDFProcessor. Error: %s", e
+        )
+        return PDFProcessor()
+
+
 class DocumentProcessorFactory:
     """
     A stateless factory that returns the appropriate DocumentProcessor
@@ -25,7 +39,7 @@ class DocumentProcessorFactory:
         # Default processors
         self._processors: Dict[str, DocumentProcessor] = {
             # PDF files
-            "pdf": DoclingPDFProcessor() if HAS_DOCLING else PDFProcessor(),
+            "pdf": _build_default_pdf_processor(),
             # Code files
             "py": CodeProcessor(),
             "js": CodeProcessor(),
