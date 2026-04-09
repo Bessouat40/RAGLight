@@ -40,6 +40,7 @@ class TestServerConfigDefaults(unittest.TestCase):
             "RAGLIGHT_DB": "chromadb",
             "RAGLIGHT_DB_PORT": "8001",
             "RAGLIGHT_DB_HOST": "localhost",
+            "RAGLIGHT_MCP_URLS": "http://mcp:8080,http://mcp:8081",
         }
         with patch.dict(os.environ, {**_clean_env(), **env}, clear=True):
             cfg = ServerConfig()
@@ -48,6 +49,7 @@ class TestServerConfigDefaults(unittest.TestCase):
         self.assertEqual(cfg.llm_api_base, "http://mistral:11434")
         self.assertEqual(cfg.embeddings_model, "nomic-embed-text")
         self.assertEqual(cfg.embeddings_provider, "Ollama")
+        self.assertEqual(cfg.mcp_urls, "http://mcp:8080,http://mcp:8081")
         self.assertEqual(cfg.embeddings_api_base, "http://ollama:11434")
         self.assertEqual(cfg.persist_dir, "/tmp/mydb")
         self.assertEqual(cfg.collection, "myproject")

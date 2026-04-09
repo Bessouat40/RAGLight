@@ -466,6 +466,7 @@ def interactive_agentic_chat_command():
         "RAGLIGHT_EMBEDDINGS_PROVIDER",
         "RAGLIGHT_PERSIST_DIR",
         "RAGLIGHT_COLLECTION",
+        "RAGLIGHT_MCP_URLS",
     ]
     headless = any(os.environ.get(v) for v in _raglight_env_vars)
 
@@ -506,10 +507,7 @@ def interactive_agentic_chat_command():
             for idx, url in enumerate(mcp_urls_env.split(",")):
                 url = url.strip()
                 if url:
-                    mcp_config[f"mcp_server_{idx}"] = {
-                        "url": url,
-                        "transport": "sse"
-                    }
+                    mcp_config[f"mcp_server_{idx}"] = {"url": url, "transport": "sse"}
 
         console.print("[bold magenta]🚀 RAGLight Agentic Chat[/bold magenta]")
         console.print(
@@ -594,17 +592,12 @@ def interactive_agentic_chat_command():
 
         console.print("[bold blue]\n--- 🔌 Step 4: MCP Servers ---[/bold blue]")
         mcp_config = {}
-        if typer.confirm(
-            "Do you want to configure an MCP server?", default=False
-        ):
+        if typer.confirm("Do you want to configure an MCP server?", default=False):
             mcp_url = typer.prompt(
                 "What is the URL of your MCP server? (e.g. http://127.0.0.1:8001/sse)"
             )
             if mcp_url:
-                mcp_config["mcp_server_0"] = {
-                    "url": mcp_url,
-                    "transport": "sse"
-                }
+                mcp_config["mcp_server_0"] = {"url": mcp_url, "transport": "sse"}
             idx = 1
             while typer.confirm(
                 "Do you want to add another MCP server?", default=False
@@ -613,7 +606,7 @@ def interactive_agentic_chat_command():
                 if mcp_url:
                     mcp_config[f"mcp_server_{idx}"] = {
                         "url": mcp_url,
-                        "transport": "sse"
+                        "transport": "sse",
                     }
                     idx += 1
 
