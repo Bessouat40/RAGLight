@@ -22,3 +22,6 @@ class AgenticRAGConfig:
     ignore_folders: list = field(
         default_factory=lambda: list(Settings.DEFAULT_IGNORE_FOLDERS)
     )
+    lore_config: Optional[dict] = field(default=None)
+    """Optional Lore Context integration. Pass {"api_url": ..., "api_key": ...,
+    "project_id": ...} to enable cross-session memory persistence."""

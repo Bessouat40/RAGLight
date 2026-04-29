@@ -61,6 +61,12 @@ class AgenticRAG:
 
         self.model = self._create_llm_model(config)
 
+        # Lore Context integration for cross-session memory
+        self.lore_memory = None
+        if config.lore_config:
+            from ..memory.lore_memory import LoreMemory
+            self.lore_memory = LoreMemory(**config.lore_config)
+
         # Pre-compile the agent for local-only mode (reused across calls)
         self._local_agent = create_agent(
             self.model,
@@ -173,6 +179,17 @@ class AgenticRAG:
         """
         self.conversation_history.append(HumanMessage(content=query))
 
+        # Inject relevant past context from Lore if available
+        if self.lore_memory:
+            from langchain_core.messages import SystemMessage
+            past_context = self.lore_memory.recall_context(query)
+            if past_context:
+                self.conversation_history.append(
+                    SystemMessage(
+                        content=f"[Relevant past context from previous sessions]:\n{past_context}"
+                    )
+                )
+
         if self.config.mcp_config:
             mcp_client = MultiServerMCPClient(self.config.mcp_config)
             mcp_tools = await mcp_client.get_tools()
@@ -187,6 +204,11 @@ class AgenticRAG:
 
         result = await self._invoke_agent(agent, query)
         self.conversation_history.append(AIMessage(content=result))
+
+        # Persist conversation to Lore for cross-session recall
+        if self.lore_memory:
+            self.lore_memory.save_conversation(self.conversation_history)
+
         return result
 
     async def _invoke_agent(self, agent, query: str) -> str:
