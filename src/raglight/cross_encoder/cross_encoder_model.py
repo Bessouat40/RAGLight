@@ -1,6 +1,24 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, List
+from dataclasses import dataclass
+from typing import Any, List, Optional
+
+
+@dataclass
+class RerankResult:
+    """
+    Represents a single reranked document result with metadata and score.
+    
+    Attributes:
+        text (str): The document text content.
+        score (float): The relevance score from the cross encoder.
+        corpus_id (int): The original index in the input document list.
+        metadata (Optional[dict]): Original document metadata (source, etc.).
+    """
+    text: str
+    score: float
+    corpus_id: int
+    metadata: Optional[dict] = None
 
 
 class CrossEncoderModel(ABC):
@@ -48,7 +66,7 @@ class CrossEncoderModel(ABC):
         return self.model
 
     @abstractmethod
-    def predict(self, query: str, documents: List[str], top_k: int) -> List[str]:
+    def predict(self, query: str, documents: List[str], top_k: int) -> List[RerankResult]:
         """
         Re-ranks the given documents against the query and returns the top_k most relevant.
 
@@ -58,6 +76,6 @@ class CrossEncoderModel(ABC):
             top_k (int): The number of top results to return.
 
         Returns:
-            List[str]: The top_k re-ranked document texts.
+            List[RerankResult]: The top_k re-ranked results with scores and corpus IDs.
         """
         pass

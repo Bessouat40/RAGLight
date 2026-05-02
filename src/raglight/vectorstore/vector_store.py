@@ -13,6 +13,8 @@ from ..embeddings.embeddings_model import EmbeddingsModel
 from ..config.settings import Settings
 from .bm25_index import BM25Index
 
+logger = logging.getLogger(__name__)
+
 
 class VectorStore(ABC):
     """
@@ -51,7 +53,8 @@ class VectorStore(ABC):
 
     def _update_bm25(self, documents: List[Document]) -> None:
         texts = [doc.page_content for doc in documents]
-        self._bm25.add_documents(texts)
+        metadatas = [dict(doc.metadata) if doc.metadata else {} for doc in documents]
+        self._bm25.add_documents(texts, metadatas)
         bm25_path = self._bm25_path()
         if bm25_path:
             self._bm25.save(bm25_path)
@@ -59,9 +62,12 @@ class VectorStore(ABC):
     def _bm25_search(self, question: str, k: int) -> List[Document]:
         results = self._bm25.search(question, k)
         docs = []
-        for idx, _score in results:
-            if idx < len(self._bm25.corpus):
-                docs.append(Document(page_content=self._bm25.corpus[idx]))
+        for idx, score, text, metadata in results:
+            new_metadata = dict(metadata) if metadata else {}
+            new_metadata["bm25_score"] = score
+            new_metadata["bm25_index"] = idx
+            docs.append(Document(page_content=text, metadata=new_metadata))
+        logger.info(f"BM25 search: found {len(docs)} documents with metadata")
         return docs
 
     def _rrf(
@@ -69,13 +75,35 @@ class VectorStore(ABC):
     ) -> List[Document]:
         scores: Dict[str, float] = {}
         doc_map: Dict[str, Document] = {}
+        
         for ranked in ranked_lists:
             for rank, doc in enumerate(ranked):
-                key = doc.page_content[:100]
-                scores[key] = scores.get(key, 0) + 1 / (k_rrf + rank + 1)
-                doc_map[key] = doc
+                key = doc.page_content[:200]
+                rrf_score = 1 / (k_rrf + rank + 1)
+                
+                if key in scores:
+                    scores[key] += rrf_score
+                    existing_doc = doc_map[key]
+                    merged_metadata = dict(existing_doc.metadata)
+                    merged_metadata.update(doc.metadata)
+                    merged_metadata["rrf_combined_score"] = scores[key]
+                    doc_map[key] = Document(
+                        page_content=existing_doc.page_content,
+                        metadata=merged_metadata
+                    )
+                else:
+                    scores[key] = rrf_score
+                    new_metadata = dict(doc.metadata) if doc.metadata else {}
+                    new_metadata["rrf_score"] = rrf_score
+                    doc_map[key] = Document(
+                        page_content=doc.page_content,
+                        metadata=new_metadata
+                    )
+        
         sorted_keys = sorted(scores, key=scores.__getitem__, reverse=True)
-        return [doc_map[k] for k in sorted_keys]
+        result = [doc_map[k] for k in sorted_keys]
+        logger.info(f"RRF fusion: merged {len(ranked_lists)} ranked lists into {len(result)} unique documents")
+        return result
 
     def _hybrid_search(
         self, question: str, k: int, filter: Optional[Dict[str, Any]]

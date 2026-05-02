@@ -12,6 +12,8 @@ from ..document_processing.document_processor import DocumentProcessor
 from .vector_store import VectorStore
 from ..embeddings.embeddings_model import EmbeddingsModel
 
+logger = logging.getLogger(__name__)
+
 
 class ChromaEmbeddingAdapter(EmbeddingFunction):
     """
@@ -84,8 +86,24 @@ class ChromaVS(VectorStore):
     def _rebuild_bm25_from_chroma(self) -> None:
         result = self.collection.get()
         texts = result.get("documents") or []
+        metadatas = result.get("metadatas") or []
+        
         if texts:
-            self._bm25.add_documents(texts)
+            if not metadatas or len(metadatas) != len(texts):
+                metadatas = [{} for _ in texts]
+            
+            # Convert None metadata to empty dict
+            processed_metadatas = []
+            for meta in metadatas:
+                if meta is None:
+                    processed_metadatas.append({})
+                elif isinstance(meta, dict):
+                    processed_metadatas.append(dict(meta))
+                else:
+                    processed_metadatas.append({"raw_meta": str(meta)})
+            
+            self._bm25.add_documents(texts, processed_metadatas)
+            logger.info(f"Rebuilt BM25 index from Chroma: {len(texts)} documents with metadata")
 
     @override
     def add_documents(self, documents: List[Document]) -> None:

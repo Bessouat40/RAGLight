@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List
 from typing_extensions import override
-from .cross_encoder_model import CrossEncoderModel
+from .cross_encoder_model import CrossEncoderModel, RerankResult
 from sentence_transformers import CrossEncoder
 
 
@@ -39,9 +39,9 @@ class HuggingfaceCrossEncoderModel(CrossEncoderModel):
         return CrossEncoder(self.model_name)
 
     @override
-    def predict(self, query: str, documents: List[str], top_k: int) -> List[str]:
+    def predict(self, query: str, documents: List[str], top_k: int) -> List[RerankResult]:
         """
-        Predicts the similarity scores and returns the list of most relevant document texts.
+        Predicts the similarity scores and returns the list of most relevant document results.
 
         Args:
             query (str): The input query.
@@ -49,12 +49,22 @@ class HuggingfaceCrossEncoderModel(CrossEncoderModel):
             top_k (int): The number of top results to return.
 
         Returns:
-            List[str]: The list of top_k re-ranked document texts.
+            List[RerankResult]: The list of top_k re-ranked results with scores and corpus IDs.
         """
+        if not documents:
+            return []
+        
         # rank returns a list of dicts: [{'corpus_id': int, 'score': float, 'text': str}, ...]
         results = self.model.rank(
             query=query, documents=documents, top_k=top_k, return_documents=True
         )
 
-        # We extract and return only the text strings
-        return [res["text"] for res in results]
+        # Convert to RerankResult objects with all metadata
+        return [
+            RerankResult(
+                text=res["text"],
+                score=float(res["score"]),
+                corpus_id=int(res["corpus_id"])
+            )
+            for res in results
+        ]
