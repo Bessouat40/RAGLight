@@ -191,7 +191,8 @@ class ChromaVS(VectorStore):
                 else [{}] * len(docs_list)
             )
             for text, meta in zip(docs_list, metas_list):
-                safe_meta = meta if isinstance(meta, dict) else {}
+                safe_meta = dict(meta) if isinstance(meta, dict) else {}
+                safe_meta["retrieval_stage"] = "semantic"
                 found_docs.append(Document(page_content=text, metadata=safe_meta))
 
         return found_docs

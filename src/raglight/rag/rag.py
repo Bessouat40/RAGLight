@@ -353,6 +353,14 @@ You are an evidence-based assistant. Your answers MUST be strictly based on the 
                 new_metadata = dict(original_doc.metadata) if original_doc.metadata else {}
                 new_metadata["rerank_score"] = result.score
                 new_metadata["original_index"] = result.corpus_id
+                
+                original_stage = new_metadata.get("retrieval_stage", "unknown")
+                retrieval_stages = new_metadata.get("retrieval_stages", [])
+                if original_stage not in retrieval_stages:
+                    retrieval_stages.append(original_stage)
+                new_metadata["retrieval_stages"] = retrieval_stages
+                new_metadata["retrieval_stage"] = "reranked"
+                
                 ranked_docs.append(Document(
                     page_content=result.text,
                     metadata=new_metadata

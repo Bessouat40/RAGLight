@@ -10,6 +10,8 @@ from ..document_processing.document_processor import DocumentProcessor
 from .vector_store import VectorStore
 from ..embeddings.embeddings_model import EmbeddingsModel
 
+logger = logging.getLogger(__name__)
+
 
 class QdrantVS(VectorStore):
     """
@@ -73,15 +75,24 @@ class QdrantVS(VectorStore):
             records, _ = self.client.scroll(
                 collection_name=self.collection_name, limit=10_000, with_payload=True
             )
-            texts = [
-                r.payload.get("page_content", "")
-                for r in records
-                if r.payload and r.payload.get("page_content")
-            ]
+            
+            texts = []
+            metadatas = []
+            
+            for r in records:
+                if r.payload and r.payload.get("page_content"):
+                    page_content = r.payload.get("page_content", "")
+                    texts.append(page_content)
+                    
+                    metadata = dict(r.payload)
+                    metadata.pop("page_content", None)
+                    metadatas.append(metadata)
+            
             if texts:
-                self._bm25.add_documents(texts)
+                self._bm25.add_documents(texts, metadatas)
+                logger.info(f"Rebuilt BM25 index from Qdrant: {len(texts)} documents with metadata")
         except Exception as e:
-            logging.warning(f"Could not rebuild BM25 from Qdrant: {e}")
+            logger.warning(f"Could not rebuild BM25 from Qdrant: {e}")
 
     def _ensure_collection(self, name: str) -> None:
         from qdrant_client.models import Distance, VectorParams
@@ -146,8 +157,9 @@ class QdrantVS(VectorStore):
 
         docs = []
         for hit in results:
-            payload = hit.payload or {}
+            payload = dict(hit.payload) if hit.payload else {}
             page_content = payload.pop("page_content", "")
+            payload["retrieval_stage"] = "semantic"
             docs.append(Document(page_content=page_content, metadata=payload))
         return docs
 

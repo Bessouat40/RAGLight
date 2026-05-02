@@ -60,12 +60,13 @@ class VectorStore(ABC):
             self._bm25.save(bm25_path)
 
     def _bm25_search(self, question: str, k: int) -> List[Document]:
-        results = self._bm25.search(question, k)
+        results = self._bm25.search_with_metadata(question, k)
         docs = []
         for idx, score, text, metadata in results:
             new_metadata = dict(metadata) if metadata else {}
             new_metadata["bm25_score"] = score
             new_metadata["bm25_index"] = idx
+            new_metadata["retrieval_stage"] = "bm25"
             docs.append(Document(page_content=text, metadata=new_metadata))
         logger.info(f"BM25 search: found {len(docs)} documents with metadata")
         return docs
@@ -85,8 +86,16 @@ class VectorStore(ABC):
                     scores[key] += rrf_score
                     existing_doc = doc_map[key]
                     merged_metadata = dict(existing_doc.metadata)
+                    
+                    retrieval_stages = merged_metadata.get("retrieval_stages", [])
+                    current_stage = doc.metadata.get("retrieval_stage", "unknown")
+                    if current_stage not in retrieval_stages:
+                        retrieval_stages.append(current_stage)
+                    merged_metadata["retrieval_stages"] = retrieval_stages
+                    
                     merged_metadata.update(doc.metadata)
                     merged_metadata["rrf_combined_score"] = scores[key]
+                    merged_metadata["retrieval_stage"] = "hybrid"
                     doc_map[key] = Document(
                         page_content=existing_doc.page_content,
                         metadata=merged_metadata
@@ -95,6 +104,11 @@ class VectorStore(ABC):
                     scores[key] = rrf_score
                     new_metadata = dict(doc.metadata) if doc.metadata else {}
                     new_metadata["rrf_score"] = rrf_score
+                    
+                    retrieval_stage = new_metadata.get("retrieval_stage", "unknown")
+                    new_metadata["retrieval_stages"] = [retrieval_stage]
+                    new_metadata["retrieval_stage"] = "hybrid"
+                    
                     doc_map[key] = Document(
                         page_content=doc.page_content,
                         metadata=new_metadata
