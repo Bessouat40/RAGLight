@@ -136,6 +136,8 @@ You can also launch the Agentic RAG wizard with:
 raglight agentic-chat
 ```
 
+If you want to configure an MCP server (e.g., to give your agent access to external tools), you can run the wizard or set `RAGLIGHT_MCP_URLS="http://127.0.0.1:8001/sse"` before launching the CLI to bypass the prompt and run in headless mode.
+
 The wizard will guide you through the setup process. Here is what it looks like:
 
 <div align="center">
@@ -574,7 +576,7 @@ print('response : ', response)
 
 RAGLight supports MCP Server integration to enhance the reasoning capabilities of your agent. MCP allows the agent to interact with external tools (e.g., code execution environments, database tools, or search agents) via a standardized server interface.
 
-To use MCP, simply pass a mcp_config parameter to your AgenticRAGConfig, where each config defines the url (and optionally transport) of the MCP server.
+To use MCP, simply pass a `mcp_config` parameter to your `AgenticRAGConfig`, passing a dictionary where each key is a server name and its value configures the url (and optionally transport) of the MCP server.
 
 Just add this parameter to your AgenticRAGPipeline :
 
@@ -583,9 +585,12 @@ config = AgenticRAGConfig(
     provider = Settings.OPENAI,
     model = "gpt-4o",
     k = 10,
-    mcp_config = [
-        {"url": "http://127.0.0.1:8001/sse"}  # Your MCP server URL
-    ],
+    mcp_config = {
+        "mcp_server_1": {
+            "url": "http://127.0.0.1:8001/sse",  # Your MCP server URL
+            "transport": "sse"                   # Required transport method
+        }
+    },
     ...
 )
 ```

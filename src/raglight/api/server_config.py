@@ -78,6 +78,9 @@ class ServerConfig:
     langfuse_secret_key: Optional[str] = field(
         default_factory=lambda: os.environ.get("LANGFUSE_SECRET_KEY") or None
     )
+    mcp_urls: Optional[str] = field(
+        default_factory=lambda: os.environ.get("RAGLIGHT_MCP_URLS") or None
+    )
 
     def _build_langfuse_config(self) -> Optional[LangfuseConfig]:
         if self.langfuse_host and self.langfuse_public_key and self.langfuse_secret_key:

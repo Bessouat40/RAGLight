@@ -47,9 +47,12 @@ config = AgenticRAGConfig(
     model="mistral-large-2411",
     k=10,
     system_prompt=Settings.DEFAULT_AGENT_PROMPT,
-    # mcp_config=[
-    #     {"url": "http://127.0.0.1:8001/sse"}
-    # ],
+    # mcp_config={
+    #     "mcp_server_1": {
+    #         "url": "http://127.0.0.1:8001/sse",
+    #         "transport": "sse"
+    #     }
+    # },
     # api_base = ... # If you have a custom client URL
     max_steps=5,
     api_key=Settings.MISTRAL_API_KEY,  # os.environ.get('MISTRAL_API_KEY')
