@@ -9,39 +9,42 @@ license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "mistralai==1.5.0",
-    "typer==0.16.0",
-    "rich==14.0.0",
-    "quo==2023.5.1",
-    "InquirerPy==0.3.4",
-    "python-dotenv==1.1.1",
-    "pydantic==2.11.7",
-    "langchain==1.2.0",
-    "langchain-text-splitters==1.1.0",
-    "langchain-core==1.2.5",
-    "langgraph==1.0.5",
-    "sentence-transformers==5.1.2",
-    "pymupdf==1.26.7",
-    "ollama==0.6.1",
-    "langchain-ollama==1.0.1",
-    "langchain-openai==1.1.6",
-    "langchain-mistralai==1.1.1",
-    "google-genai==1.57.0",
-    "langchain-google-genai==4.1.3",
-    "langchain-mcp-adapters==0.2.1",
-    "typing-extensions==4.15.0",
-    "nltk==3.9.2",
-    "rank_bm25==0.2.2",
-    "fastapi==0.128.0",
-    "uvicorn[standard]==0.35.0",
-    "python-multipart==0.0.20",
+    "mistralai>=1.5.0",
+    "typer>=0.16.0",
+    "rich>=14.0.0",
+    "quo>=2023.5.1",
+    "InquirerPy>=0.3.4",
+    "python-dotenv>=1.1.1",
+    "pydantic>=2.11.7",
+    "langchain>=1.2.0",
+    "langchain-text-splitters>=1.1.0",
+    "langchain-core>=1.2.5",
+    "langgraph>=1.0.5",
+    "sentence-transformers>=5.1.2",
+    "pymupdf>=1.26.7",
+    "ollama>=0.6.1",
+    "langchain-ollama>=1.0.1",
+    "langchain-openai>=1.1.6",
+    "langchain-mistralai>=1.1.1",
+    "google-genai>=1.57.0",
+    "langchain-google-genai>=4.1.3",
+    "langchain-mcp-adapters>=0.3.2",
+    "typing-extensions>=4.15.0",
+    "nltk>=3.9.3",
+    "rank_bm25>=0.2.2",
+    "fastapi>=0.140",
+    "uvicorn[standard]>=0.35.0",
+    "python-multipart>=0.0.22",
     "streamlit>=1.40.0",
-    "langchain-aws==1.2.1",
+    "langchain-aws>=1.2.1",
+    "transformers>=5.5.0",
+    "pillow>=12.2.0",
+    "mcp>=1.24,<2",
 ]
 [project.optional-dependencies]
-langfuse = ["langfuse==4.0.0"]
-chroma = ["chromadb==0.5.23"]
-qdrant = ["qdrant-client==1.17.0"]
+langfuse = ["langfuse>=4.0.0"]
+chroma = ["chromadb>=0.5.23"]
+qdrant = ["qdrant-client>=1.17.0"]
 
 [project.scripts]
 raglight = "raglight.cli.main:app"
