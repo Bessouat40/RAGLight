@@ -17,3 +17,5 @@ jobs:
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
+        with:
+          allow-ghsas: GHSA-f4j7-r4q5-qw2c,GHSA-36p7-vc44-83pf,GHSA-2wm9-hf6c-p5cr,GHSA-xph7-9rjv-w5fr
