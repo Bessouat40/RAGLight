@@ -1,7 +1,8 @@
 install:
 	uv pip install -e ".[chroma,qdrant]"
 test:
-	PYTHONPATH=src python3 -m unittest -v
+	uv sync --all-extras
+	PYTHONPATH=src uv run python -m unittest -v
 
 format:
 	uv run black .
