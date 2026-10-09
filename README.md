@@ -574,7 +574,7 @@ print('response : ', response)
 
 RAGLight supports MCP Server integration to enhance the reasoning capabilities of your agent. MCP allows the agent to interact with external tools (e.g., code execution environments, database tools, or search agents) via a standardized server interface.
 
-To use MCP, simply pass a mcp_config parameter to your AgenticRAGConfig, where each config defines the url (and optionally transport) of the MCP server.
+To use MCP, simply pass a mcp_config parameter to your AgenticRAGConfig, using a dictionary of named connections. Each connection defines the transport and the server URL (or command for stdio).
 
 Just add this parameter to your AgenticRAGPipeline :
 
@@ -583,14 +583,30 @@ config = AgenticRAGConfig(
     provider = Settings.OPENAI,
     model = "gpt-4o",
     k = 10,
-    mcp_config = [
-        {"url": "http://127.0.0.1:8001/sse"}  # Your MCP server URL
-    ],
+    mcp_config = {
+        "local": {"url": "http://127.0.0.1:8001/sse", "transport": "sse"}
+    },
     ...
 )
 ```
 
-> 📚 Documentation: Learn how to configure and launch an MCP server using [MCPClient.server_parameters](https://huggingface.co/docs/smolagents/en/reference/tools#smolagents.MCPClient.server_parameters)
+> 📚 Documentation: See the [LangChain MCP adapters](https://github.com/langchain-ai/langchain-mcp-adapters) for supported connection settings.
+
+#### Free web search with Parallel
+
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp) adds web search and page fetching to the agent through Streamable HTTP. No Parallel account or API key is required; the anonymous endpoint has lower rate limits.
+
+Run the [Parallel example](examples/parallel_search_mcp.py) from a checkout with Python 3.12+, [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com/) running locally:
+
+```bash
+uv venv
+uv pip install -e ".[qdrant]"
+ollama pull qwen3:8b
+ollama pull nomic-embed-text
+uv run --no-sync python examples/parallel_search_mcp.py
+```
+
+The example uses local Ollama inference and a separate Qdrant directory. Pass `--question`, `--model`, `--embedding-model`, `--api-base` or `--persist-directory` to customize it. Existing pipelines can use the example's `create_config().mcp_config` with their own model and vector store. Both `web_search` and `web_fetch` become available to the agent; the model chooses which tools to call.
 
 ### Use Custom Pipeline
 
