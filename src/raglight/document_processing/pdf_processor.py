@@ -2,7 +2,9 @@ import logging
 import fitz
 from typing import List, Dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
+from langchain_core.documents import Document as LangChainDocument
+
+from ..models import Document
 from .document_processor import DocumentProcessor
 
 
@@ -29,7 +31,7 @@ class PDFProcessor(DocumentProcessor):
                 full_page_text = "".join(page_text_parts).strip()
 
                 if full_page_text:
-                    document = Document(
+                    document = LangChainDocument(
                         page_content=full_page_text,
                         metadata={"source": file_path, "page": page_index},
                     )
@@ -44,10 +46,14 @@ class PDFProcessor(DocumentProcessor):
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=chunk_size, chunk_overlap=chunk_overlap
             )
-            chunks = text_splitter.split_documents(raw_documents)
-
-            for chunk in chunks:
-                chunk.metadata["source"] = file_path
+            split_documents = text_splitter.split_documents(raw_documents)
+            chunks = []
+            for chunk in split_documents:
+                metadata = dict(chunk.metadata)
+                metadata["source"] = file_path
+                chunks.append(
+                    Document(page_content=chunk.page_content, metadata=metadata)
+                )
 
             return {"chunks": chunks, "classes": []}
 

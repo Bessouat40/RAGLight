@@ -20,6 +20,11 @@ source -> document processor -> embeddings -> vector store
 question -> retrieval -> optional reranking -> generation -> answer
 ```
 
+The v4 facade now depends on structural contracts from `raglight.contracts`.
+Legacy provider ABCs remain as compatibility scaffolding, while their concrete
+implementations conform to the public contracts without the protocols becoming
+base classes.
+
 Important v3 entry points include `RAGPipeline`, `Builder`, `RAG`, and
 `AgenticRAGPipeline`. The v4 public API work will decide which names remain
 public; their existence today does not guarantee future stability.
@@ -99,10 +104,13 @@ Immediately enforced:
 
 Target-v4 rules introduced as the migration progresses:
 
-- core contracts do not import concrete integrations;
 - optional providers are not imported when the base package loads;
 - REST models do not become public domain models;
 - provider registration is extensible without editing application internals.
+
+The following v4 rule is now enforced:
+
+- core contracts do not import concrete integrations or optional SDKs.
 
 The executable checks are in `scripts/check_architecture.py` and
 `tests/architecture/`. Add a guardrail when a boundary becomes enforceable; do

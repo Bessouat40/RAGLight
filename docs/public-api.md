@@ -11,14 +11,18 @@ The first v4 slice currently implements:
 
 - `raglight.RAGPipeline` with keyword-only component injection;
 - immutable `raglight.PipelineConfig(top_k=...)`;
+- `raglight.contracts` structural contracts for LLMs, embeddings, vector
+  stores, rerankers, and document processors;
+- provider-independent `raglight.models.Document` values;
+- optional reranking through `RAGPipeline(reranker=...)`;
 - stateless `generate(..., history=...)` returning text;
 - stateless `stream(..., history=...)` yielding text chunks;
 - a root import that loads no concrete provider or delivery package.
 
 The rest of this document defines the destination for subsequent milestone
-issues. Contracts and reranking land in #157, registry-backed configuration in
-#158, structured responses and events in #159, sessions in #160, and ingestion
-orchestration as the architecture migration progresses.
+issues. Registry-backed configuration lands in #158, structured responses and
+events in #159, sessions in #160, and ingestion orchestration as the
+architecture migration progresses.
 
 ## Design principles
 
@@ -86,8 +90,28 @@ from raglight.contracts import (
 ```
 
 Implementations do not need to inherit from a RAGLight base class. Contract
-method signatures and shared contract tests are delivered by #157. Adding a
-provider must not require editing `RAGPipeline`.
+method signatures are stable for v4 and tested through a shared contract-test
+matrix. Adding a provider must not require editing `RAGPipeline`.
+
+The contracts use these provider-independent methods:
+
+| Contract | Required methods |
+| --- | --- |
+| `LLM` | `generate(input)`, `generate_streaming(input)` |
+| `EmbeddingModel` | `embed_documents(texts)`, `embed_query(text)` |
+| `VectorStore` | `similarity_search(question, k=5)` |
+| `Reranker` | `rerank(question, documents, top_k)` |
+| `DocumentProcessor` | `process(file_path, chunk_size, chunk_overlap)` |
+
+`LLM` input is a dictionary containing `question` and `history`. A vector store
+and reranker exchange `raglight.models.Document` values. A document processor
+returns a dictionary containing `chunks` and `classes` document lists. See
+[`examples/v4_custom_components.py`](../examples/v4_custom_components.py) for
+a complete offline implementation.
+
+The protocols are runtime-checkable for diagnostics, but normal pipeline use
+does not require an `isinstance` check or registration. Type checkers verify
+the same structure without coupling custom components to RAGLight inheritance.
 
 ### Optional integrations: `raglight.integrations`
 
@@ -158,6 +182,7 @@ pipeline = RAGPipeline(
     llm=my_llm,
     embeddings=my_embeddings,
     vector_store=my_vector_store,
+    reranker=my_reranker,  # optional
     config=PipelineConfig(top_k=5),
 )
 ```

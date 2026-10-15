@@ -4,6 +4,7 @@ import unittest
 
 from raglight.document_processing.text_processor import TextProcessor
 from raglight.document_processing.code_processor import CodeProcessor
+from raglight.models import Document
 
 
 class TestTextProcessor(unittest.TestCase):
@@ -33,6 +34,9 @@ class TestTextProcessor(unittest.TestCase):
         try:
             result = self.processor.process(path, chunk_size=50, chunk_overlap=0)
             self.assertGreater(len(result["chunks"]), 0)
+            self.assertTrue(
+                all(isinstance(chunk, Document) for chunk in result["chunks"])
+            )
             self.assertEqual(result["classes"], [])
         finally:
             os.unlink(path)
@@ -72,6 +76,8 @@ class TestCodeProcessor(unittest.TestCase):
         try:
             result = self.processor.process(path, chunk_size=1000, chunk_overlap=0)
             class_contents = [doc.page_content for doc in result["classes"]]
+            self.assertTrue(all(isinstance(doc, Document) for doc in result["classes"]))
+            self.assertTrue(all(isinstance(doc, Document) for doc in result["chunks"]))
             self.assertTrue(any("Foo" in c for c in class_contents))
             self.assertTrue(any("Bar" in c for c in class_contents))
         finally:

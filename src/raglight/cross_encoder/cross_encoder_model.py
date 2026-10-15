@@ -2,6 +2,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, List
 
+from ..models import Document
+
 
 class CrossEncoderModel(ABC):
     """
@@ -61,3 +63,28 @@ class CrossEncoderModel(ABC):
             List[str]: The top_k re-ranked document texts.
         """
         pass
+
+    def rerank(
+        self,
+        question: str,
+        documents: list[Document],
+        top_k: int,
+    ) -> list[Document]:
+        """Adapt the legacy text-based API to the public reranker contract."""
+
+        ranked_texts = self.predict(
+            question,
+            [document.page_content for document in documents],
+            top_k,
+        )
+        remaining = list(documents)
+        ranked_documents: list[Document] = []
+        for text in ranked_texts:
+            match = next(
+                (document for document in remaining if document.page_content == text),
+                None,
+            )
+            if match is not None:
+                ranked_documents.append(match)
+                remaining.remove(match)
+        return ranked_documents

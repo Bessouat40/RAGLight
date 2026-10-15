@@ -28,7 +28,7 @@ pipeline = (
 v4:
 
 ```python
-from raglight import RAGPipeline
+from raglight import PipelineConfig, RAGPipeline
 from raglight.integrations.openai import OpenAIEmbeddings, OpenAILLM
 from raglight.integrations.qdrant import QdrantVectorStore
 
@@ -40,12 +40,37 @@ pipeline = RAGPipeline(
         collection="docs",
         embeddings=embeddings,
     ),
-    top_k=5,
+    config=PipelineConfig(top_k=5),
 )
 ```
 
 The v4 pipeline receives ready component instances. Selecting and configuring
 provider SDKs is not pipeline behavior.
+
+### Replace implementation inheritance with structural contracts
+
+Custom v3 components commonly inherited from an abstract base class. In v4,
+implement the matching protocol methods directly:
+
+```python
+from raglight.contracts import LLM
+
+
+class MyLLM:
+    def generate(self, input: dict) -> str:
+        return "custom answer"
+
+    def generate_streaming(self, input: dict):
+        yield self.generate(input)
+
+
+custom_llm: LLM = MyLLM()
+```
+
+The annotation is optional and no registration or inheritance is required.
+The legacy ABCs remain available only as v3 compatibility scaffolding. See the
+[complete custom-component example](../examples/v4_custom_components.py) for
+LLM, embeddings, vector-store, reranker, and document-processor contracts.
 
 ### Replace the two-config constructor
 

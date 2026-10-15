@@ -1,6 +1,6 @@
 # 0002: Extend RAGLight through contracts and dependency injection
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-15
 
 ## Context
@@ -16,8 +16,14 @@ contracts. Registries provide optional name-based construction for built-in and
 third-party integrations. Every implementation passes a shared contract-test
 suite.
 
-The final method signatures and compatibility guarantees will be accepted as
-part of issue #157.
+The public contracts are Python structural protocols. Implementations provide
+the required methods but do not inherit from the protocols. The v4 signatures
+are documented in `docs/public-api.md`; `raglight.models.Document` is the value
+exchanged by retrieval and reranking contracts.
+
+Legacy abstract base classes remain temporarily available for v3 compatibility.
+Built-in components conform structurally, and the legacy cross encoder exposes
+a `rerank` adapter for the v4 contract.
 
 ## Consequences
 
@@ -31,4 +37,3 @@ part of issue #157.
 Continuing to add `if`/`elif` branches was rejected because it couples every
 integration to framework releases. Runtime duck typing without documented
 contracts was rejected because failures would surface too late.
-

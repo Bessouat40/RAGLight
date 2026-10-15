@@ -3,31 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Protocol
+from typing import Any
+
+from ..contracts import EmbeddingModel, LLM, Reranker, VectorStore
+from ..models import Document
 
 from .config import PipelineConfig
-
-
-class _Document(Protocol):
-    page_content: str
-
-
-class _LLM(Protocol):
-    def generate(self, input: dict[str, Any]) -> str: ...
-
-    def generate_streaming(
-        self, input: dict[str, Any], callbacks: list[Any] | None = None
-    ) -> Iterable[str]: ...
-
-
-class _EmbeddingModel(Protocol):
-    def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
-
-    def embed_query(self, text: str) -> list[float]: ...
-
-
-class _VectorStore(Protocol):
-    def similarity_search(self, question: str, k: int = 5) -> list[_Document]: ...
 
 
 class RAGPipeline:
@@ -40,14 +21,16 @@ class RAGPipeline:
     def __init__(
         self,
         *,
-        llm: _LLM,
-        embeddings: _EmbeddingModel,
-        vector_store: _VectorStore,
+        llm: LLM,
+        embeddings: EmbeddingModel,
+        vector_store: VectorStore,
+        reranker: Reranker | None = None,
         config: PipelineConfig | None = None,
     ) -> None:
         self._llm = llm
         self._embeddings = embeddings
         self._vector_store = vector_store
+        self._reranker = reranker
         self._config = config or PipelineConfig()
 
     @property
@@ -91,13 +74,19 @@ class RAGPipeline:
             normalized_question,
             k=self._config.top_k,
         )
+        if self._reranker is not None:
+            documents = self._reranker.rerank(
+                normalized_question,
+                documents,
+                self._config.top_k,
+            )
         return {
             "question": self._build_prompt(normalized_question, documents),
             "history": [dict(message) for message in history],
         }
 
     @staticmethod
-    def _build_prompt(question: str, documents: Sequence[_Document]) -> str:
+    def _build_prompt(question: str, documents: Sequence[Document]) -> str:
         context = "\n\n".join(document.page_content for document in documents)
         return (
             "Use only the retrieved context to answer the question.\n\n"

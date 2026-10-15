@@ -4,7 +4,8 @@ import re
 import logging
 from typing import List, Dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
-from langchain_core.documents import Document
+
+from ..models import Document
 from .document_processor import DocumentProcessor
 
 
@@ -45,13 +46,18 @@ class CodeProcessor(DocumentProcessor):
             splitter = RecursiveCharacterTextSplitter.from_language(
                 language=language, chunk_size=chunk_size, chunk_overlap=chunk_overlap
             )
-            code_chunks = splitter.create_documents([code])
+            split_documents = splitter.create_documents([code])
 
             class_names_str = ", ".join(class_signatures)
-            for chunk in code_chunks:
-                chunk.metadata["source"] = file_path
+            code_chunks = []
+            for chunk in split_documents:
+                metadata = dict(chunk.metadata)
+                metadata["source"] = file_path
                 if class_names_str:
-                    chunk.metadata["classes"] = class_names_str
+                    metadata["classes"] = class_names_str
+                code_chunks.append(
+                    Document(page_content=chunk.page_content, metadata=metadata)
+                )
 
             return {"chunks": code_chunks, "classes": class_docs}
         except Exception as e:

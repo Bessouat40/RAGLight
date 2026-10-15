@@ -4,9 +4,8 @@ import uuid
 from typing import List, Dict, Optional, Any
 from typing_extensions import override
 
-from langchain_core.documents import Document
-
 from ..document_processing.document_processor import DocumentProcessor
+from ..models import Document
 from .vector_store import VectorStore
 from ..embeddings.embeddings_model import EmbeddingsModel
 

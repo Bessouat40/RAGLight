@@ -5,7 +5,6 @@ import os
 import uuid
 from typing import Any, Iterable, Optional
 
-from langchain_core.documents import Document
 from langgraph.graph import START, StateGraph
 from typing_extensions import Dict, List, TypedDict
 
@@ -13,6 +12,7 @@ from ..config.langfuse_config import LangfuseConfig
 from ..cross_encoder.cross_encoder_model import CrossEncoderModel
 from ..embeddings.embeddings_model import EmbeddingsModel
 from ..llm.llm import LLM
+from ..models import Document
 from ..vectorstore.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)

@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Dict, Optional
 import os
 import logging
-from langchain_core.documents import Document
 import copy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from ..models import Document
 from ..document_processing.document_processor import DocumentProcessor
 from ..embeddings.embeddings_model import EmbeddingsModel
 from ..config.settings import Settings

@@ -129,6 +129,27 @@ pip install "raglight[server,openai,qdrant,langfuse]"
 See the [dependency and extras policy](docs/dependencies.md) for the complete
 matrix and composition rules.
 
+### Custom components (v4)
+
+RAGLight v4 uses structural contracts, so custom LLMs, embedding models,
+vector stores, rerankers, and document processors require neither inheritance
+nor changes to `Builder`:
+
+```python
+from raglight import RAGPipeline
+
+pipeline = RAGPipeline(
+    llm=my_llm,
+    embeddings=my_embeddings,
+    vector_store=my_vector_store,
+    reranker=my_reranker,  # optional
+)
+```
+
+Import contracts from `raglight.contracts` for type checking and read the
+[extension API](docs/public-api.md#extension-contracts-raglightcontracts) or
+run the [complete custom-component example](examples/v4_custom_components.py).
+
 ---
 
 ## Chat with Your Documents Instantly With CLI 💬

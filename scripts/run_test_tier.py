@@ -11,6 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEST_ROOT = PROJECT_ROOT / "tests"
 UNIT_DIRECTORIES = (
     "architecture",
+    "contracts",
     "tests_api",
     "tests_document_processing",
     "tests_embeddings",

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List
-from langchain_core.documents import Document
+
+from ..models import Document
 
 
 class DocumentProcessor(ABC):

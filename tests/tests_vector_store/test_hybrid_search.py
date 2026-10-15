@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from langchain_core.documents import Document
 
+from raglight.models import Document
 from raglight.vectorstore.bm25_index import BM25Index
 from raglight.vectorstore.chroma import ChromaVS
 

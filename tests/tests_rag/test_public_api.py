@@ -10,6 +10,7 @@ from dataclasses import FrozenInstanceError
 
 import raglight
 from raglight import PipelineConfig, RAGPipeline
+from raglight.models import Document
 
 
 class PublicAPITests(unittest.TestCase):
@@ -67,6 +68,16 @@ class PipelineConfigTests(unittest.TestCase):
 
         with self.assertRaises(FrozenInstanceError):
             config.top_k = 4
+
+
+class DocumentTests(unittest.TestCase):
+    def test_metadata_defaults_are_isolated_between_documents(self):
+        first = Document(page_content="first")
+        second = Document(page_content="second")
+
+        first.metadata["source"] = "one"
+
+        self.assertEqual({}, second.metadata)
 
 
 if __name__ == "__main__":

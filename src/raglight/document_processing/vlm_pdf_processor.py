@@ -6,10 +6,11 @@ import tempfile
 import fitz
 from typing import List
 
-from langchain_core.documents import Document
+from langchain_core.documents import Document as LangChainDocument
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ..llm.llm import LLM
+from ..models import Document
 from .document_processor import DocumentProcessor
 
 import uuid
@@ -60,7 +61,7 @@ class VlmPDFProcessor(DocumentProcessor):
         tmp_dir = tempfile.mkdtemp(prefix="pdf_images_")
         try:
             doc = fitz.open(file_path)
-            documents: List[Document] = []
+            documents: List[LangChainDocument] = []
 
             for page_index, page in enumerate(doc):
                 blocks = page.get_text("dict")["blocks"]
@@ -76,7 +77,7 @@ class VlmPDFProcessor(DocumentProcessor):
                         text = text.strip()
                         if text:
                             documents.append(
-                                Document(
+                                LangChainDocument(
                                     page_content=text,
                                     metadata={
                                         "source": file_path,
@@ -118,7 +119,7 @@ class VlmPDFProcessor(DocumentProcessor):
                             caption = "Image (caption unavailable due to VLM error)."
 
                         documents.append(
-                            Document(
+                            LangChainDocument(
                                 page_content=f"[IMAGE CAPTION]\n{caption}",
                                 metadata={
                                     "source": file_path,
@@ -134,7 +135,13 @@ class VlmPDFProcessor(DocumentProcessor):
                 chunk_overlap=chunk_overlap,
             )
 
-            split_docs = splitter.split_documents(documents)
+            split_docs = [
+                Document(
+                    page_content=document.page_content,
+                    metadata=dict(document.metadata),
+                )
+                for document in splitter.split_documents(documents)
+            ]
 
             return {"chunks": split_docs, "classes": []}
 

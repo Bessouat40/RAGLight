@@ -74,6 +74,60 @@ class ArchitectureDependencyTests(unittest.TestCase):
                 CHECK_ARCHITECTURE.violations(package),
             )
 
+    def test_public_contracts_cannot_import_concrete_providers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            contracts = package / "contracts"
+            contracts.mkdir()
+            (contracts / "__init__.py").write_text(
+                "from raglight.llm.openai_model import OpenAIModel\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "contracts/__init__.py:1: public contract dependency on "
+                    "raglight.llm.openai_model"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
+    def test_public_contracts_cannot_hide_provider_behind_relative_import(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            contracts = package / "contracts"
+            contracts.mkdir()
+            (contracts / "__init__.py").write_text(
+                "from ..llm.openai_model import OpenAIModel\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "contracts/__init__.py:1: public contract dependency on "
+                    "raglight.llm.openai_model"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
+    def test_public_contracts_cannot_import_optional_sdk(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            contracts = package / "contracts"
+            contracts.mkdir()
+            (contracts / "__init__.py").write_text(
+                "from langchain_core.documents import Document\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "contracts/__init__.py:1: public contract dependency on "
+                    "langchain_core.documents"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
