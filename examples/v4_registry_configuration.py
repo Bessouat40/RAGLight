@@ -60,4 +60,6 @@ config = PipelineConfig.from_dict(
 )
 pipeline = RAGPipeline.from_config(config, registries=registries)
 
-print(pipeline.generate("How does named construction work?"))
+response = pipeline.generate("How does named construction work?")
+print(response.answer)
+print(response.to_dict())

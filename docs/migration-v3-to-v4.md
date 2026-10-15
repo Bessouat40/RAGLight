@@ -146,7 +146,7 @@ such as tools, MCP servers, execution limits, and termination policy remain in
 | root concrete-provider imports | `raglight.integrations.<provider>` |
 | `Settings.*` provider constants | integration names in configuration, or direct integration constructors |
 
-## Generation results (planned for #159)
+## Generation results
 
 v3 returns generated text directly:
 
@@ -160,9 +160,14 @@ v4 returns a structured response:
 response = pipeline.generate(question)
 answer = response.answer
 sources = response.sources
+events = response.events
+timings = response.timings
+trace_id = response.trace_id
 ```
 
-See #159 for the response and execution-event model.
+Use `response.to_dict()` when a transport-friendly representation is needed.
+Execution events report completed retrieval, optional reranking, and generation
+stages without exposing implementation logs.
 
 ## Conversation history
 
@@ -172,7 +177,10 @@ between users.
 v4 pipelines are stateless and accept explicit history today:
 
 ```python
-answer = pipeline.generate(question, history=[{"role": "user", "content": "..."}])
+response = pipeline.generate(
+    question,
+    history=[{"role": "user", "content": "..."}],
+)
 ```
 
 Isolated sessions are planned for #160:

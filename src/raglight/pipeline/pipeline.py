@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from time import perf_counter
 from typing import Any
+from uuid import uuid4
 
 from ..contracts import EmbeddingModel, LLM, Reranker, VectorStore
-from ..models import Document
+from ..models import Document, ExecutionEvent, RAGResponse
 from ..registry import IntegrationRegistries
 
 from .config import PipelineConfig
@@ -99,11 +101,41 @@ class RAGPipeline:
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
-    ) -> str:
-        """Retrieve context and return one complete generated answer."""
+    ) -> RAGResponse:
+        """Retrieve context and return an observable structured response."""
 
-        payload = self._generation_input(question, history)
-        return self._llm.generate(payload)
+        trace_id = str(uuid4())
+        total_started = perf_counter()
+        payload, documents, events, timings, retrieved_count = self._prepare_generation(
+            question, history
+        )
+
+        generation_started = perf_counter()
+        answer = self._llm.generate(payload)
+        generation_duration = self._elapsed_ms(generation_started)
+        timings["generation"] = generation_duration
+        events.append(
+            ExecutionEvent(
+                stage="generation",
+                status="completed",
+                duration_ms=generation_duration,
+                metrics={"answer_characters": len(answer)},
+                message="Generated the final answer.",
+            )
+        )
+        timings["total"] = self._elapsed_ms(total_started)
+        return RAGResponse(
+            answer=answer,
+            sources=documents,
+            events=events,
+            timings=timings,
+            metadata={
+                "top_k": self._config.top_k,
+                "retrieved_count": retrieved_count,
+                "reranked": self._reranker is not None,
+            },
+            trace_id=trace_id,
+        )
 
     def stream(
         self,
@@ -113,32 +145,78 @@ class RAGPipeline:
     ) -> Iterable[str]:
         """Retrieve context and yield generated text chunks in order."""
 
-        payload = self._generation_input(question, history)
+        payload, _, _, _, _ = self._prepare_generation(question, history)
         yield from self._llm.generate_streaming(payload)
 
-    def _generation_input(
+    def _prepare_generation(
         self,
         question: str,
         history: Sequence[Mapping[str, str]],
-    ) -> dict[str, Any]:
+    ) -> tuple[
+        dict[str, Any],
+        Sequence[Document],
+        list[ExecutionEvent],
+        dict[str, float],
+        int,
+    ]:
         normalized_question = question.strip()
         if not normalized_question:
             raise ValueError("question must not be empty")
 
+        events: list[ExecutionEvent] = []
+        timings: dict[str, float] = {}
+        retrieval_started = perf_counter()
         documents = self._vector_store.similarity_search(
             normalized_question,
             k=self._config.top_k,
         )
+        retrieval_duration = self._elapsed_ms(retrieval_started)
+        retrieved_count = len(documents)
+        timings["retrieval"] = retrieval_duration
+        events.append(
+            ExecutionEvent(
+                stage="retrieval",
+                status="completed",
+                duration_ms=retrieval_duration,
+                metrics={
+                    "document_count": retrieved_count,
+                    "requested_top_k": self._config.top_k,
+                },
+                message=f"Retrieved {retrieved_count} source document(s).",
+            )
+        )
         if self._reranker is not None:
+            reranking_started = perf_counter()
             documents = self._reranker.rerank(
                 normalized_question,
                 documents,
                 self._config.top_k,
             )
-        return {
-            "question": self._build_prompt(normalized_question, documents),
-            "history": [dict(message) for message in history],
-        }
+            reranking_duration = self._elapsed_ms(reranking_started)
+            timings["reranking"] = reranking_duration
+            events.append(
+                ExecutionEvent(
+                    stage="reranking",
+                    status="completed",
+                    duration_ms=reranking_duration,
+                    metrics={"document_count": len(documents)},
+                    message=f"Reranked {len(documents)} source document(s).",
+                )
+            )
+        return (
+            {
+                "question": self._build_prompt(normalized_question, documents),
+                "history": [dict(message) for message in history],
+            },
+            documents,
+            events,
+            timings,
+            retrieved_count,
+        )
+
+    @staticmethod
+    def _elapsed_ms(started: float) -> float:
+        return max(0.0, (perf_counter() - started) * 1000)
 
     @staticmethod
     def _build_prompt(question: str, documents: Sequence[Document]) -> str:

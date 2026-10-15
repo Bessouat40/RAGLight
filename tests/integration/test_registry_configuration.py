@@ -75,10 +75,10 @@ class RegistryConfigurationTests(unittest.TestCase):
         )
 
         pipeline = RAGPipeline.from_config(config, registries=custom_registries())
-        answer = pipeline.generate("What is configured?")
+        response = pipeline.generate("What is configured?")
 
-        self.assertIn("Answer: ", answer)
-        self.assertIn("configured context", answer)
+        self.assertIn("Answer: ", response.answer)
+        self.assertIn("configured context", response.answer)
 
     def test_json_configuration_file_is_supported(self):
         payload = {
@@ -97,7 +97,7 @@ class RegistryConfigurationTests(unittest.TestCase):
             config = PipelineConfig.from_file(path)
             pipeline = RAGPipeline.from_config(config, registries=custom_registries())
 
-        self.assertIn("from JSON", pipeline.generate("Question"))
+        self.assertIn("from JSON", pipeline.generate("Question").answer)
 
     def test_toml_configuration_file_is_supported(self):
         content = """
@@ -126,7 +126,7 @@ content = "from TOML"
                 PipelineConfig.from_file(path), registries=custom_registries()
             )
 
-        self.assertIn("from TOML", pipeline.generate("Question"))
+        self.assertIn("from TOML", pipeline.generate("Question").answer)
 
     def test_named_construction_requires_core_component_specs(self):
         config = PipelineConfig()

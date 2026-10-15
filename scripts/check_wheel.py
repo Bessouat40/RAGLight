@@ -49,13 +49,16 @@ import raglight
 from raglight import PipelineConfig, RAGPipeline
 from raglight.contracts import EmbeddingModel, LLM, VectorStore
 from raglight.integrations import default_registries
-from raglight.models import ComponentConfig, Document
+from raglight.models import ComponentConfig, Document, ExecutionEvent, RAGResponse
 
 assert raglight.__all__ == ["PipelineConfig", "RAGPipeline"]
 assert Path(raglight.__file__).with_name("py.typed").is_file()
 assert PipelineConfig(top_k=1).top_k == 1
 assert ComponentConfig(name="CUSTOM").name == "custom"
 assert Document(page_content="test").page_content == "test"
+event = ExecutionEvent(stage="retrieval", status="completed", duration_ms=0)
+response = RAGResponse(answer="test", trace_id="trace", events=[event])
+assert response.to_dict()["events"][0]["stage"] == "retrieval"
 assert "ollama" in default_registries.llms.names
 assert all(contract is not None for contract in (EmbeddingModel, LLM, VectorStore))
 unconditional = [item for item in requires("raglight") or [] if "extra ==" not in item]
