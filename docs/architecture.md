@@ -58,6 +58,12 @@ package. Package layout and public API are related but not identical: internal
 application modules do not become public merely because the facade delegates
 to them.
 
+`raglight.agentic.AgenticPipeline` is a separate optional application facade.
+It composes the same core contracts where appropriate but owns agent-only tool
+selection, iteration, and termination behavior. It does not inherit from the
+standard pipeline, and the standard pipeline never depends on the agentic
+package.
+
 ### Core
 
 The core owns stable contracts and transport-independent models. It must not

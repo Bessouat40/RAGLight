@@ -92,11 +92,45 @@ by #158 also live under `raglight.integrations`.
 
 Features that are not part of the basic RAG workflow use dedicated namespaces:
 
-- `raglight.agentic` for agentic pipelines and MCP support;
+- `raglight.agentic` for `AgenticPipeline`, its configuration, tools, and MCP
+  support;
 - `raglight.observability` for tracing integrations;
 - `raglight.server`, `raglight.cli`, and `raglight.ui` for delivery layers.
 
 These namespaces are not imported by the root package and may require extras.
+
+## Standard and agentic pipelines
+
+RAGLight exposes two intentionally separate application APIs:
+
+```python
+from raglight import RAGPipeline
+from raglight.agentic import AgenticPipeline
+```
+
+`RAGPipeline` owns a deterministic retrieval workflow:
+
+```text
+retrieve -> optional rerank -> generate
+```
+
+`AgenticPipeline` owns an iterative decision loop that may select retrieval or
+other tools until it reaches an answer or a configured execution limit. Its
+tool registry, step budget, MCP support, and termination behavior do not belong
+on `RAGPipeline`.
+
+The two APIs share domain models and component contracts where their semantics
+are identical:
+
+- both may receive `LLM`, `EmbeddingModel`, and `VectorStore` implementations;
+- both return `RAGResponse` and emit `RAGEvent` values;
+- both use caller-owned history or isolated sessions;
+- both use integrations from `raglight.integrations`.
+
+They do not inherit from one another, and `RAGPipeline` does not accept an
+`agentic=True` mode flag. Shared implementation belongs in internal application
+services, not in a public base class. Installing or importing standard RAG must
+not require the `agentic` extra, MCP, or agent-framework dependencies.
 
 ## Pipeline construction
 
@@ -195,6 +229,10 @@ The following v3 concepts are not part of the v4 public API:
 - transport request/response models;
 - LangChain or LangGraph objects used internally;
 - mutable pipeline-owned conversation history.
+
+The v3 `AgenticRAGPipeline` is replaced by
+`raglight.agentic.AgenticPipeline`; agentic behavior remains public but is no
+longer mixed into the standard RAG namespace or configuration model.
 
 See [Migrating from v3 to v4](migration-v3-to-v4.md) for replacements.
 

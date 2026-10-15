@@ -36,6 +36,11 @@ are not root exports.
 The standard pipeline is stateless. Structured responses and isolated sessions
 are part of the public model but are finalized in their dedicated issues.
 
+Agentic execution is exposed separately as
+`raglight.agentic.AgenticPipeline`. It shares contracts and domain models with
+`RAGPipeline` but does not inherit from it. Standard RAG has no agentic mode
+flag, and its installation does not require agent or MCP dependencies.
+
 ## Consequences
 
 - Application code has one obvious entry point.
@@ -43,6 +48,8 @@ are part of the public model but are finalized in their dedicated issues.
 - Custom components and built-in providers use the same pipeline path.
 - Provider-specific options remain at integration boundaries.
 - v3 deep imports and builder-based examples require a migration guide.
+- Agentic-specific configuration remains out of the standard pipeline while
+  common components and response types remain reusable.
 - Internal compatibility shims may be necessary while the migration is in
   progress, but they are removed before the v4 release.
 
@@ -56,3 +63,8 @@ new integration would continue to influence the application layer.
 
 Re-exporting every useful class from `raglight` was rejected because it makes
 the root import unstable and risks importing optional dependencies.
+
+Using one pipeline class with an `agentic` flag was rejected because standard
+RAG and agentic loops have different execution, tool, failure, and dependency
+semantics. Public inheritance between the two pipelines was rejected because
+their commonality is component composition rather than substitutable behavior.

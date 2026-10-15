@@ -67,6 +67,38 @@ pipeline = RAGPipeline.from_config(PipelineConfig.from_file("raglight.toml"))
 `RAGConfig`, `VectorStoreConfig`, and `AgenticRAGConfig` are not carried into
 the standard v4 API as separate overlapping configuration objects.
 
+## Agentic pipelines
+
+Standard RAG and agentic execution have separate v4 entry points. Do not turn a
+standard pipeline into an agent with a mode flag.
+
+v3:
+
+```python
+from raglight.rag.simple_agentic_rag_api import AgenticRAGPipeline
+
+agent = AgenticRAGPipeline(agentic_config, vector_store_config)
+```
+
+v4:
+
+```python
+from raglight.agentic import AgenticPipeline
+
+agent = AgenticPipeline(
+    llm=my_llm,
+    embeddings=my_embeddings,
+    vector_store=my_vector_store,
+    tools=my_tools,
+    max_steps=4,
+)
+```
+
+`AgenticPipeline` may reuse the same component implementations, response
+models, events, and session semantics as `RAGPipeline`. Agent-only concepts
+such as tools, MCP servers, execution limits, and termination policy remain in
+`raglight.agentic` and its optional dependency group.
+
 ## Imports
 
 | v3 import or concept | v4 replacement |
@@ -74,6 +106,8 @@ the standard v4 API as separate overlapping configuration objects.
 | `raglight.rag.simple_rag_api.RAGPipeline` | `raglight.RAGPipeline` |
 | `raglight.rag.rag.RAG` | `raglight.RAGPipeline` |
 | `raglight.rag.builder.Builder` | direct component injection |
+| `raglight.rag.simple_agentic_rag_api.AgenticRAGPipeline` | `raglight.agentic.AgenticPipeline` |
+| `raglight.config.agentic_rag_config.AgenticRAGConfig` | agentic constructor arguments or configuration under `raglight.agentic` |
 | `raglight.config.rag_config.RAGConfig` | `raglight.PipelineConfig` when configuration files are required |
 | `raglight.config.vector_store_config.VectorStoreConfig` | integration constructor arguments or `PipelineConfig` |
 | `raglight.llm.llm.LLM` | `raglight.contracts.LLM` |
