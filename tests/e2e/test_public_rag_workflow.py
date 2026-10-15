@@ -112,6 +112,30 @@ class PublicRAGWorkflowTests(unittest.TestCase):
 
         self.assertEqual(["RAGLight ", "is modular."], chunks)
 
+    def test_session_preserves_its_own_generated_and_streamed_turns(self):
+        llm = FakeLLM()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=FakeVectorStore(),
+            llm=llm,
+        )
+        session = pipeline.create_session(session_id="user-1")
+
+        session.generate("First question")
+        chunks = list(session.stream("Follow-up question"))
+
+        self.assertEqual(["RAGLight ", "is modular."], chunks)
+        self.assertEqual(
+            (
+                {"role": "user", "content": "First question"},
+                {"role": "assistant", "content": "RAGLight is modular."},
+                {"role": "user", "content": "Follow-up question"},
+                {"role": "assistant", "content": "RAGLight is modular."},
+            ),
+            session.history,
+        )
+        self.assertEqual(list(session.history[:2]), llm.inputs[1]["history"])
+
     def test_optional_reranker_is_injected_without_builder_changes(self):
         reranker = FakeReranker()
         pipeline = RAGPipeline(

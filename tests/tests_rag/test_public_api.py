@@ -11,6 +11,7 @@ from dataclasses import FrozenInstanceError
 import raglight
 from raglight import PipelineConfig, RAGPipeline
 from raglight.models import ComponentConfig, Document
+from raglight.pipeline import ConversationSession
 
 
 class PublicAPITests(unittest.TestCase):
@@ -18,6 +19,15 @@ class PublicAPITests(unittest.TestCase):
         self.assertEqual(["PipelineConfig", "RAGPipeline"], raglight.__all__)
         self.assertIs(raglight.PipelineConfig, PipelineConfig)
         self.assertIs(raglight.RAGPipeline, RAGPipeline)
+
+    def test_pipeline_namespace_exports_the_session_type(self):
+        import raglight.pipeline
+
+        self.assertEqual(
+            ["ConversationSession", "PipelineConfig", "RAGPipeline"],
+            raglight.pipeline.__all__,
+        )
+        self.assertIs(raglight.pipeline.ConversationSession, ConversationSession)
 
     def test_legacy_implementation_types_are_not_root_exports(self):
         for name in ("Builder", "RAG", "Settings", "OllamaModel", "ChromaVS"):

@@ -88,6 +88,25 @@ can be consumed directly or converted into transport-friendly values with
 `response.to_dict()`. Streaming continues to yield text chunks through
 `pipeline.stream(...)`.
 
+The pipeline itself is stateless and safe to share between users. Pass
+`history` explicitly for stateless requests, or create an isolated session when
+RAGLight should retain completed turns:
+
+```python
+response = pipeline.generate("One-off question", history=[])
+
+session = pipeline.create_session(session_id="user-123")
+first = session.generate("Remember this question")
+chunks = list(session.stream("What did I ask?"))
+
+print(session.history)
+session.clear()
+```
+
+A session commits a turn only after generation or streaming completes. Failed
+or abandoned streams do not leave partial conversation state behind. Separate
+sessions share configured components without sharing history.
+
 See [`examples/v4_custom_components.py`](examples/v4_custom_components.py) for
 a complete executable example.
 
