@@ -1,4 +1,4 @@
-"""Validate dependency rules that are enforceable in the current codebase."""
+"""Validate the dependency direction of the v4 package."""
 
 from __future__ import annotations
 
@@ -8,60 +8,66 @@ import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = PROJECT_ROOT / "src" / "raglight"
-DELIVERY_DIRECTORIES = {"api", "cli", "ui"}
-FORBIDDEN_INTERNAL_PREFIXES = ("raglight.api", "raglight.cli", "raglight.ui")
-FORBIDDEN_EXTERNAL_MODULES = {"fastapi", "streamlit"}
 V4_APPLICATION_DIRECTORY = "pipeline"
-FORBIDDEN_V4_APPLICATION_PREFIXES = (
-    "raglight.agentic",
-    "raglight.config",
-    "raglight.cross_encoder",
-    "raglight.document_processing",
-    "raglight.embeddings",
-    "raglight.llm",
-    "raglight.rag",
-    "raglight.scrapper",
-    "raglight.vectorstore",
-)
+CORE_DIRECTORIES = {"contracts", "models"}
+FORBIDDEN_APPLICATION_PREFIXES = ("raglight.integrations",)
+FORBIDDEN_CORE_PREFIXES = ("raglight.integrations", "raglight.pipeline")
+OPTIONAL_SDK_MODULES = {
+    "boto3",
+    "chromadb",
+    "langchain",
+    "langchain_aws",
+    "langchain_core",
+    "langchain_google_genai",
+    "langchain_mistralai",
+    "langchain_ollama",
+    "langchain_openai",
+    "qdrant_client",
+    "sentence_transformers",
+}
 
 
-def imported_modules(tree: ast.AST) -> list[tuple[int, str]]:
+def imported_modules(tree: ast.AST, relative: Path) -> list[tuple[int, str]]:
     """Return line numbers and absolute module names imported by a syntax tree."""
     imports: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             imports.extend((node.lineno, alias.name) for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            imports.append((node.lineno, node.module))
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            if node.level == 0:
+                module = node.module
+            else:
+                package = ("raglight", *relative.parts[:-1])
+                ancestor_count = max(0, len(package) - node.level + 1)
+                module = ".".join((*package[:ancestor_count], *node.module.split(".")))
+            imports.append((node.lineno, module))
     return imports
 
 
 def violations(package_root: Path = PACKAGE_ROOT) -> list[str]:
-    """Find imports that make non-delivery code depend on delivery frameworks."""
+    """Find imports that make the core depend on optional integrations."""
     failures: list[str] = []
     for path in sorted(package_root.rglob("*.py")):
         relative = path.relative_to(package_root)
-        if relative.parts and relative.parts[0] in DELIVERY_DIRECTORIES:
-            continue
-
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for line, module in imported_modules(tree):
-            internal_violation = module.startswith(FORBIDDEN_INTERNAL_PREFIXES)
-            external_violation = module.split(".", 1)[0] in FORBIDDEN_EXTERNAL_MODULES
-            if internal_violation or external_violation:
-                failures.append(f"{relative}:{line}: forbidden dependency on {module}")
-                continue
-
+        for line, module in imported_modules(tree, relative):
             is_v4_application = (
                 relative.parts and relative.parts[0] == V4_APPLICATION_DIRECTORY
             )
             forbidden_application_dependency = module.startswith(
-                FORBIDDEN_V4_APPLICATION_PREFIXES
+                FORBIDDEN_APPLICATION_PREFIXES
             )
             if is_v4_application and forbidden_application_dependency:
                 failures.append(
                     f"{relative}:{line}: v4 application dependency on {module}"
                 )
+                continue
+
+            is_core = relative.parts and relative.parts[0] in CORE_DIRECTORIES
+            forbidden_core_dependency = module.startswith(FORBIDDEN_CORE_PREFIXES)
+            forbidden_core_sdk = module.split(".", 1)[0] in OPTIONAL_SDK_MODULES
+            if is_core and (forbidden_core_dependency or forbidden_core_sdk):
+                failures.append(f"{relative}:{line}: core dependency on {module}")
     return failures
 
 

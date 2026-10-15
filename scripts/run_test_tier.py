@@ -11,12 +11,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEST_ROOT = PROJECT_ROOT / "tests"
 UNIT_DIRECTORIES = (
     "architecture",
-    "tests_api",
+    "contracts",
     "tests_document_processing",
     "tests_embeddings",
     "tests_llm",
     "tests_rag",
-    "tests_scrapper",
     "tests_vector_store",
 )
 TIERS = {

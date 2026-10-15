@@ -1,11 +1,12 @@
 [project]
 name = "raglight"
-version = "3.4.7"
+version = "4.0.0"
 description = "RAGLight is a lightweight and modular Python library for implementing Retrieval-Augmented Generation (RAG). It enhances the capabilities of Large Language Models (LLMs) by combining document retrieval with natural language inference."
 authors = [
     {name = "Bessouat40",email = "roman.bessouat@orange.fr"}
 ]
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
@@ -13,31 +14,26 @@ dependencies = []
 openai = [
     "langchain-core>=1.2.5",
     "langchain-openai>=1.1.6",
-    "python-dotenv>=1.1.1",
     "typing-extensions>=4.15.0",
 ]
 ollama = [
     "langchain-core>=1.2.5",
     "langchain-ollama>=1.0.1",
-    "python-dotenv>=1.1.1",
     "typing-extensions>=4.15.0",
 ]
 mistral = [
     "langchain-core>=1.2.5",
     "langchain-mistralai>=1.1.1",
-    "python-dotenv>=1.1.1",
     "typing-extensions>=4.15.0",
 ]
 gemini = [
     "langchain-core>=1.2.5",
     "langchain-google-genai>=4.1.3",
-    "python-dotenv>=1.1.1",
     "typing-extensions>=4.15.0",
 ]
 bedrock = [
     "langchain-aws>=1.2.1",
     "langchain-core>=1.2.5",
-    "python-dotenv>=1.1.1",
     "typing-extensions>=4.15.0",
 ]
 huggingface = [
@@ -47,21 +43,7 @@ huggingface = [
 documents = [
     "langchain-core>=1.2.5",
     "langchain-text-splitters>=1.1.0",
-    "pillow>=12.2.0",
     "pymupdf>=1.26.7",
-    "sentence-transformers>=5.1.2",
-]
-legacy = [
-    "langchain-core>=1.2.5",
-    "langchain-text-splitters>=1.1.0",
-    "langgraph>=1.0.5",
-    "pillow>=12.2.0",
-    "pydantic>=2.11.7",
-    "pymupdf>=1.26.7",
-    "python-dotenv>=1.1.1",
-    "rank_bm25>=0.2.2",
-    "sentence-transformers>=5.1.2",
-    "typing-extensions>=4.15.0",
 ]
 chroma = [
     "chromadb>=0.5.23",
@@ -81,59 +63,6 @@ qdrant = [
     "sentence-transformers>=5.1.2",
     "typing-extensions>=4.15.0",
 ]
-agentic = [
-    "langchain>=1.2.0",
-    "langchain-core>=1.2.5",
-    "langchain-mcp-adapters>=0.3.2",
-    "langgraph>=1.0.5",
-    "mcp>=1.24,<2",
-    "pydantic>=2.11.7",
-    "rank_bm25>=0.2.2",
-]
-server = [
-    "fastapi>=0.140",
-    "langchain-core>=1.2.5",
-    "langchain-text-splitters>=1.1.0",
-    "langgraph>=1.0.5",
-    "pydantic>=2.11.7",
-    "pymupdf>=1.26.7",
-    "python-dotenv>=1.1.1",
-    "python-multipart>=0.0.22",
-    "rank_bm25>=0.2.2",
-    "sentence-transformers>=5.1.2",
-    "typing-extensions>=4.15.0",
-    "uvicorn[standard]>=0.35.0",
-]
-cli = [
-    "InquirerPy>=0.3.4",
-    "langchain>=1.2.0",
-    "langchain-core>=1.2.5",
-    "langchain-mcp-adapters>=0.3.2",
-    "langchain-text-splitters>=1.1.0",
-    "langgraph>=1.0.5",
-    "mcp>=1.24,<2",
-    "nltk>=3.9.3",
-    "pydantic>=2.11.7",
-    "pillow>=12.2.0",
-    "pymupdf>=1.26.7",
-    "python-dotenv>=1.1.1",
-    "quo>=2023.5.1",
-    "rank_bm25>=0.2.2",
-    "rich>=14.0.0",
-    "sentence-transformers>=5.1.2",
-    "typer>=0.16.0",
-    "typing-extensions>=4.15.0",
-    "uvicorn[standard]>=0.35.0",
-]
-ui = [
-    "requests>=2.32.0",
-    "streamlit>=1.40.0",
-]
-langfuse = ["langfuse>=4.0.0"]
-
-[project.scripts]
-raglight = "raglight._entrypoints:cli"
-
 [tool.setuptools.packages.find]
 where = ["src"]
 
@@ -163,8 +92,7 @@ target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
-# Start with correctness rules that the v3 codebase can enforce immediately.
-# Expand this set as issue #161 removes the remaining legacy debt.
+# Start with correctness rules and expand the set as the v4 codebase matures.
 select = ["E9", "F63", "F7", "F82"]
 ignore = ["E501"]
 

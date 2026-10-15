@@ -1,12 +1,7 @@
 import unittest
-from dataclasses import dataclass
 
 from raglight import PipelineConfig, RAGPipeline
-
-
-@dataclass(frozen=True)
-class Document:
-    page_content: str
+from raglight.models import Document
 
 
 class FakeEmbeddings:
@@ -38,6 +33,15 @@ class FakeLLM:
         self.inputs.append(input)
         yield "RAGLight "
         yield "is modular."
+
+
+class FakeReranker:
+    def __init__(self):
+        self.calls = []
+
+    def rerank(self, question, documents, top_k):
+        self.calls.append((question, documents, top_k))
+        return list(reversed(documents))[:top_k]
 
 
 class PublicRAGWorkflowTests(unittest.TestCase):
@@ -82,6 +86,25 @@ class PublicRAGWorkflowTests(unittest.TestCase):
         chunks = list(pipeline.stream("What is RAGLight?"))
 
         self.assertEqual(["RAGLight ", "is modular."], chunks)
+
+    def test_optional_reranker_is_injected_without_builder_changes(self):
+        reranker = FakeReranker()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=FakeVectorStore(),
+            llm=FakeLLM(),
+            reranker=reranker,
+            config=PipelineConfig(top_k=1),
+        )
+
+        pipeline.generate("What is RAGLight?")
+
+        question, documents, top_k = reranker.calls[0]
+        self.assertEqual("What is RAGLight?", question)
+        self.assertEqual(
+            "RAGLight is a modular RAG library.", documents[0].page_content
+        )
+        self.assertEqual(1, top_k)
 
     def test_empty_questions_are_rejected_before_retrieval(self):
         vector_store = FakeVectorStore()

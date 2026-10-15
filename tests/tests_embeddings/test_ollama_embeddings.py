@@ -1,37 +1,37 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from raglight.embeddings.ollama_embeddings import OllamaEmbeddingsModel
+from raglight.integrations.embeddings.ollama_embeddings import OllamaEmbeddings
 from ..test_config import TestsConfig
 
 
 class TestOllamaEmbeddings(unittest.TestCase):
 
-    @patch("raglight.embeddings.ollama_embeddings.OllamaEmbeddings")
+    @patch("raglight.integrations.embeddings.ollama_embeddings.OllamaEmbeddings")
     def test_model_load(self, MockEmbeddings: MagicMock):
         MockEmbeddings.return_value = MagicMock()
-        embeddings = OllamaEmbeddingsModel(TestsConfig.OLLAMA_EMBEDDING_MODEL)
+        embeddings = OllamaEmbeddings(TestsConfig.OLLAMA_EMBEDDING_MODEL)
         self.assertIsNotNone(embeddings.model)
         MockEmbeddings.assert_called_once()
 
-    @patch("raglight.embeddings.ollama_embeddings.OllamaEmbeddings")
+    @patch("raglight.integrations.embeddings.ollama_embeddings.OllamaEmbeddings")
     def test_embed_documents(self, MockEmbeddings: MagicMock):
         mock_instance = MockEmbeddings.return_value
         mock_instance.embed_documents.return_value = [[0.1, 0.2], [0.3, 0.4]]
 
-        model = OllamaEmbeddingsModel(TestsConfig.OLLAMA_EMBEDDING_MODEL)
+        model = OllamaEmbeddings(TestsConfig.OLLAMA_EMBEDDING_MODEL)
         texts = ["doc1", "doc2"]
         result = model.embed_documents(texts)
 
         self.assertEqual(len(result), 2)
         mock_instance.embed_documents.assert_called_with(texts)
 
-    @patch("raglight.embeddings.ollama_embeddings.OllamaEmbeddings")
+    @patch("raglight.integrations.embeddings.ollama_embeddings.OllamaEmbeddings")
     def test_embed_query(self, MockEmbeddings: MagicMock):
         mock_instance = MockEmbeddings.return_value
         mock_instance.embed_query.return_value = [0.9, 0.9]
 
-        model = OllamaEmbeddingsModel(TestsConfig.OLLAMA_EMBEDDING_MODEL)
+        model = OllamaEmbeddings(TestsConfig.OLLAMA_EMBEDDING_MODEL)
         result = model.embed_query("query text")
 
         self.assertEqual(result, [0.9, 0.9])

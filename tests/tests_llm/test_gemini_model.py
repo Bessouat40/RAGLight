@@ -1,15 +1,14 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from raglight.llm.gemini_model import GeminiModel
+from raglight.integrations.llms.gemini_model import GeminiLLM
 from ..test_config import TestsConfig
 
 
-class TestGeminiModel(unittest.TestCase):
+class TestGeminiLLM(unittest.TestCase):
     _MOCK_RESPONSE = "Hello! This is a test response."
 
-    @patch("raglight.llm.gemini_model.ChatGoogleGenerativeAI")
-    @patch("raglight.llm.gemini_model.Settings.GEMINI_API_KEY", "DUMMY_KEY")
+    @patch("raglight.integrations.llms.gemini_model.ChatGoogleGenerativeAI")
     def setUp(self, MockChatGemini):
         mock_lc_client = MagicMock()
         mock_response = MagicMock()
@@ -17,7 +16,10 @@ class TestGeminiModel(unittest.TestCase):
         mock_lc_client.invoke.return_value = mock_response
         MockChatGemini.return_value = mock_lc_client
 
-        self.model = GeminiModel(model_name=TestsConfig.GEMINI_LLM_MODEL)
+        self.model = GeminiLLM(
+            model_name=TestsConfig.GEMINI_LLM_MODEL,
+            api_key="DUMMY_KEY",
+        )
 
     def test_generate_response(self):
         prompt = "Say hello."

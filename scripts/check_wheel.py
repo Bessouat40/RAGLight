@@ -42,13 +42,19 @@ def main() -> int:
         )
         core_check = """
 from importlib.metadata import requires
+from pathlib import Path
 import sys
 
 import raglight
 from raglight import PipelineConfig, RAGPipeline
+from raglight.contracts import EmbeddingModel, LLM, VectorStore
+from raglight.models import Document
 
 assert raglight.__all__ == ["PipelineConfig", "RAGPipeline"]
+assert Path(raglight.__file__).with_name("py.typed").is_file()
 assert PipelineConfig(top_k=1).top_k == 1
+assert Document(page_content="test").page_content == "test"
+assert all(contract is not None for contract in (EmbeddingModel, LLM, VectorStore))
 unconditional = [item for item in requires("raglight") or [] if "extra ==" not in item]
 assert not unconditional, unconditional
 forbidden = ("fastapi", "langchain", "streamlit", "chromadb", "qdrant_client")
@@ -61,7 +67,7 @@ assert not loaded, loaded
         )
 
         provider = subprocess.run(
-            [str(python), "-c", "import raglight.llm.ollama_model"],
+            [str(python), "-c", "import raglight.integrations.ollama"],
             capture_output=True,
             check=False,
             text=True,
@@ -69,20 +75,6 @@ assert not loaded, loaded
         if provider.returncode == 0 or "raglight[ollama]" not in provider.stderr:
             print(provider.stderr, file=sys.stderr)
             print("Missing Ollama dependencies were not actionable.", file=sys.stderr)
-            return 1
-
-        executable = environment / (
-            "Scripts/raglight.exe" if sys.platform == "win32" else "bin/raglight"
-        )
-        cli = subprocess.run(
-            [str(executable), "--help"],
-            capture_output=True,
-            check=False,
-            text=True,
-        )
-        if cli.returncode == 0 or "raglight[cli]" not in cli.stderr:
-            print(cli.stderr, file=sys.stderr)
-            print("Missing CLI dependencies were not actionable.", file=sys.stderr)
             return 1
 
     print(f"Validated wheel: {wheels[-1].name}")

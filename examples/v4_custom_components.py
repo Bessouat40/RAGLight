@@ -1,13 +1,7 @@
-"""Run the v4 public pipeline with deterministic custom components."""
-
-from dataclasses import dataclass
+"""Run the v4 public pipeline with structural custom components."""
 
 from raglight import PipelineConfig, RAGPipeline
-
-
-@dataclass(frozen=True)
-class Document:
-    page_content: str
+from raglight.models import Document
 
 
 class CustomEmbeddings:
@@ -20,7 +14,39 @@ class CustomEmbeddings:
 
 class CustomVectorStore:
     def similarity_search(self, question: str, k: int = 5) -> list[Document]:
-        return [Document(page_content="RAGLight supports injected components.")]
+        documents = [
+            Document(
+                page_content="RAGLight supports injected components.",
+                metadata={"source": "custom-store"},
+            ),
+            Document(page_content="No registry entry is required."),
+        ]
+        return documents[:k]
+
+
+class CustomReranker:
+    def rerank(
+        self,
+        question: str,
+        documents: list[Document],
+        top_k: int,
+    ) -> list[Document]:
+        return sorted(documents, key=lambda document: len(document.page_content))[
+            :top_k
+        ]
+
+
+class CustomDocumentProcessor:
+    def process(
+        self,
+        file_path: str,
+        chunk_size: int,
+        chunk_overlap: int,
+    ) -> dict[str, list[Document]]:
+        return {
+            "chunks": [Document(page_content=f"Processed {file_path}")],
+            "classes": [],
+        }
 
 
 class CustomLLM:
@@ -32,11 +58,17 @@ class CustomLLM:
         yield "from a custom LLM."
 
 
-pipeline = RAGPipeline(
-    llm=CustomLLM(),
-    embeddings=CustomEmbeddings(),
-    vector_store=CustomVectorStore(),
-    config=PipelineConfig(top_k=3),
-)
+def main() -> None:
+    pipeline = RAGPipeline(
+        llm=CustomLLM(),
+        embeddings=CustomEmbeddings(),
+        vector_store=CustomVectorStore(),
+        reranker=CustomReranker(),
+        config=PipelineConfig(top_k=2),
+    )
 
-print(pipeline.generate("Can I use custom components?"))
+    print(pipeline.generate("Can I use custom components?"))
+
+
+if __name__ == "__main__":
+    main()

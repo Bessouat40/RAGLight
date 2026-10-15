@@ -18,34 +18,26 @@ class PackagingTests(unittest.TestCase):
     def test_core_has_no_mandatory_third_party_dependencies(self):
         self.assertEqual([], self.project["dependencies"])
 
-    def test_optional_features_have_named_extras(self):
+    def test_integrations_have_named_extras(self):
         extras = self.project["optional-dependencies"]
 
         self.assertEqual(
             {
-                "agentic",
                 "bedrock",
                 "chroma",
-                "cli",
                 "documents",
                 "gemini",
                 "huggingface",
-                "langfuse",
-                "legacy",
                 "mistral",
                 "ollama",
                 "openai",
                 "qdrant",
-                "server",
-                "ui",
             },
             set(extras),
         )
 
-    def test_cli_entry_point_uses_lightweight_dependency_guard(self):
-        self.assertEqual(
-            {"raglight": "raglight._entrypoints:cli"}, self.project["scripts"]
-        )
+    def test_removed_v3_applications_have_no_console_entry_point(self):
+        self.assertNotIn("scripts", self.project)
 
 
 if __name__ == "__main__":

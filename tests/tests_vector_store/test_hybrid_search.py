@@ -1,24 +1,24 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from langchain_core.documents import Document
 
-from raglight.vectorstore.bm25_index import BM25Index
-from raglight.vectorstore.chroma import ChromaVS
+from raglight.integrations.chroma import ChromaVectorStore
+from raglight.models import Document
+from raglight.integrations.vectorstores.bm25_index import BM25Index
 
 
-def _make_chroma(search_type: str = "semantic") -> ChromaVS:
-    """Return a ChromaVS with all external dependencies mocked."""
+def _make_chroma(search_type: str = "semantic") -> ChromaVectorStore:
+    """Return a Chroma vector store with all external dependencies mocked."""
     mock_embeddings = MagicMock()
     mock_embeddings.embed_documents.return_value = [[0.1, 0.2]]
 
-    with patch("raglight.vectorstore.chroma.chromadb") as mock_chromadb:
+    with patch("raglight.integrations.vectorstores.chroma.chromadb") as mock_chromadb:
         mock_client = MagicMock()
         mock_collection = MagicMock()
         mock_collection.name = "test_col"
         mock_client.get_or_create_collection.return_value = mock_collection
         mock_chromadb.PersistentClient.return_value = mock_client
 
-        vs = ChromaVS(
+        vs = ChromaVectorStore(
             collection_name="test_col",
             embeddings_model=mock_embeddings,
             persist_directory="/tmp/test_chroma",

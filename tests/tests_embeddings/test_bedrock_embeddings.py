@@ -1,16 +1,16 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from raglight.embeddings.bedrock_embeddings import BedrockEmbeddingsModel
+from raglight.integrations.embeddings.bedrock_embeddings import BedrockEmbeddings
 from ..test_config import TestsConfig
 
 
 class TestBedrockEmbeddings(unittest.TestCase):
 
-    @patch("raglight.embeddings.bedrock_embeddings.BedrockEmbeddings")
+    @patch("raglight.integrations.embeddings.bedrock_embeddings.BedrockEmbeddings")
     def test_model_load(self, mock_bedrock: MagicMock):
         mock_bedrock.return_value = MagicMock()
-        model = BedrockEmbeddingsModel(
+        model = BedrockEmbeddings(
             model_name=TestsConfig.BEDROCK_EMBEDDING_MODEL,
             region_name="us-east-1",
         )
@@ -20,12 +20,12 @@ class TestBedrockEmbeddings(unittest.TestCase):
             region_name="us-east-1",
         )
 
-    @patch("raglight.embeddings.bedrock_embeddings.BedrockEmbeddings")
+    @patch("raglight.integrations.embeddings.bedrock_embeddings.BedrockEmbeddings")
     def test_embed_documents(self, mock_bedrock: MagicMock):
         mock_client = mock_bedrock.return_value
         mock_client.embed_documents.return_value = [[0.1, 0.2], [0.3, 0.4]]
 
-        model = BedrockEmbeddingsModel(
+        model = BedrockEmbeddings(
             model_name=TestsConfig.BEDROCK_EMBEDDING_MODEL,
             region_name="us-east-1",
         )
@@ -35,12 +35,12 @@ class TestBedrockEmbeddings(unittest.TestCase):
         self.assertEqual(result[0], [0.1, 0.2])
         mock_client.embed_documents.assert_called_once_with(["text1", "text2"])
 
-    @patch("raglight.embeddings.bedrock_embeddings.BedrockEmbeddings")
+    @patch("raglight.integrations.embeddings.bedrock_embeddings.BedrockEmbeddings")
     def test_embed_query(self, mock_bedrock: MagicMock):
         mock_client = mock_bedrock.return_value
         mock_client.embed_query.return_value = [0.5, 0.6]
 
-        model = BedrockEmbeddingsModel(
+        model = BedrockEmbeddings(
             model_name=TestsConfig.BEDROCK_EMBEDDING_MODEL,
             region_name="us-east-1",
         )

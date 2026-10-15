@@ -12,64 +12,77 @@ SPEC.loader.exec_module(CHECK_ARCHITECTURE)
 
 
 class ArchitectureDependencyTests(unittest.TestCase):
-    def test_current_package_respects_delivery_boundary(self):
+    def test_current_package_respects_v4_boundaries(self):
         self.assertEqual([], CHECK_ARCHITECTURE.violations())
 
-    def test_core_importing_fastapi_is_rejected(self):
-        with tempfile.TemporaryDirectory() as directory:
-            package = Path(directory)
-            (package / "core.py").write_text(
-                "from fastapi import FastAPI\n", encoding="utf-8"
-            )
-
-            self.assertEqual(
-                ["core.py:1: forbidden dependency on fastapi"],
-                CHECK_ARCHITECTURE.violations(package),
-            )
-
-    def test_delivery_code_may_import_delivery_framework(self):
-        with tempfile.TemporaryDirectory() as directory:
-            package = Path(directory)
-            api = package / "api"
-            api.mkdir()
-            (api / "app.py").write_text(
-                "from fastapi import FastAPI\n", encoding="utf-8"
-            )
-
-            self.assertEqual([], CHECK_ARCHITECTURE.violations(package))
-
-    def test_v4_pipeline_cannot_import_legacy_provider_packages(self):
+    def test_pipeline_cannot_import_a_concrete_integration(self):
         with tempfile.TemporaryDirectory() as directory:
             package = Path(directory)
             pipeline = package / "pipeline"
             pipeline.mkdir()
             (pipeline / "pipeline.py").write_text(
-                "from raglight.llm.ollama_model import OllamaModel\n",
+                "from raglight.integrations.ollama import OllamaLLM\n",
                 encoding="utf-8",
             )
 
             self.assertEqual(
                 [
                     "pipeline/pipeline.py:1: v4 application dependency on "
-                    "raglight.llm.ollama_model"
+                    "raglight.integrations.ollama"
                 ],
                 CHECK_ARCHITECTURE.violations(package),
             )
 
-    def test_standard_pipeline_cannot_import_agentic_package(self):
+    def test_public_contracts_cannot_import_concrete_providers(self):
         with tempfile.TemporaryDirectory() as directory:
             package = Path(directory)
-            pipeline = package / "pipeline"
-            pipeline.mkdir()
-            (pipeline / "pipeline.py").write_text(
-                "from raglight.agentic import AgenticPipeline\n",
+            contracts = package / "contracts"
+            contracts.mkdir()
+            (contracts / "__init__.py").write_text(
+                "from raglight.integrations.openai import OpenAILLM\n",
                 encoding="utf-8",
             )
 
             self.assertEqual(
                 [
-                    "pipeline/pipeline.py:1: v4 application dependency on "
-                    "raglight.agentic"
+                    "contracts/__init__.py:1: core dependency on "
+                    "raglight.integrations.openai"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
+    def test_public_contracts_cannot_hide_provider_behind_relative_import(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            contracts = package / "contracts"
+            contracts.mkdir()
+            (contracts / "__init__.py").write_text(
+                "from ..integrations.openai import OpenAILLM\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "contracts/__init__.py:1: core dependency on "
+                    "raglight.integrations.openai"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
+    def test_public_contracts_cannot_import_optional_sdk(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            contracts = package / "contracts"
+            contracts.mkdir()
+            (contracts / "__init__.py").write_text(
+                "from langchain_core.documents import Document\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "contracts/__init__.py:1: core dependency on "
+                    "langchain_core.documents"
                 ],
                 CHECK_ARCHITECTURE.violations(package),
             )

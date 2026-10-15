@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from raglight.llm.ollama_model import OllamaModel
+from raglight.integrations.llms.ollama_model import OllamaLLM
 from ..test_config import TestsConfig
 
 
-class TestOllamaModel(unittest.TestCase):
-    @patch("raglight.llm.ollama_model.ChatOllama")
+class TestOllamaLLM(unittest.TestCase):
+    @patch("raglight.integrations.llms.ollama_model.ChatOllama")
     def setUp(self, MockChatOllama):
         mock_lc_client = MagicMock()
         mock_response = MagicMock()
@@ -16,9 +16,9 @@ class TestOllamaModel(unittest.TestCase):
         mock_lc_client.invoke.return_value = mock_response
         MockChatOllama.return_value = mock_lc_client
 
-        self.model = OllamaModel(
+        self.model = OllamaLLM(
             model_name=TestsConfig.OLLAMA_MODEL,
-            system_prompt_file=TestsConfig.TEST_SYSTEM_PROMPT,
+            system_prompt="You are helpful.",
             preload_model=False,
             options={"temperature": 0.3},
             headers={"x-some-header": "some-value"},
@@ -35,8 +35,8 @@ class TestOllamaModel(unittest.TestCase):
         self.model.model.invoke.assert_called_once()
 
 
-class TestOllamaModelStreaming(unittest.TestCase):
-    @patch("raglight.llm.ollama_model.ChatOllama")
+class TestOllamaLLMStreaming(unittest.TestCase):
+    @patch("raglight.integrations.llms.ollama_model.ChatOllama")
     def setUp(self, MockChatOllama):
         chunk1 = MagicMock()
         chunk1.content = "Hello"
@@ -47,7 +47,7 @@ class TestOllamaModelStreaming(unittest.TestCase):
         self.mock_lc_client.stream.return_value = iter([chunk1, chunk2])
         MockChatOllama.return_value = self.mock_lc_client
 
-        self.model = OllamaModel(
+        self.model = OllamaLLM(
             model_name=TestsConfig.OLLAMA_MODEL,
             system_prompt="You are helpful.",
             preload_model=False,

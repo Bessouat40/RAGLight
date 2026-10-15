@@ -5,9 +5,9 @@ working in this repository. Tool-specific instruction files must link here and
 must not duplicate these rules.
 
 RAGLight is a Python library for building retrieval-augmented generation
-pipelines. Version 4 aims to keep the core small, make integrations optional,
-and expose stable extension contracts without coupling the library to its CLI,
-HTTP server, or user interface.
+pipelines. Version 4 keeps the core small, makes integrations optional, and
+exposes stable extension contracts. The v3 CLI, HTTP server, UI, and agentic
+runtime are not compatibility layers in the v4 tree.
 
 ## Start here
 
@@ -15,7 +15,7 @@ Read the documents relevant to the change before editing code:
 
 | Document | Purpose |
 | --- | --- |
-| `docs/architecture.md` | Current architecture, v4 target layers, and dependency rules |
+| `docs/architecture.md` | Current v4 layers and dependency rules |
 | `docs/development.md` | Environment setup and validation commands |
 | `docs/dependencies.md` | Optional extras, dependency ownership, and package audit |
 | `docs/testing.md` | TDD workflow and test pyramid |
@@ -26,31 +26,25 @@ Read the documents relevant to the change before editing code:
 | `docs/releasing.md` | Package and release validation |
 | `docs/decisions/` | Architecture decision records |
 
-Documentation explicitly distinguishes **Current v3**, **Target v4**, and
-**Migration rule** statements. Do not describe a target rule as already
-implemented.
+Documentation must distinguish implemented v4 behavior from capabilities that
+are explicitly planned for a later issue.
 
 ## Repository map
 
 ```text
 src/raglight/
-  models/                shared data models
-  llm/                   LLM contracts and provider implementations
-  embeddings/            embedding contracts and providers
-  vectorstore/           vector-store contracts and providers
-  document_processing/   ingestion processors
-  rag/                    pipeline construction and orchestration
-  api/                    FastAPI delivery layer
-  cli/                    command-line delivery layer
-  ui/                     Streamlit user interface
+  contracts/             stable structural extension protocols
+  models/                provider-independent data models
+  pipeline/              classic RAG orchestration
+  integrations/          optional provider adapters
 tests/                    existing unit and component tests
 tests/architecture/       executable dependency guardrails
 tests/integration/        cross-component tests
 tests/e2e/                public workflow tests
 ```
 
-The v3 tree does not yet fully match the target v4 layers. Preserve current
-behavior while moving it toward the boundaries in `docs/architecture.md`.
+Do not restore removed v3 packages as compatibility shims. New optional
+capabilities must be designed on the boundaries in `docs/architecture.md`.
 
 ## Non-negotiable engineering rules
 
@@ -59,12 +53,11 @@ behavior while moving it toward the boundaries in `docs/architecture.md`.
 3. Every bug fix has a regression test that fails without the fix.
 4. Tests run without network access, credentials, or external services unless
    explicitly marked as opt-in live tests.
-5. Core code does not depend on `raglight.api`, `raglight.cli`,
-   `raglight.ui`, FastAPI, or Streamlit.
+5. Core and pipeline code do not depend on concrete integrations.
 6. Core extension contracts never depend on concrete provider implementations.
 7. Optional packages are imported only within their integration boundary and
    missing dependencies produce an actionable installation message.
-8. HTTP and UI layers translate inputs and outputs; they do not own RAG
+8. Future delivery layers translate inputs and outputs; they do not own RAG
    business logic.
 9. Conversation history belongs to a caller or session, never to a globally
    shared pipeline.
@@ -72,9 +65,8 @@ behavior while moving it toward the boundaries in `docs/architecture.md`.
 11. CI validates source code and never rewrites or commits it.
 12. Do not mix unrelated cleanup with a focused behavior change.
 
-Some target-v4 rules expose existing v3 debt. Do not conceal that debt with a
-weak check. Record the exception, keep the guardrail from getting worse, and
-remove the exception in the issue that completes the migration.
+Do not weaken a guardrail to accommodate a new dependency violation. Change
+the design or record an explicit architecture decision.
 
 ## TDD workflow
 

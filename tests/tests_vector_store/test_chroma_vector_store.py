@@ -2,17 +2,13 @@ import shutil
 import tempfile
 import unittest
 
-from raglight.embeddings.embeddings_model import EmbeddingsModel
-from raglight.vectorstore.chroma import ChromaVS
+from raglight.integrations.chroma import ChromaVectorStore
 
 from ..test_config import TestsConfig
 
 
-class DeterministicEmbeddings(EmbeddingsModel):
+class DeterministicEmbeddings:
     """Small offline test double with stable two-dimensional embeddings."""
-
-    def load(self):
-        return self
 
     def embed_documents(self, texts):
         return [self.embed_query(text) for text in texts]
@@ -28,8 +24,8 @@ class TestVectorStore(unittest.TestCase):
         with open(f"{self.data_path}/document.txt", "w", encoding="utf-8") as document:
             document.write("RAGLight provides deterministic retrieval workflows.")
         collection_name = TestsConfig.COLLECTION_NAME
-        embeddings = DeterministicEmbeddings("deterministic-test-embeddings")
-        self.store = ChromaVS(
+        embeddings = DeterministicEmbeddings()
+        self.store = ChromaVectorStore(
             embeddings_model=embeddings,
             persist_directory=self.persist_directory,
             collection_name=collection_name,

@@ -1,17 +1,17 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from raglight.llm.bedrock_model import BedrockModel
+from raglight.integrations.llms.bedrock_model import BedrockLLM
 from ..test_config import TestsConfig
 
 
-class TestBedrockModel(unittest.TestCase):
+class TestBedrockLLM(unittest.TestCase):
     _MOCK_RESPONSE = "Hello! This is a test Bedrock response."
 
-    @patch("raglight.llm.bedrock_model.ChatBedrock")
+    @patch("raglight.integrations.llms.bedrock_model.ChatBedrock")
     def setUp(self, mock_chat_bedrock: MagicMock):
         mock_chat_bedrock.return_value = MagicMock()
-        self.model = BedrockModel(
+        self.model = BedrockLLM(
             model_name=TestsConfig.BEDROCK_LLM_MODEL,
             region_name="us-east-1",
         )

@@ -10,6 +10,7 @@ from dataclasses import FrozenInstanceError
 
 import raglight
 from raglight import PipelineConfig, RAGPipeline
+from raglight.models import Document
 
 
 class PublicAPITests(unittest.TestCase):
@@ -29,13 +30,10 @@ class PublicAPITests(unittest.TestCase):
             import raglight
 
             forbidden = (
-                "raglight.api",
-                "raglight.cli",
-                "raglight.ui",
-                "raglight.llm.ollama_model",
-                "raglight.llm.openai_model",
-                "raglight.vectorstore.chroma",
-                "raglight.vectorstore.qdrant",
+                "raglight.integrations.ollama",
+                "raglight.integrations.openai",
+                "raglight.integrations.chroma",
+                "raglight.integrations.qdrant",
                 "fastapi",
                 "langchain",
                 "langgraph",
@@ -56,6 +54,11 @@ class PublicAPITests(unittest.TestCase):
 
         self.assertEqual(0, completed.returncode, completed.stderr)
 
+    def test_removed_v3_packages_are_not_importable(self):
+        for module in ("raglight.rag", "raglight.config", "raglight.api"):
+            with self.subTest(module=module):
+                self.assertIsNone(__import__("importlib.util").util.find_spec(module))
+
 
 class PipelineConfigTests(unittest.TestCase):
     def test_top_k_must_be_positive(self):
@@ -67,6 +70,16 @@ class PipelineConfigTests(unittest.TestCase):
 
         with self.assertRaises(FrozenInstanceError):
             config.top_k = 4
+
+
+class DocumentTests(unittest.TestCase):
+    def test_metadata_defaults_are_isolated_between_documents(self):
+        first = Document(page_content="first")
+        second = Document(page_content="second")
+
+        first.metadata["source"] = "one"
+
+        self.assertEqual({}, second.metadata)
 
 
 if __name__ == "__main__":

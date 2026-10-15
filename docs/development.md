@@ -1,71 +1,51 @@
 # Development
 
-## Requirements
+## Setup
 
-- Python 3.11 or newer, matching `pyproject.toml`
-- `uv`
-- Git
-
-Install the development environment:
+RAGLight requires Python 3.11 or newer, `uv`, and Git.
 
 ```bash
 make install-dev
 ```
 
-The default test suite is offline. Do not configure provider credentials merely
-to run normal development checks.
+The required suite is offline; normal development must not require provider
+credentials or network calls.
 
-## Focused feedback
+## TDD workflow
 
-Run one existing unittest module:
+1. Add a test that fails for the intended reason.
+2. Implement the smallest behavior that makes it pass.
+3. Refactor while keeping the suite green.
+4. Add integration or end-to-end coverage when a public workflow crosses
+   component boundaries.
 
-```bash
-PYTHONPATH=src uv run python -m unittest -v tests.tests_rag.test_rag
-```
-
-Run one test method:
+Run a focused test during the red/green loop:
 
 ```bash
 PYTHONPATH=src uv run python -m unittest -v \
-  tests.tests_rag.test_rag.TestRAGGenerate.test_generate
+  tests.tests_rag.test_public_api.PublicAPITests
 ```
-
-Use `make test-unit`, `make test-integration`, and `make test-e2e` for the
-standard tiers. During the v3-to-v4 migration, the historical test directories
-are explicitly listed in the unit command; new cross-component and workflow
-tests go in their explicitly named directories. When adding a new unit-test
-package, add it to `test-unit` in the `Makefile` until issue #161 consolidates
-the legacy layout. The tier commands use `uv run --all-extras` because the v3
-suite still exercises multiple optional integrations; issue #162 will split
-these into isolated extra-specific jobs.
 
 ## Validation
 
 ```bash
-make format-check       # Black, check only
-make lint               # Ruff correctness rules
-make typecheck          # typed tooling and all new v4 modules
-make architecture-check # dependency boundaries
-make package-check      # build and inspect/install the wheel
-make check              # complete local gate
+make test-unit
+make test-integration
+make test-e2e
+make architecture-check
+make package-check
+make check
 ```
 
-The typing and lint scopes start from a baseline the v3 tree can satisfy. They
-must become stricter as v4 modules are introduced. A new v4 module must be fully
-typed even if a legacy neighbor is not.
+`make check` is the required local gate. It includes formatting, linting, type
+checking, architecture rules, every test tier, and isolated wheel validation.
 
-## Test environment rules
+## Contribution rules
 
-- Patch provider clients at the integration boundary.
-- Use fake implementations for application tests.
-- Never call a live provider from the default suite.
-- Never use sleeps to coordinate asynchronous behavior.
-- Keep fixtures small, deterministic, and free of personal or secret data.
-- Use temporary directories supplied by the test framework.
-
-## Changing dependencies
-
-Explain why the dependency belongs in the base package or a named extra. After
-changing packaging, run `make package-check` and verify the relevant minimal or
-extra installation. See `dependencies.md` for the complete extras matrix and
-dependency ownership rules.
+- Test public behavior, not private implementation details.
+- Mock external SDKs at the integration boundary.
+- Use temporary directories and deterministic fixtures.
+- Put dependencies in the narrowest matching extra and update `uv.lock`.
+- Do not introduce global provider selection or credentials.
+- Do not make the pipeline import a concrete integration.
+- Document new public names and migration impact in the same change.
