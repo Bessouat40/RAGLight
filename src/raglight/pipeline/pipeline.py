@@ -12,13 +12,14 @@ from ..models import Document, ExecutionEvent, RAGResponse
 from ..registry import IntegrationRegistries
 
 from .config import PipelineConfig
+from .session import ConversationSession
 
 
 class RAGPipeline:
     """Coordinate retrieval and generation using injected components.
 
-    The pipeline owns configuration, not conversation history. Callers pass
-    history explicitly until the public session API is introduced.
+    The pipeline owns configuration, not conversation history. Callers either
+    pass history explicitly or create an isolated conversation session.
     """
 
     def __init__(
@@ -95,6 +96,16 @@ class RAGPipeline:
         """Return immutable pipeline behavior configuration."""
 
         return self._config
+
+    def create_session(
+        self,
+        *,
+        session_id: str | None = None,
+        history: Sequence[Mapping[str, str]] = (),
+    ) -> ConversationSession:
+        """Create an isolated conversation over this shared pipeline."""
+
+        return ConversationSession(self, session_id=session_id, history=history)
 
     def generate(
         self,

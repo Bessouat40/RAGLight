@@ -174,7 +174,7 @@ stages without exposing implementation logs.
 v3 stores history on the pipeline. A shared pipeline can therefore mix state
 between users.
 
-v4 pipelines are stateless and accept explicit history today:
+v4 pipelines are stateless and accept explicit history:
 
 ```python
 response = pipeline.generate(
@@ -183,14 +183,18 @@ response = pipeline.generate(
 )
 ```
 
-Isolated sessions are planned for #160:
+Use a session when RAGLight should retain completed turns for one conversation:
 
 ```python
-session = pipeline.create_session()
+session = pipeline.create_session(session_id="user-123")
 response = session.generate("Remember this conversation")
+chunks = session.stream("Continue it")
 ```
 
-See #160 for concurrency, session lifetime, and streaming behavior.
+Each session owns its history and can share the configured pipeline with other
+sessions. Generation failures and incomplete streams do not commit partial
+turns. Use `session.history` for a detached snapshot and `session.clear()` to
+reset the messages without changing the session identifier.
 
 ## Ingestion (planned)
 

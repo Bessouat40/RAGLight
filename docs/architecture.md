@@ -27,7 +27,7 @@ imports a concrete provider.
 | `raglight.contracts` | Stable structural protocols for extensions |
 | `raglight.models` | Provider- and transport-independent values |
 | `raglight.registry` | Provider-independent lazy registry primitives |
-| `raglight.pipeline` | Classic retrieval, optional reranking, and generation |
+| `raglight.pipeline` | Stateless classic orchestration and isolated sessions |
 | `raglight.integrations` | Optional provider adapters and SDK translation |
 
 `raglight.RAGPipeline` and `raglight.PipelineConfig` are the root facade.
@@ -44,7 +44,8 @@ import them.
 - domain data uses `raglight.models.Document`, not an SDK document type.
 - configuration for credentials and provider clients stays at the integration
   boundary.
-- conversation history is supplied by the caller and is never global state.
+- conversation history is supplied by the caller or owned by one explicit
+  session; it is never pipeline or global state.
 
 These rules are executable in `scripts/check_architecture.py` and
 `tests/architecture/`.
@@ -62,6 +63,11 @@ the generated answer, final source documents, timings, metadata, and a trace
 identifier together. These transport-independent models live in
 `raglight.models`, so future delivery and agentic layers can reuse them without
 depending on the classic pipeline implementation.
+
+`ConversationSession` is an application-layer wrapper around `RAGPipeline`.
+The pipeline remains reusable and stateless; each session owns its identifier,
+history, and lock. Completed turns are committed atomically, including streamed
+turns, so failures and abandoned streams cannot leave partial history.
 
 Agentic execution will be implemented as a separate capability with its own
 public namespace, dependencies, tools, step budget, and termination behavior.

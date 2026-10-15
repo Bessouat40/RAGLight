@@ -73,6 +73,11 @@ def main() -> None:
     print(f"Stages: {[event.stage for event in response.events]}")
     print(f"Trace: {response.trace_id}")
 
+    session = pipeline.create_session(session_id="example-conversation")
+    session.generate("Remember that I use custom components.")
+    print("".join(session.stream("What do I use?")))
+    print(f"Committed messages: {len(session.history)}")
+
 
 if __name__ == "__main__":
     main()
