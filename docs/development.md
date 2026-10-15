@@ -35,7 +35,9 @@ standard tiers. During the v3-to-v4 migration, the historical test directories
 are explicitly listed in the unit command; new cross-component and workflow
 tests go in their explicitly named directories. When adding a new unit-test
 package, add it to `test-unit` in the `Makefile` until issue #161 consolidates
-the legacy layout.
+the legacy layout. The tier commands use `uv run --all-extras` because the v3
+suite still exercises optional Chroma and Qdrant integrations; issue #162 will
+split these into isolated extra-specific jobs.
 
 ## Validation
 

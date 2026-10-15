@@ -10,13 +10,13 @@ test:
 	$(MAKE) test-e2e
 
 test-unit:
-	PYTHONPATH=src uv run python scripts/run_test_tier.py unit
+	PYTHONPATH=src uv run --all-extras python scripts/run_test_tier.py unit
 
 test-integration:
-	PYTHONPATH=src uv run python scripts/run_test_tier.py integration
+	PYTHONPATH=src uv run --all-extras python scripts/run_test_tier.py integration
 
 test-e2e:
-	PYTHONPATH=src uv run python scripts/run_test_tier.py e2e
+	PYTHONPATH=src uv run --all-extras python scripts/run_test_tier.py e2e
 
 architecture-check:
 	PYTHONPATH=src uv run python scripts/check_architecture.py
