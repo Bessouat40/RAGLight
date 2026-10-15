@@ -34,8 +34,9 @@ registries explicitly. `Builder`, the
 low-level execution graph, global provider settings, and concrete integrations
 are not root exports.
 
-The standard pipeline is stateless. Structured responses and isolated sessions
-are part of the public model but are finalized in their dedicated issues.
+The standard pipeline is stateless. `generate()` returns the shared
+`RAGResponse` domain model with structured execution events. Isolated sessions
+are finalized separately.
 
 Agentic execution is exposed separately as
 `raglight.agentic.AgenticPipeline`. It shares contracts and domain models with

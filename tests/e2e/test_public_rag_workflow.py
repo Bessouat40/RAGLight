@@ -1,4 +1,5 @@
 import unittest
+from uuid import UUID
 
 from raglight import PipelineConfig, RAGPipeline
 from raglight.integrations import IntegrationRegistries, IntegrationRegistry
@@ -57,9 +58,32 @@ class PublicRAGWorkflowTests(unittest.TestCase):
             config=PipelineConfig(top_k=1),
         )
 
-        answer = pipeline.generate("What is RAGLight?")
+        response = pipeline.generate("What is RAGLight?")
 
-        self.assertEqual("RAGLight is modular.", answer)
+        self.assertEqual("RAGLight is modular.", response.answer)
+        self.assertEqual(
+            "RAGLight is a modular RAG library.", response.sources[0].page_content
+        )
+        self.assertEqual(
+            ["retrieval", "generation"],
+            [event.stage for event in response.events],
+        )
+        self.assertEqual(
+            ["completed", "completed"],
+            [event.status for event in response.events],
+        )
+        self.assertEqual({"retrieval", "generation", "total"}, set(response.timings))
+        for event in response.events:
+            self.assertEqual(response.timings[event.stage], event.duration_ms)
+        self.assertGreaterEqual(
+            response.timings["total"],
+            response.timings["retrieval"] + response.timings["generation"],
+        )
+        self.assertEqual(
+            {"top_k": 1, "retrieved_count": 1, "reranked": False},
+            dict(response.metadata),
+        )
+        self.assertEqual(response.trace_id, str(UUID(response.trace_id)))
         self.assertEqual([("What is RAGLight?", 1)], vector_store.calls)
         self.assertIn("RAGLight is a modular RAG library.", llm.inputs[0]["question"])
 
@@ -98,7 +122,7 @@ class PublicRAGWorkflowTests(unittest.TestCase):
             config=PipelineConfig(top_k=1),
         )
 
-        pipeline.generate("What is RAGLight?")
+        response = pipeline.generate("What is RAGLight?")
 
         question, documents, top_k = reranker.calls[0]
         self.assertEqual("What is RAGLight?", question)
@@ -106,6 +130,11 @@ class PublicRAGWorkflowTests(unittest.TestCase):
             "RAGLight is a modular RAG library.", documents[0].page_content
         )
         self.assertEqual(1, top_k)
+        self.assertEqual(
+            ["retrieval", "reranking", "generation"],
+            [event.stage for event in response.events],
+        )
+        self.assertTrue(response.metadata["reranked"])
 
     def test_empty_questions_are_rejected_before_retrieval(self):
         vector_store = FakeVectorStore()
@@ -144,7 +173,7 @@ class PublicRAGWorkflowTests(unittest.TestCase):
 
         pipeline = RAGPipeline.from_config(config, registries=registries)
 
-        self.assertEqual("RAGLight is modular.", pipeline.generate("Question"))
+        self.assertEqual("RAGLight is modular.", pipeline.generate("Question").answer)
 
 
 if __name__ == "__main__":

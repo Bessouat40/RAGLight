@@ -67,7 +67,11 @@ def main() -> None:
         config=PipelineConfig(top_k=2),
     )
 
-    print(pipeline.generate("Can I use custom components?"))
+    response = pipeline.generate("Can I use custom components?")
+    print(response.answer)
+    print(f"Sources: {len(response.sources)}")
+    print(f"Stages: {[event.stage for event in response.events]}")
+    print(f"Trace: {response.trace_id}")
 
 
 if __name__ == "__main__":

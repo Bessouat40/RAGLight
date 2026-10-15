@@ -47,9 +47,16 @@ class CustomComponentIntegrationTests(unittest.TestCase):
             config=PipelineConfig(top_k=2),
         )
 
-        answer = pipeline.generate("Which document ranks first?")
+        response = pipeline.generate("Which document ranks first?")
 
-        self.assertLess(answer.index("higher-ranked"), answer.index("lower-ranked"))
+        self.assertLess(
+            response.answer.index("higher-ranked"),
+            response.answer.index("lower-ranked"),
+        )
+        self.assertEqual(
+            ["higher-ranked", "lower-ranked"],
+            [source.page_content for source in response.sources],
+        )
 
 
 if __name__ == "__main__":

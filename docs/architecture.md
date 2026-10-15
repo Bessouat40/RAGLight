@@ -54,8 +54,14 @@ These rules are executable in `scripts/check_architecture.py` and
 The current v4 package contains only the classic deterministic flow:
 
 ```text
-question -> retrieve -> optional rerank -> generate -> answer
+question -> retrieve -> optional rerank -> generate -> RAGResponse
 ```
+
+The pipeline records each completed stage as an `ExecutionEvent` and returns
+the generated answer, final source documents, timings, metadata, and a trace
+identifier together. These transport-independent models live in
+`raglight.models`, so future delivery and agentic layers can reuse them without
+depending on the classic pipeline implementation.
 
 Agentic execution will be implemented as a separate capability with its own
 public namespace, dependencies, tools, step budget, and termination behavior.

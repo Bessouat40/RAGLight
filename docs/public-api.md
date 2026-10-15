@@ -24,7 +24,8 @@ pipeline = RAGPipeline(
     config=PipelineConfig(top_k=5),  # optional
 )
 
-answer: str = pipeline.generate("What is RAGLight?", history=[])
+response = pipeline.generate("What is RAGLight?", history=[])
+answer: str = response.answer
 chunks = pipeline.stream("What is RAGLight?", history=[])
 ```
 
@@ -35,13 +36,43 @@ construction.
 ## Domain models
 
 ```python
-from raglight.models import ComponentConfig, Document
+from raglight.models import (
+    ComponentConfig,
+    Document,
+    ExecutionEvent,
+    ExecutionStatus,
+    RAGResponse,
+)
 ```
 
 `Document(page_content: str, metadata: dict[str, object] = {})` is the value
 exchanged by retrieval, reranking, and document-processing boundaries.
 `ComponentConfig(name, options)` is the provider-independent serialized form
 of one named integration.
+
+### Structured generation results
+
+`RAGPipeline.generate(...)` returns an immutable `RAGResponse` containing:
+
+- `answer`: the generated text;
+- `sources`: the final documents supplied to generation, after optional
+  reranking;
+- `events`: completed `retrieval`, optional `reranking`, and `generation`
+  stages;
+- `timings`: non-negative stage durations in milliseconds plus `total`;
+- `metadata`: pipeline-level facts such as `top_k`, retrieved document count,
+  and whether reranking ran;
+- `trace_id`: a unique identifier for correlating one execution.
+
+Each `ExecutionEvent` has a `stage`, `status`, `duration_ms`, optional message,
+metrics, and metadata. Event statuses are `started`, `completed`, or `failed`;
+the synchronous classic pipeline emits completed events for stages represented
+in a successful response.
+
+`RAGResponse.to_dict()` and `ExecutionEvent.to_dict()` provide
+transport-friendly dictionaries for future delivery layers. Raw logs are not
+part of the response contract. `stream(...)` continues to yield text chunks;
+the delivery-level streaming event protocol is designed separately.
 
 ## Extension contracts
 
@@ -145,7 +176,6 @@ server, CLI, and UI are removed and are not v4 aliases or compatibility shims.
 
 The following are not implemented in this change:
 
-- structured responses and execution events (#159);
 - isolated conversation sessions (#160);
 - a separately designed agentic API;
 - delivery applications built on the v4 core.

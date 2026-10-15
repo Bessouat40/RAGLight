@@ -35,7 +35,7 @@ from raglight.contracts import (
     Reranker,
     VectorStore,
 )
-from raglight.models import Document
+from raglight.models import Document, ExecutionEvent, RAGResponse
 ```
 
 The contracts are structural protocols. Custom components do not inherit from
@@ -48,8 +48,7 @@ from raglight.models import Document
 
 class MyLLM:
     def generate(self, input: dict[str, object]) -> str:
-        contexts = input.get("contexts", [])
-        return f"Answer based on {len(contexts)} documents"
+        return "RAGLight is extended through structural component contracts."
 
 
 class MyEmbeddings:
@@ -77,8 +76,17 @@ pipeline = RAGPipeline(
     config=PipelineConfig(top_k=3),
 )
 
-print(pipeline.generate("How is RAGLight extended?"))
+response = pipeline.generate("How is RAGLight extended?")
+print(response.answer)
+print(response.sources)
+print(response.events)
 ```
+
+`generate()` returns an immutable `RAGResponse`. Its `answer`, `sources`,
+structured execution `events`, per-stage `timings`, `metadata`, and `trace_id`
+can be consumed directly or converted into transport-friendly values with
+`response.to_dict()`. Streaming continues to yield text chunks through
+`pipeline.stream(...)`.
 
 See [`examples/v4_custom_components.py`](examples/v4_custom_components.py) for
 a complete executable example.
