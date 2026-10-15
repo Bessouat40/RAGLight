@@ -4,8 +4,8 @@ RAGLight 4 has a dependency-free core and explicit optional integrations.
 
 ```text
                          +----------------+
-                         |   contracts    |
-                         |    models      |
+                         | contracts/models|
+                         | registry core  |
                          +-------^--------+
                                  |
                  +---------------+---------------+
@@ -26,6 +26,7 @@ imports a concrete provider.
 | --- | --- |
 | `raglight.contracts` | Stable structural protocols for extensions |
 | `raglight.models` | Provider- and transport-independent values |
+| `raglight.registry` | Provider-independent lazy registry primitives |
 | `raglight.pipeline` | Classic retrieval, optional reranking, and generation |
 | `raglight.integrations` | Optional provider adapters and SDK translation |
 
@@ -35,8 +36,10 @@ import them.
 
 ## Core rules
 
-- `contracts` and `models` do not import integrations or optional SDKs.
-- `pipeline` imports contracts and models, never integrations.
+- contracts, models, and registry primitives do not import integrations or
+  optional SDKs.
+- `pipeline` imports core registry types, contracts, and models, never
+  integrations.
 - importing `raglight` does not load any optional provider package.
 - domain data uses `raglight.models.Document`, not an SDK document type.
 - configuration for credentials and provider clients stays at the integration
@@ -73,6 +76,8 @@ Each integration owns:
 - deterministic provider unit tests and shared contract coverage.
 
 Adding an integration must not add provider-name branches to the pipeline.
+Built-in names are registered as lazy import references in
+`raglight.integrations`; resolving one entry imports only its provider module.
 
 ## Cross-cutting invariants
 

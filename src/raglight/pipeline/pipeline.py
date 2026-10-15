@@ -7,6 +7,7 @@ from typing import Any
 
 from ..contracts import EmbeddingModel, LLM, Reranker, VectorStore
 from ..models import Document
+from ..registry import IntegrationRegistries
 
 from .config import PipelineConfig
 
@@ -32,6 +33,60 @@ class RAGPipeline:
         self._vector_store = vector_store
         self._reranker = reranker
         self._config = config or PipelineConfig()
+
+    @classmethod
+    def from_config(
+        cls,
+        config: PipelineConfig,
+        *,
+        registries: IntegrationRegistries,
+    ) -> RAGPipeline:
+        """Construct a pipeline from names resolved by explicit registries."""
+
+        required = {
+            "llm": config.llm,
+            "embeddings": config.embeddings,
+            "vector_store": config.vector_store,
+        }
+        missing = [name for name, component in required.items() if component is None]
+        if missing:
+            raise ValueError(
+                "registry-backed construction requires: " + ", ".join(missing)
+            )
+
+        llm_config = config.llm
+        embeddings_config = config.embeddings
+        vector_store_config = config.vector_store
+        assert llm_config is not None
+        assert embeddings_config is not None
+        assert vector_store_config is not None
+
+        embeddings = registries.embeddings.create(
+            embeddings_config.name, **embeddings_config.options
+        )
+        vector_store_options = dict(vector_store_config.options)
+        if "embeddings_model" in vector_store_options:
+            raise ValueError(
+                "vector_store options must not define reserved 'embeddings_model'"
+            )
+        vector_store = registries.vector_stores.create(
+            vector_store_config.name,
+            embeddings_model=embeddings,
+            **vector_store_options,
+        )
+        llm = registries.llms.create(llm_config.name, **llm_config.options)
+        reranker = (
+            registries.rerankers.create(config.reranker.name, **config.reranker.options)
+            if config.reranker is not None
+            else None
+        )
+        return cls(
+            llm=llm,
+            embeddings=embeddings,
+            vector_store=vector_store,
+            reranker=reranker,
+            config=config,
+        )
 
     @property
     def config(self) -> PipelineConfig:

@@ -87,6 +87,19 @@ class ArchitectureDependencyTests(unittest.TestCase):
                 CHECK_ARCHITECTURE.violations(package),
             )
 
+    def test_registry_primitives_cannot_import_concrete_integrations(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            (package / "registry.py").write_text(
+                "from raglight.integrations.openai import OpenAILLM\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                ["registry.py:1: core dependency on " "raglight.integrations.openai"],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,7 @@
 import unittest
 
 from raglight import PipelineConfig, RAGPipeline
+from raglight.integrations import IntegrationRegistries, IntegrationRegistry
 from raglight.models import Document
 
 
@@ -118,6 +119,32 @@ class PublicRAGWorkflowTests(unittest.TestCase):
             pipeline.generate("   ")
 
         self.assertEqual([], vector_store.calls)
+
+    def test_serialized_names_build_the_public_pipeline(self):
+        registries = IntegrationRegistries(
+            llms=IntegrationRegistry("LLM"),
+            embeddings=IntegrationRegistry("embedding"),
+            vector_stores=IntegrationRegistry("vector store"),
+            rerankers=IntegrationRegistry("reranker"),
+            document_processors=IntegrationRegistry("document processor"),
+        )
+        registries.llms.register("fake", FakeLLM)
+        registries.embeddings.register("fake", FakeEmbeddings)
+        registries.vector_stores.register(
+            "fake", lambda *, embeddings_model: FakeVectorStore()
+        )
+        config = PipelineConfig.from_dict(
+            {
+                "top_k": 1,
+                "llm": {"name": "fake"},
+                "embeddings": {"name": "fake"},
+                "vector_store": {"name": "fake"},
+            }
+        )
+
+        pipeline = RAGPipeline.from_config(config, registries=registries)
+
+        self.assertEqual("RAGLight is modular.", pipeline.generate("Question"))
 
 
 if __name__ == "__main__":

@@ -1,3 +1,64 @@
-"""Optional built-in integrations, imported explicitly by provider."""
+"""Lazy registries and optional built-in integrations."""
 
-__all__: list[str] = []
+from ..registry import IntegrationRegistries, IntegrationRegistry
+
+
+def _builtins() -> IntegrationRegistries:
+    registries = IntegrationRegistries(
+        llms=IntegrationRegistry("LLM"),
+        embeddings=IntegrationRegistry("embedding"),
+        vector_stores=IntegrationRegistry("vector store"),
+        rerankers=IntegrationRegistry("reranker"),
+        document_processors=IntegrationRegistry("document processor"),
+    )
+
+    for name, module, attribute in (
+        ("bedrock", "raglight.integrations.bedrock", "BedrockLLM"),
+        ("gemini", "raglight.integrations.gemini", "GeminiLLM"),
+        ("lmstudio", "raglight.integrations.lmstudio", "LMStudioLLM"),
+        ("mistral", "raglight.integrations.mistral", "MistralLLM"),
+        ("ollama", "raglight.integrations.ollama", "OllamaLLM"),
+        ("openai", "raglight.integrations.openai", "OpenAILLM"),
+    ):
+        registries.llms.register_lazy(name, module, attribute)
+
+    for name, module, attribute in (
+        ("bedrock", "raglight.integrations.bedrock", "BedrockEmbeddings"),
+        ("gemini", "raglight.integrations.gemini", "GeminiEmbeddings"),
+        (
+            "huggingface",
+            "raglight.integrations.huggingface",
+            "HuggingFaceEmbeddings",
+        ),
+        ("ollama", "raglight.integrations.ollama", "OllamaEmbeddings"),
+        ("openai", "raglight.integrations.openai", "OpenAIEmbeddings"),
+    ):
+        registries.embeddings.register_lazy(name, module, attribute)
+
+    registries.vector_stores.register_lazy(
+        "chroma", "raglight.integrations.chroma", "ChromaVectorStore"
+    )
+    registries.vector_stores.register_lazy(
+        "qdrant", "raglight.integrations.qdrant", "QdrantVectorStore"
+    )
+    registries.rerankers.register_lazy(
+        "huggingface",
+        "raglight.integrations.huggingface",
+        "HuggingFaceReranker",
+    )
+
+    for name, attribute in (
+        ("code", "CodeProcessor"),
+        ("pdf", "PDFProcessor"),
+        ("text", "TextProcessor"),
+        ("vlm-pdf", "VlmPDFProcessor"),
+    ):
+        registries.document_processors.register_lazy(
+            name, "raglight.integrations.documents", attribute
+        )
+    return registries
+
+
+default_registries = _builtins()
+
+__all__ = ["IntegrationRegistries", "IntegrationRegistry", "default_registries"]

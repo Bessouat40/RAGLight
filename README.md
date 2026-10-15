@@ -77,7 +77,7 @@ pipeline = RAGPipeline(
     config=PipelineConfig(top_k=3),
 )
 
-print(pipeline.query("How is RAGLight extended?"))
+print(pipeline.generate("How is RAGLight extended?"))
 ```
 
 See [`examples/v4_custom_components.py`](examples/v4_custom_components.py) for
@@ -122,15 +122,61 @@ Provider modules and public classes:
 | `raglight.integrations.qdrant` | `QdrantVectorStore` |
 | `raglight.integrations.documents` | document processors and their factory |
 
+### Registry-backed configuration
+
+Direct component injection remains the primary API. Registries provide an
+optional path for serializable JSON or TOML configuration without
+provider-specific branches in the pipeline:
+
+```toml
+top_k = 3
+
+[llm]
+name = "ollama"
+[llm.options]
+model_name = "llama3.1:8b"
+preload_model = false
+
+[embeddings]
+name = "ollama"
+[embeddings.options]
+model_name = "nomic-embed-text"
+
+[vector_store]
+name = "chroma"
+[vector_store.options]
+collection_name = "knowledge"
+persist_directory = "./raglight-db"
+```
+
+```python
+from raglight import PipelineConfig, RAGPipeline
+from raglight.integrations import default_registries
+
+config = PipelineConfig.from_file("raglight.toml")
+pipeline = RAGPipeline.from_config(config, registries=default_registries)
+```
+
+Custom factories may opt into named configuration:
+
+```python
+default_registries.llms.register("my-llm", MyLLM)
+```
+
+Registration is never required when passing a component instance directly.
+See
+[`examples/v4_registry_configuration.py`](examples/v4_registry_configuration.py)
+for an offline custom-registry example.
+
 ## Architecture
 
 Dependencies point inward:
 
 ```text
-integrations -> contracts/models <- pipeline
+integrations -> registry/contracts/models <- pipeline
 ```
 
-- `contracts` and `models` are dependency-free.
+- registry primitives, contracts, and models are dependency-free.
 - `pipeline` depends only on public contracts and models.
 - built-in integrations own their optional SDK dependencies.
 - agentic orchestration is intentionally separate from the classic RAG API and

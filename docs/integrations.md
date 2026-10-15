@@ -34,6 +34,12 @@ Every integration must:
   provider responses;
 - document limitations and provider-specific behavior.
 
+Built-in integrations register a lazy public import path in
+`raglight.integrations.default_registries`. Do not import the provider module
+while populating the registry. Third-party components may call `register(...)`
+when they need name-based configuration; direct injection remains available
+without registration.
+
 The extension contracts are structural. A provider class must not inherit from
 a protocol merely to satisfy RAGLight; matching the documented signature is
 sufficient. Add every built-in implementation to the shared matrix in
@@ -50,6 +56,7 @@ translation behavior in its own unit tests.
 - [ ] Base `import raglight` works without the provider SDK.
 - [ ] Missing dependency message names the correct extra.
 - [ ] Public import and configuration path is integration tested.
+- [ ] Built-in registry entry is lazy and covered by the registry matrix.
 - [ ] Documentation uses public imports only.
 - [ ] No real credentials or required network calls are present.
 
