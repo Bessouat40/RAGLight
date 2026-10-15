@@ -33,10 +33,14 @@ class QdrantVS(VectorStore):
         try:
             from qdrant_client import QdrantClient
             from qdrant_client.models import Distance, VectorParams
-        except ImportError:
-            raise ImportError(
-                "qdrant-client is required to use QdrantVS. "
-                "Install it with: pip install raglight[qdrant]"
+        except ModuleNotFoundError as error:
+            from .._optional import optional_import_error
+
+            optional_import_error(
+                error,
+                dependency="qdrant_client",
+                extra="qdrant",
+                feature="Qdrant vector store support",
             )
 
         super().__init__(

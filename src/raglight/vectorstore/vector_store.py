@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, List, Dict, Optional
+from typing import TYPE_CHECKING, Any, List, Dict, Optional
 import os
 import logging
 from langchain_core.documents import Document
@@ -8,10 +10,14 @@ import copy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ..document_processing.document_processor import DocumentProcessor
-from ..document_processing.document_processor_factory import DocumentProcessorFactory
 from ..embeddings.embeddings_model import EmbeddingsModel
 from ..config.settings import Settings
 from .bm25_index import BM25Index
+
+if TYPE_CHECKING:
+    from ..document_processing.document_processor_factory import (
+        DocumentProcessorFactory,
+    )
 
 
 class VectorStore(ABC):
@@ -158,6 +164,10 @@ class VectorStore(ABC):
             return [], []
 
     def ingest(self, data_path: str, ignore_folders: List[str] = None) -> None:
+        from ..document_processing.document_processor_factory import (
+            DocumentProcessorFactory,
+        )
+
         if not os.path.isdir(data_path):
             logging.error(f"Provided data_path '{data_path}' is not a valid directory.")
             return

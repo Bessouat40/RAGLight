@@ -3,8 +3,8 @@ revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform != 'win32'",
@@ -838,15 +838,6 @@ wheels = [
 ]
 
 [[package]]
-name = "eval-type-backport"
-version = "0.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/30/ea/8b0ac4469d4c347c6a385ff09dc3c048c2d021696664e26c7ee6791631b5/eval_type_backport-0.2.2.tar.gz", hash = "sha256:f0576b4cf01ebb5bd358d02314d31846af5e07678387486e2c798af0e7d849c1", size = 9079, upload-time = "2024-12-21T20:09:46.005Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/31/55cd413eaccd39125368be33c46de24a1f639f2e12349b0361b4678f3915/eval_type_backport-0.2.2-py3-none-any.whl", hash = "sha256:cb6ad7c393517f476f96d456d0412ea80f0a8cf96f6892834cd9340149111b0a", size = 5830, upload-time = "2024-12-21T20:09:44.175Z" },
-]
-
-[[package]]
 name = "fastapi"
 version = "0.141.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1072,8 +1063,8 @@ version = "1.75.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -1138,8 +1129,8 @@ version = "1.83.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -1580,15 +1571,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/78/18813351fe5d63acad16aec57f94ec2b70a09e53ca98145589e185423873/jsonpatch-1.33.tar.gz", hash = "sha256:9fcd4009c41e6d12348b4a0ff2563ba56a2923a7dfee731d004e212e1ee5030c", size = 21699, upload-time = "2023-06-26T12:07:29.144Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/73/07/02e16ed01e04a374e644b575638ec7987ae846d25ad97bcc9945a3ee4b0e/jsonpatch-1.33-py2.py3-none-any.whl", hash = "sha256:0ae28c0cd062bbd8b8ecc26d7d164fbbea9652a1a3693f3b956c1eae5145dade", size = 12898, upload-time = "2023-06-16T21:01:28.466Z" },
-]
-
-[[package]]
-name = "jsonpath-python"
-version = "1.0.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b5/49/e582e50b0c54c1b47e714241c4a4767bf28758bf90212248aea8e1ce8516/jsonpath-python-1.0.6.tar.gz", hash = "sha256:dd5be4a72d8a2995c3f583cf82bf3cd1a9544cfdabf2d22595b67aff07349666", size = 18121, upload-time = "2022-03-14T02:35:01.877Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/8a/d63959f4eff03893a00e6e63592e3a9f15b9266ed8e0275ab77f8c7dbc94/jsonpath_python-1.0.6-py3-none-any.whl", hash = "sha256:1e3b78df579f5efc23565293612decee04214609208a2335884b3ee3f786b575", size = 7552, upload-time = "2022-03-14T02:34:59.754Z" },
 ]
 
 [[package]]
@@ -2123,24 +2105,6 @@ wheels = [
 ]
 
 [[package]]
-name = "mistralai"
-version = "1.5.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "eval-type-backport" },
-    { name = "httpx" },
-    { name = "jsonpath-python" },
-    { name = "pydantic", version = "2.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
-    { name = "pydantic", version = "2.13.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
-    { name = "python-dateutil" },
-    { name = "typing-inspect" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/16/9d/aba193fdfe0fc7403efa380189143d965becfb1bc7df3230e5c7664f8c53/mistralai-1.5.0.tar.gz", hash = "sha256:fd94bc93bc25aad9c6dd8005b1a0bc4ba1250c6b3fbf855a49936989cc6e5c0d", size = 131647, upload-time = "2025-01-28T15:50:33.564Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/e7/7147c75c383a975c58c33f8e7ee7dbbb0e7390fbcb1ecd321f63e4c73efd/mistralai-1.5.0-py3-none-any.whl", hash = "sha256:9372537719f87bd6f9feef4747d0bf1f4fbe971f8c02945ca4b4bf3c94571c97", size = 271559, upload-time = "2025-01-28T15:50:31.031Z" },
-]
-
-[[package]]
 name = "mmh3"
 version = "5.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2503,8 +2467,8 @@ version = "2.5.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform != 'win32'",
@@ -2831,8 +2795,8 @@ version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -2871,8 +2835,8 @@ version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -2917,8 +2881,8 @@ version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -2969,8 +2933,8 @@ version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -3015,8 +2979,8 @@ version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -3057,8 +3021,8 @@ version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -3100,8 +3064,8 @@ version = "0.65b0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -3575,8 +3539,8 @@ version = "7.36.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a7/e7/0553e21d25ca4d9f573135775348a372c3ec34a93a71d5f297c3bac38341/protobuf-7.36.0.tar.gz", hash = "sha256:e8e09cb0d794c6687926fa558a8a6e72aa10edb997d5ca61da0765f12a3e00ea", size = 510034, upload-time = "2026-08-20T16:34:01.071Z" }
@@ -3864,8 +3828,8 @@ version = "2.13.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -3960,8 +3924,8 @@ version = "2.46.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -4310,50 +4274,133 @@ wheels = [
 name = "raglight"
 version = "3.4.7"
 source = { virtual = "." }
-dependencies = [
-    { name = "fastapi" },
-    { name = "google-genai" },
-    { name = "inquirerpy" },
+
+[package.optional-dependencies]
+agentic = [
     { name = "langchain" },
+    { name = "langchain-core" },
+    { name = "langchain-mcp-adapters" },
+    { name = "langgraph" },
+    { name = "mcp" },
+    { name = "pydantic", version = "2.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "pydantic", version = "2.13.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "rank-bm25" },
+]
+bedrock = [
     { name = "langchain-aws" },
     { name = "langchain-core" },
-    { name = "langchain-google-genai" },
+    { name = "python-dotenv" },
+    { name = "typing-extensions" },
+]
+chroma = [
+    { name = "chromadb" },
+    { name = "langchain-core" },
+    { name = "langchain-text-splitters" },
+    { name = "pymupdf" },
+    { name = "rank-bm25" },
+    { name = "sentence-transformers" },
+    { name = "typing-extensions" },
+]
+cli = [
+    { name = "inquirerpy" },
+    { name = "langchain" },
+    { name = "langchain-core" },
     { name = "langchain-mcp-adapters" },
-    { name = "langchain-mistralai" },
-    { name = "langchain-ollama" },
-    { name = "langchain-openai" },
     { name = "langchain-text-splitters" },
     { name = "langgraph" },
     { name = "mcp" },
-    { name = "mistralai" },
     { name = "nltk" },
-    { name = "ollama" },
     { name = "pillow" },
     { name = "pydantic", version = "2.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
     { name = "pydantic", version = "2.13.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
     { name = "pymupdf" },
     { name = "python-dotenv" },
-    { name = "python-multipart" },
     { name = "quo" },
     { name = "rank-bm25" },
     { name = "rich" },
     { name = "sentence-transformers" },
-    { name = "streamlit" },
-    { name = "transformers" },
     { name = "typer" },
     { name = "typing-extensions" },
     { name = "uvicorn", extra = ["standard"] },
 ]
-
-[package.optional-dependencies]
-chroma = [
-    { name = "chromadb" },
+documents = [
+    { name = "langchain-core" },
+    { name = "langchain-text-splitters" },
+    { name = "pillow" },
+    { name = "pymupdf" },
+    { name = "sentence-transformers" },
+]
+gemini = [
+    { name = "langchain-core" },
+    { name = "langchain-google-genai" },
+    { name = "python-dotenv" },
+    { name = "typing-extensions" },
+]
+huggingface = [
+    { name = "sentence-transformers" },
+    { name = "typing-extensions" },
 ]
 langfuse = [
     { name = "langfuse" },
 ]
+legacy = [
+    { name = "langchain-core" },
+    { name = "langchain-text-splitters" },
+    { name = "langgraph" },
+    { name = "pillow" },
+    { name = "pydantic", version = "2.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "pydantic", version = "2.13.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "pymupdf" },
+    { name = "python-dotenv" },
+    { name = "rank-bm25" },
+    { name = "sentence-transformers" },
+    { name = "typing-extensions" },
+]
+mistral = [
+    { name = "langchain-core" },
+    { name = "langchain-mistralai" },
+    { name = "python-dotenv" },
+    { name = "typing-extensions" },
+]
+ollama = [
+    { name = "langchain-core" },
+    { name = "langchain-ollama" },
+    { name = "python-dotenv" },
+    { name = "typing-extensions" },
+]
+openai = [
+    { name = "langchain-core" },
+    { name = "langchain-openai" },
+    { name = "python-dotenv" },
+    { name = "typing-extensions" },
+]
 qdrant = [
+    { name = "langchain-core" },
+    { name = "langchain-text-splitters" },
+    { name = "pymupdf" },
     { name = "qdrant-client" },
+    { name = "rank-bm25" },
+    { name = "sentence-transformers" },
+    { name = "typing-extensions" },
+]
+server = [
+    { name = "fastapi" },
+    { name = "langchain-core" },
+    { name = "langchain-text-splitters" },
+    { name = "langgraph" },
+    { name = "pydantic", version = "2.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "pydantic", version = "2.13.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "pymupdf" },
+    { name = "python-dotenv" },
+    { name = "python-multipart" },
+    { name = "rank-bm25" },
+    { name = "sentence-transformers" },
+    { name = "typing-extensions" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+ui = [
+    { name = "requests" },
+    { name = "streamlit" },
 ]
 
 [package.dev-dependencies]
@@ -4368,41 +4415,99 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "chromadb", marker = "extra == 'chroma'", specifier = ">=0.5.23" },
-    { name = "fastapi", specifier = ">=0.140" },
-    { name = "google-genai", specifier = ">=1.57.0" },
-    { name = "inquirerpy", specifier = ">=0.3.4" },
-    { name = "langchain", specifier = ">=1.2.0" },
-    { name = "langchain-aws", specifier = ">=1.2.1" },
-    { name = "langchain-core", specifier = ">=1.2.5" },
-    { name = "langchain-google-genai", specifier = ">=4.1.3" },
-    { name = "langchain-mcp-adapters", specifier = ">=0.3.2" },
-    { name = "langchain-mistralai", specifier = ">=1.1.1" },
-    { name = "langchain-ollama", specifier = ">=1.0.1" },
-    { name = "langchain-openai", specifier = ">=1.1.6" },
-    { name = "langchain-text-splitters", specifier = ">=1.1.0" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.140" },
+    { name = "inquirerpy", marker = "extra == 'cli'", specifier = ">=0.3.4" },
+    { name = "langchain", marker = "extra == 'agentic'", specifier = ">=1.2.0" },
+    { name = "langchain", marker = "extra == 'cli'", specifier = ">=1.2.0" },
+    { name = "langchain-aws", marker = "extra == 'bedrock'", specifier = ">=1.2.1" },
+    { name = "langchain-core", marker = "extra == 'agentic'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'bedrock'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'chroma'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'cli'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'documents'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'gemini'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'legacy'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'mistral'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'ollama'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'openai'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'qdrant'", specifier = ">=1.2.5" },
+    { name = "langchain-core", marker = "extra == 'server'", specifier = ">=1.2.5" },
+    { name = "langchain-google-genai", marker = "extra == 'gemini'", specifier = ">=4.1.3" },
+    { name = "langchain-mcp-adapters", marker = "extra == 'agentic'", specifier = ">=0.3.2" },
+    { name = "langchain-mcp-adapters", marker = "extra == 'cli'", specifier = ">=0.3.2" },
+    { name = "langchain-mistralai", marker = "extra == 'mistral'", specifier = ">=1.1.1" },
+    { name = "langchain-ollama", marker = "extra == 'ollama'", specifier = ">=1.0.1" },
+    { name = "langchain-openai", marker = "extra == 'openai'", specifier = ">=1.1.6" },
+    { name = "langchain-text-splitters", marker = "extra == 'chroma'", specifier = ">=1.1.0" },
+    { name = "langchain-text-splitters", marker = "extra == 'cli'", specifier = ">=1.1.0" },
+    { name = "langchain-text-splitters", marker = "extra == 'documents'", specifier = ">=1.1.0" },
+    { name = "langchain-text-splitters", marker = "extra == 'legacy'", specifier = ">=1.1.0" },
+    { name = "langchain-text-splitters", marker = "extra == 'qdrant'", specifier = ">=1.1.0" },
+    { name = "langchain-text-splitters", marker = "extra == 'server'", specifier = ">=1.1.0" },
     { name = "langfuse", marker = "extra == 'langfuse'", specifier = ">=4.0.0" },
-    { name = "langgraph", specifier = ">=1.0.5" },
-    { name = "mcp", specifier = ">=1.24,<2" },
-    { name = "mistralai", specifier = ">=1.5.0" },
-    { name = "nltk", specifier = ">=3.9.3" },
-    { name = "ollama", specifier = ">=0.6.1" },
-    { name = "pillow", specifier = ">=12.2.0" },
-    { name = "pydantic", specifier = ">=2.11.7" },
-    { name = "pymupdf", specifier = ">=1.26.7" },
-    { name = "python-dotenv", specifier = ">=1.1.1" },
-    { name = "python-multipart", specifier = ">=0.0.22" },
+    { name = "langgraph", marker = "extra == 'agentic'", specifier = ">=1.0.5" },
+    { name = "langgraph", marker = "extra == 'cli'", specifier = ">=1.0.5" },
+    { name = "langgraph", marker = "extra == 'legacy'", specifier = ">=1.0.5" },
+    { name = "langgraph", marker = "extra == 'server'", specifier = ">=1.0.5" },
+    { name = "mcp", marker = "extra == 'agentic'", specifier = ">=1.24,<2" },
+    { name = "mcp", marker = "extra == 'cli'", specifier = ">=1.24,<2" },
+    { name = "nltk", marker = "extra == 'cli'", specifier = ">=3.9.3" },
+    { name = "pillow", marker = "extra == 'cli'", specifier = ">=12.2.0" },
+    { name = "pillow", marker = "extra == 'documents'", specifier = ">=12.2.0" },
+    { name = "pillow", marker = "extra == 'legacy'", specifier = ">=12.2.0" },
+    { name = "pydantic", marker = "extra == 'agentic'", specifier = ">=2.11.7" },
+    { name = "pydantic", marker = "extra == 'cli'", specifier = ">=2.11.7" },
+    { name = "pydantic", marker = "extra == 'legacy'", specifier = ">=2.11.7" },
+    { name = "pydantic", marker = "extra == 'server'", specifier = ">=2.11.7" },
+    { name = "pymupdf", marker = "extra == 'chroma'", specifier = ">=1.26.7" },
+    { name = "pymupdf", marker = "extra == 'cli'", specifier = ">=1.26.7" },
+    { name = "pymupdf", marker = "extra == 'documents'", specifier = ">=1.26.7" },
+    { name = "pymupdf", marker = "extra == 'legacy'", specifier = ">=1.26.7" },
+    { name = "pymupdf", marker = "extra == 'qdrant'", specifier = ">=1.26.7" },
+    { name = "pymupdf", marker = "extra == 'server'", specifier = ">=1.26.7" },
+    { name = "python-dotenv", marker = "extra == 'bedrock'", specifier = ">=1.1.1" },
+    { name = "python-dotenv", marker = "extra == 'cli'", specifier = ">=1.1.1" },
+    { name = "python-dotenv", marker = "extra == 'gemini'", specifier = ">=1.1.1" },
+    { name = "python-dotenv", marker = "extra == 'legacy'", specifier = ">=1.1.1" },
+    { name = "python-dotenv", marker = "extra == 'mistral'", specifier = ">=1.1.1" },
+    { name = "python-dotenv", marker = "extra == 'ollama'", specifier = ">=1.1.1" },
+    { name = "python-dotenv", marker = "extra == 'openai'", specifier = ">=1.1.1" },
+    { name = "python-dotenv", marker = "extra == 'server'", specifier = ">=1.1.1" },
+    { name = "python-multipart", marker = "extra == 'server'", specifier = ">=0.0.22" },
     { name = "qdrant-client", marker = "extra == 'qdrant'", specifier = ">=1.17.0" },
-    { name = "quo", specifier = ">=2023.5.1" },
-    { name = "rank-bm25", specifier = ">=0.2.2" },
-    { name = "rich", specifier = ">=14.0.0" },
-    { name = "sentence-transformers", specifier = ">=5.1.2" },
-    { name = "streamlit", specifier = ">=1.40.0" },
-    { name = "transformers", specifier = ">=5.5.0" },
-    { name = "typer", specifier = ">=0.16.0" },
-    { name = "typing-extensions", specifier = ">=4.15.0" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0" },
+    { name = "quo", marker = "extra == 'cli'", specifier = ">=2023.5.1" },
+    { name = "rank-bm25", marker = "extra == 'agentic'", specifier = ">=0.2.2" },
+    { name = "rank-bm25", marker = "extra == 'chroma'", specifier = ">=0.2.2" },
+    { name = "rank-bm25", marker = "extra == 'cli'", specifier = ">=0.2.2" },
+    { name = "rank-bm25", marker = "extra == 'legacy'", specifier = ">=0.2.2" },
+    { name = "rank-bm25", marker = "extra == 'qdrant'", specifier = ">=0.2.2" },
+    { name = "rank-bm25", marker = "extra == 'server'", specifier = ">=0.2.2" },
+    { name = "requests", marker = "extra == 'ui'", specifier = ">=2.32.0" },
+    { name = "rich", marker = "extra == 'cli'", specifier = ">=14.0.0" },
+    { name = "sentence-transformers", marker = "extra == 'chroma'", specifier = ">=5.1.2" },
+    { name = "sentence-transformers", marker = "extra == 'cli'", specifier = ">=5.1.2" },
+    { name = "sentence-transformers", marker = "extra == 'documents'", specifier = ">=5.1.2" },
+    { name = "sentence-transformers", marker = "extra == 'huggingface'", specifier = ">=5.1.2" },
+    { name = "sentence-transformers", marker = "extra == 'legacy'", specifier = ">=5.1.2" },
+    { name = "sentence-transformers", marker = "extra == 'qdrant'", specifier = ">=5.1.2" },
+    { name = "sentence-transformers", marker = "extra == 'server'", specifier = ">=5.1.2" },
+    { name = "streamlit", marker = "extra == 'ui'", specifier = ">=1.40.0" },
+    { name = "typer", marker = "extra == 'cli'", specifier = ">=0.16.0" },
+    { name = "typing-extensions", marker = "extra == 'bedrock'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'chroma'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'cli'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'gemini'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'huggingface'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'legacy'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'mistral'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'ollama'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'openai'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'qdrant'", specifier = ">=4.15.0" },
+    { name = "typing-extensions", marker = "extra == 'server'", specifier = ">=4.15.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'cli'", specifier = ">=0.35.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'server'", specifier = ">=0.35.0" },
 ]
-provides-extras = ["langfuse", "chroma", "qdrant"]
+provides-extras = ["openai", "ollama", "mistral", "gemini", "bedrock", "huggingface", "documents", "legacy", "chroma", "qdrant", "agentic", "server", "cli", "ui", "langfuse"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -5233,19 +5338,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/72/94/1a15dd82efb362ac84269196e94cf00f187f7ed21c242792a923cdb1c61f/typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466", size = 109391, upload-time = "2025-08-25T13:49:26.313Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548", size = 44614, upload-time = "2025-08-25T13:49:24.86Z" },
-]
-
-[[package]]
-name = "typing-inspect"
-version = "0.9.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "mypy-extensions" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/dc/74/1789779d91f1961fa9438e9a8710cdae6bd138c80d7303996933d117264a/typing_inspect-0.9.0.tar.gz", hash = "sha256:b23fc42ff6f6ef6954e4852c1fb512cdd18dbea03134f91f856a95ccc9461f78", size = 13825, upload-time = "2023-05-24T20:25:47.612Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl", hash = "sha256:9ee6fc59062311ef8547596ab6b955e1b8aa46242d854bfc78f4f6b0eff35f9f", size = 8827, upload-time = "2023-05-24T20:25:45.287Z" },
 ]
 
 [[package]]

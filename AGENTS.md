@@ -17,6 +17,7 @@ Read the documents relevant to the change before editing code:
 | --- | --- |
 | `docs/architecture.md` | Current architecture, v4 target layers, and dependency rules |
 | `docs/development.md` | Environment setup and validation commands |
+| `docs/dependencies.md` | Optional extras, dependency ownership, and package audit |
 | `docs/testing.md` | TDD workflow and test pyramid |
 | `docs/integrations.md` | Checklist for adding or changing a provider |
 | `docs/public-api.md` | Public API policy and compatibility expectations |

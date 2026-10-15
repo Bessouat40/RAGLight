@@ -1,13 +1,23 @@
 from __future__ import annotations
 import base64
 from typing import Iterable, Mapping, Optional, Dict, Any
-from typing_extensions import override
 from ..config.settings import Settings
 from .llm import LLM
 import logging
 
-from langchain_ollama import ChatOllama
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+try:
+    from typing_extensions import override
+    from langchain_ollama import ChatOllama
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "langchain_ollama", "langchain_core"),
+        extra="ollama",
+        feature="Ollama support",
+    )
 
 OLLAMA_DEFAULT_CONTEXT_SIZE = 4096
 OLLAMA_OPTION_CONTEXT_SIZE = "num_ctx"

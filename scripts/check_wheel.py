@@ -37,13 +37,53 @@ def main() -> int:
             "Scripts/python.exe" if sys.platform == "win32" else "bin/python"
         )
         subprocess.run(
-            [str(python), "-m", "pip", "install", str(wheels[-1])],
+            [str(python), "-m", "pip", "install", "--no-deps", str(wheels[-1])],
             check=True,
         )
+        core_check = """
+from importlib.metadata import requires
+import sys
+
+import raglight
+from raglight import PipelineConfig, RAGPipeline
+
+assert raglight.__all__ == ["PipelineConfig", "RAGPipeline"]
+assert PipelineConfig(top_k=1).top_k == 1
+unconditional = [item for item in requires("raglight") or [] if "extra ==" not in item]
+assert not unconditional, unconditional
+forbidden = ("fastapi", "langchain", "streamlit", "chromadb", "qdrant_client")
+loaded = [name for name in forbidden if name in sys.modules]
+assert not loaded, loaded
+"""
         subprocess.run(
-            [str(python), "-c", "import raglight; print(raglight.__name__)"],
+            [str(python), "-c", core_check],
             check=True,
         )
+
+        provider = subprocess.run(
+            [str(python), "-c", "import raglight.llm.ollama_model"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if provider.returncode == 0 or "raglight[ollama]" not in provider.stderr:
+            print(provider.stderr, file=sys.stderr)
+            print("Missing Ollama dependencies were not actionable.", file=sys.stderr)
+            return 1
+
+        executable = environment / (
+            "Scripts/raglight.exe" if sys.platform == "win32" else "bin/raglight"
+        )
+        cli = subprocess.run(
+            [str(executable), "--help"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if cli.returncode == 0 or "raglight[cli]" not in cli.stderr:
+            print(cli.stderr, file=sys.stderr)
+            print("Missing CLI dependencies were not actionable.", file=sys.stderr)
+            return 1
 
     print(f"Validated wheel: {wheels[-1].name}")
     return 0

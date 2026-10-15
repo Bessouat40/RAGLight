@@ -1,8 +1,18 @@
 from __future__ import annotations
 from typing import Optional, List
-from typing_extensions import override
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+try:
+    from typing_extensions import override
+    from langchain_google_genai import GoogleGenerativeAIEmbeddings
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "langchain_google_genai"),
+        extra="gemini",
+        feature="Google Gemini embeddings support",
+    )
 
 from ..config.settings import Settings
 from .embeddings_model import EmbeddingsModel

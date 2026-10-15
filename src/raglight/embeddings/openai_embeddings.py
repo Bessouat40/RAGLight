@@ -1,8 +1,18 @@
 from __future__ import annotations
 from typing import Optional, List
-from typing_extensions import override
 
-from langchain_openai import OpenAIEmbeddings
+try:
+    from typing_extensions import override
+    from langchain_openai import OpenAIEmbeddings
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "langchain_openai"),
+        extra="openai",
+        feature="OpenAI embeddings support",
+    )
 
 from ..config.settings import Settings
 from .embeddings_model import EmbeddingsModel

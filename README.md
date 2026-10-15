@@ -103,26 +103,31 @@ Designed for simplicity and flexibility, RAGLight provides modular components to
 
 ## Import library 🛠️
 
-Install the base library:
+Install the dependency-free v4 core:
 
 ```bash
 pip install raglight
 ```
 
-RAGLight uses **optional extras** for vector store backends, so you only install what you need:
+RAGLight uses **optional extras**, so you install only the providers and
+applications you need:
 
-| Extra                | Package installed | Notes                                                 |
-| -------------------- | ----------------- | ----------------------------------------------------- |
-| `raglight[chroma]`   | `chromadb`        | Requires a C++ compiler on Windows                    |
-| `raglight[qdrant]`   | `qdrant-client`   | Pure Python — works on Windows without a C++ compiler |
-| `raglight[langfuse]` | `langfuse`        | Observability tracing                                 |
+| Group | Extras |
+| --- | --- |
+| Model providers | `openai`, `ollama`, `mistral`, `gemini`, `bedrock` |
+| Local ML | `huggingface` |
+| Vector stores | `chroma`, `qdrant` |
+| Applications | `cli`, `server`, `ui`, `agentic` |
+| Supporting features | `documents`, `langfuse`, `legacy` |
 
 ```bash
-pip install "raglight[qdrant]"           # Qdrant only (Windows-friendly)
-pip install "raglight[chroma]"           # ChromaDB only
-pip install "raglight[chroma,qdrant]"    # both
-pip install "raglight[qdrant,langfuse]"  # Qdrant + observability
+pip install "raglight[legacy,ollama,huggingface,qdrant]"
+pip install "raglight[cli,ollama,huggingface,chroma]"
+pip install "raglight[server,openai,qdrant,langfuse]"
 ```
+
+See the [dependency and extras policy](docs/dependencies.md) for the complete
+matrix and composition rules.
 
 ---
 

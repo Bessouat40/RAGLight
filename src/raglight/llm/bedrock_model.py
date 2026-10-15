@@ -1,16 +1,20 @@
 from __future__ import annotations
 from typing import Iterable, Optional, Dict, Any
-from typing_extensions import override
 import logging
 
 try:
+    from typing_extensions import override
     from langchain_aws import ChatBedrock
     from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-except ImportError as e:
-    raise ImportError(
-        "AWS Bedrock support requires langchain-aws. "
-        "Install it with: pip install 'raglight[bedrock]'"
-    ) from e
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "langchain_aws", "langchain_core"),
+        extra="bedrock",
+        feature="AWS Bedrock support",
+    )
 
 from ..config.settings import Settings
 from .llm import LLM

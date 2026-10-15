@@ -36,8 +36,8 @@ are explicitly listed in the unit command; new cross-component and workflow
 tests go in their explicitly named directories. When adding a new unit-test
 package, add it to `test-unit` in the `Makefile` until issue #161 consolidates
 the legacy layout. The tier commands use `uv run --all-extras` because the v3
-suite still exercises optional Chroma and Qdrant integrations; issue #162 will
-split these into isolated extra-specific jobs.
+suite still exercises multiple optional integrations; issue #162 will split
+these into isolated extra-specific jobs.
 
 ## Validation
 
@@ -67,4 +67,5 @@ typed even if a legacy neighbor is not.
 
 Explain why the dependency belongs in the base package or a named extra. After
 changing packaging, run `make package-check` and verify the relevant minimal or
-extra installation. Issue #156 will establish the complete extras matrix.
+extra installation. See `dependencies.md` for the complete extras matrix and
+dependency ownership rules.

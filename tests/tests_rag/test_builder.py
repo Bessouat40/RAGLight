@@ -1,3 +1,6 @@
+import subprocess
+import sys
+import textwrap
 import unittest
 import logging
 from unittest.mock import patch, MagicMock
@@ -8,6 +11,36 @@ logging.getLogger().setLevel(logging.WARNING)
 
 
 class TestRAGBuilder(unittest.TestCase):
+    def test_import_does_not_load_concrete_provider_integrations(self):
+        script = textwrap.dedent("""
+            import sys
+            from raglight.rag.builder import Builder
+
+            forbidden = (
+                "langchain_aws",
+                "langchain_google_genai",
+                "langchain_mistralai",
+                "langchain_ollama",
+                "langchain_openai",
+                "sentence_transformers",
+            )
+            loaded = [
+                name for name in forbidden
+                if name in sys.modules
+                or any(module.startswith(f"{name}.") for module in sys.modules)
+            ]
+            raise SystemExit(f"unexpected imports: {loaded}" if loaded else 0)
+            """)
+
+        completed = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
     @patch("raglight.vectorstore.chroma.ChromaVS")
     def test_builder_rag(self, mock_chroma):
         mock_chroma_instance = MagicMock()
