@@ -31,7 +31,7 @@ lint:
 	uv run ruff check .
 
 typecheck:
-	uv run mypy scripts
+	uv run mypy scripts src/raglight/pipeline
 
 package-check:
 	uv run python scripts/check_wheel.py

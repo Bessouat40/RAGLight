@@ -5,6 +5,21 @@ describes the target API, not the API currently implemented by v3. The
 implementation will land incrementally; until the v4 release, examples must
 label target-v4 code as such.
 
+## Implementation status
+
+The first v4 slice currently implements:
+
+- `raglight.RAGPipeline` with keyword-only component injection;
+- immutable `raglight.PipelineConfig(top_k=...)`;
+- stateless `generate(..., history=...)` returning text;
+- stateless `stream(..., history=...)` yielding text chunks;
+- a root import that loads no concrete provider or delivery package.
+
+The rest of this document defines the destination for subsequent milestone
+issues. Contracts and reranking land in #157, registry-backed configuration in
+#158, structured responses and events in #159, sessions in #160, and ingestion
+orchestration as the architecture migration progresses.
+
 ## Design principles
 
 - There is one pipeline type for standard retrieval-augmented generation.
@@ -30,8 +45,8 @@ from raglight import PipelineConfig, RAGPipeline
 ```
 
 `RAGPipeline` is the single standard pipeline abstraction. `PipelineConfig`
-contains provider-independent pipeline behavior and the serializable component
-specifications used by the optional registry construction path.
+contains provider-independent pipeline behavior. Registry-backed component
+specifications will extend the named construction path in #158.
 
 No concrete provider, builder, low-level graph, global settings object, or
 delivery-layer type is exported from `raglight`.
@@ -143,16 +158,17 @@ pipeline = RAGPipeline(
     llm=my_llm,
     embeddings=my_embeddings,
     vector_store=my_vector_store,
-    reranker=my_reranker,
+    config=PipelineConfig(top_k=5),
 )
 ```
 
-`reranker` is optional. Provider-independent behavior such as retrieval count
-is supplied explicitly to the pipeline or through `PipelineConfig`; provider
-credentials and SDK clients remain owned by integration instances.
+Provider-independent behavior such as retrieval count is supplied through
+`PipelineConfig`; provider credentials and SDK clients remain owned by
+integration instances. Optional reranker injection is added with the extension
+contracts in #157.
 
-Serializable configuration uses a named constructor so it cannot be confused
-with dependency injection:
+After registries land in #158, serializable configuration will use a named
+constructor so it cannot be confused with dependency injection:
 
 ```python
 from raglight import PipelineConfig, RAGPipeline

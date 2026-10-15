@@ -44,7 +44,7 @@ split these into isolated extra-specific jobs.
 ```bash
 make format-check       # Black, check only
 make lint               # Ruff correctness rules
-make typecheck          # currently enforced typed tooling scope
+make typecheck          # typed tooling and all new v4 modules
 make architecture-check # dependency boundaries
 make package-check      # build and inspect/install the wheel
 make check              # complete local gate

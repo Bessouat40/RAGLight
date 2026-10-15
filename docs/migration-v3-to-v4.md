@@ -56,7 +56,7 @@ pipeline = RAGPipeline(rag_config, vector_store_config)
 ```
 
 v4 applications either inject components, as above, or use the explicit
-serializable factory path:
+serializable factory path planned by #158:
 
 ```python
 from raglight import PipelineConfig, RAGPipeline

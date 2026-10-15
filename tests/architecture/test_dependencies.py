@@ -38,6 +38,24 @@ class ArchitectureDependencyTests(unittest.TestCase):
 
             self.assertEqual([], CHECK_ARCHITECTURE.violations(package))
 
+    def test_v4_pipeline_cannot_import_legacy_provider_packages(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            pipeline = package / "pipeline"
+            pipeline.mkdir()
+            (pipeline / "pipeline.py").write_text(
+                "from raglight.llm.ollama_model import OllamaModel\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "pipeline/pipeline.py:1: v4 application dependency on "
+                    "raglight.llm.ollama_model"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
