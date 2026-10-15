@@ -1,10 +1,5 @@
 name: Run Test
 
-env:
-  UV_SYSTEM_PYTHON: 1
-  # Force CPU-only PyTorch in CI to avoid downloading ~2 GB of NVIDIA/CUDA packages
-  UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
-  UV_INDEX_STRATEGY: unsafe-best-match
 on:
   push:
     branches: ['main']
@@ -28,8 +23,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Install the project
-        run: make install
+      - name: Install development environment
+        run: make install-dev
 
       - name: Format with black
         run: uv run black --check . && uv run ruff check .
