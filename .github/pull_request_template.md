@@ -1,41 +1,47 @@
-# Title <!-- Replace with your title -->
+# Summary
 
-## Description
+<!-- What observable behavior or engineering constraint changes, and why? -->
 
-<!-- Briefly explain the changes. Why is this change necessary? -->
+## Related issue
 
-## Related Issue
+Closes #
 
-<!-- If this PR closes an issue, please write "Closes #123" -->
+## Architectural impact
 
-## Type of change
+- Owning layer:
+- Public API impact:
+- Optional dependency impact:
+- Architecture decision record required: yes / no
 
-<!-- Please check the relevant option -->
+## Test-driven development evidence
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
+<!-- Describe the first failing test and the behavior it specifies. -->
 
-- [ ] New feature (non-breaking change which adds functionality)
+- Failing test:
+- Unit coverage:
+- Contract coverage:
+- Integration coverage:
+- End-to-end coverage:
+- Live tests, if any:
 
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+## Validation
 
-- [ ] Refactoring (code improvement without functionality change)
+- [ ] I followed the red, green, refactor workflow for behavior changes.
+- [ ] Every behavior change has unit tests.
+- [ ] Every bug fix has a regression test.
+- [ ] New or changed extension implementations pass shared contract tests.
+- [ ] Affected component interactions have integration coverage.
+- [ ] Affected public workflows have end-to-end coverage where appropriate.
+- [ ] Default tests require no network, secrets, or external services.
+- [ ] `make architecture-check` passes.
+- [ ] `make check` passes, or failures and their scope are documented below.
+- [ ] Public API and migration documentation are updated where required.
+- [ ] I did not include unrelated changes.
 
-- [ ] Documentation update
+## Documentation
 
-## Checklist
+<!-- List documents changed, or explain why no documentation change is needed. -->
 
-<!-- Please ensure the following steps are done -->
+## Remaining work or known limitations
 
-- [ ] My code follows the style guidelines of this project (Black formatted)
-
-- [ ] I have performed a self-review of my own code
-
-- [ ] I have commented my code, particularly in hard-to-understand areas
-
-- [ ] I have added tests that prove my fix is effective or that my feature works
-
-- [ ] New and existing unit tests pass locally with my changes (make test)
-
-## Screenshots / Logs (if applicable)
-
-<!-- Add screenshots or logs if relevant -->
+<!-- Be explicit about deferred work. -->

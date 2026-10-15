@@ -1,0 +1,36 @@
+name: Engineering quality
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v5
+      - name: Install development environment
+        run: make install-dev
+      - name: Check formatting
+        run: make format-check
+      - name: Lint
+        run: make lint
+      - name: Check typed tooling
+        run: make typecheck
+      - name: Check architecture boundaries
+        run: make architecture-check
+      - name: Run integration tests
+        run: make test-integration
+      - name: Run end-to-end tests
+        run: make test-e2e
+      - name: Validate package artifacts
+        run: make package-check

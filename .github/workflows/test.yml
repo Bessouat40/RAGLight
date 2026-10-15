@@ -16,12 +16,10 @@ jobs:
     name: python
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -34,13 +32,7 @@ jobs:
         run: make install
 
       - name: Format with black
-        run: uv run black .
-
-      - name: Commit formatted code
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'style: auto-format with black'
-          file_pattern: '*.py'
+        run: uv run black --check . && uv run ruff check .
 
       - name: Run tests
         run: make test
