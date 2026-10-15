@@ -64,4 +64,26 @@ raglight = { workspace = true }
 dev = [
     "raglight",
     "black>=25.12.0",
+    "build>=1.2.2",
+    "mypy>=1.15.0",
+    "ruff>=0.11.0",
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+# Start with correctness rules that the v3 codebase can enforce immediately.
+# Expand this set as issue #161 removes the remaining legacy debt.
+select = ["E9", "F63", "F7", "F82"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+show_error_codes = true
+warn_unused_configs = true

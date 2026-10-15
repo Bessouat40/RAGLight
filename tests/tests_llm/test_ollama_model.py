@@ -10,7 +10,9 @@ class TestOllamaModel(unittest.TestCase):
     def setUp(self, MockChatOllama):
         mock_lc_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = "Machine learning (ML) is a subset of artificial intelligence"
+        mock_response.content = (
+            "Machine learning (ML) is a subset of artificial intelligence"
+        )
         mock_lc_client.invoke.return_value = mock_response
         MockChatOllama.return_value = mock_lc_client
 
@@ -57,6 +59,7 @@ class TestOllamaModelStreaming(unittest.TestCase):
 
     def test_generate_streaming_builds_correct_messages(self):
         from langchain_core.messages import SystemMessage, HumanMessage
+
         list(self.model.generate_streaming({"question": "Say hello."}))
         call_args = self.mock_lc_client.stream.call_args
         messages = call_args[0][0]
@@ -67,11 +70,16 @@ class TestOllamaModelStreaming(unittest.TestCase):
 
     def test_generate_streaming_includes_history(self):
         from langchain_core.messages import AIMessage, HumanMessage
+
         history = [
             {"role": "user", "content": "Previous question"},
             {"role": "assistant", "content": "Previous answer"},
         ]
-        list(self.model.generate_streaming({"question": "Follow-up.", "history": history}))
+        list(
+            self.model.generate_streaming(
+                {"question": "Follow-up.", "history": history}
+            )
+        )
         call_args = self.mock_lc_client.stream.call_args
         messages = call_args[0][0]
         # system + 2 history + user question = 4
