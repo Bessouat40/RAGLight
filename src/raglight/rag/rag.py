@@ -231,7 +231,8 @@ class RAG:
             from langfuse.langchain import CallbackHandler
         except ImportError as exc:
             raise ImportError(
-                "Langfuse is not installed. Install it with: pip install 'langfuse==4.0.0'"
+                "Langfuse support requires optional dependencies. "
+                "Install them with: pip install 'raglight[langfuse]'"
             ) from exc
 
         os.environ["LANGFUSE_PUBLIC_KEY"] = self.langfuse_config.public_key

@@ -2,11 +2,21 @@ from __future__ import annotations
 import logging
 import uuid
 from typing import List, Dict, Optional, Any, cast
-from typing_extensions import override
 
-import chromadb
-from chromadb.api.types import EmbeddingFunction, Documents, Embeddings
-from langchain_core.documents import Document
+try:
+    from typing_extensions import override
+    import chromadb
+    from chromadb.api.types import EmbeddingFunction, Documents, Embeddings
+    from langchain_core.documents import Document
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "chromadb", "langchain_core"),
+        extra="chroma",
+        feature="Chroma vector store support",
+    )
 
 from ..document_processing.document_processor import DocumentProcessor
 from .vector_store import VectorStore

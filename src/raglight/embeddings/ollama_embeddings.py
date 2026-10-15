@@ -1,8 +1,18 @@
 from __future__ import annotations
 from typing import Optional, List, Dict, Any
-from typing_extensions import override
 
-from langchain_ollama import OllamaEmbeddings
+try:
+    from typing_extensions import override
+    from langchain_ollama import OllamaEmbeddings
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "langchain_ollama"),
+        extra="ollama",
+        feature="Ollama embeddings support",
+    )
 
 from ..config.settings import Settings
 from .embeddings_model import EmbeddingsModel

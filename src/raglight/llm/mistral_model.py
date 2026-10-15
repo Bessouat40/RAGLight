@@ -1,12 +1,22 @@
 from __future__ import annotations
 from typing import Iterable, Optional, Dict, Any
-from typing_extensions import override
 from ..config.settings import Settings
 from .llm import LLM
 import logging
 
-from langchain_mistralai import ChatMistralAI
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+try:
+    from typing_extensions import override
+    from langchain_mistralai import ChatMistralAI
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "langchain_mistralai", "langchain_core"),
+        extra="mistral",
+        feature="Mistral support",
+    )
 
 
 class MistralModel(LLM):

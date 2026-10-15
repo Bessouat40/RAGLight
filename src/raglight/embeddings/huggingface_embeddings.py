@@ -1,8 +1,18 @@
 from __future__ import annotations
 from typing import List
-from typing_extensions import override
 
-from sentence_transformers import SentenceTransformer
+try:
+    from typing_extensions import override
+    from sentence_transformers import SentenceTransformer
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "sentence_transformers"),
+        extra="huggingface",
+        feature="Hugging Face embeddings support",
+    )
 
 from .embeddings_model import EmbeddingsModel
 

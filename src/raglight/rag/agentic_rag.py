@@ -1,12 +1,19 @@
 import logging
-from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.agents import create_agent
-from langchain_mistralai import ChatMistralAI
-from langchain_ollama import ChatOllama
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from typing import TYPE_CHECKING
+
+try:
+    from langchain.agents import create_agent
+    from langchain_core.messages import HumanMessage, AIMessage
+    from langchain_mcp_adapters.client import MultiServerMCPClient
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("langchain", "langchain_core", "langchain_mcp_adapters"),
+        extra="agentic",
+        feature="Agentic RAG support",
+    )
 
 from .agentic_rag_utils.rag_tools import RetrieverTool, ClassRetrieverTool
 from .builder import Builder
@@ -14,6 +21,9 @@ from ..vectorstore.vector_store import VectorStore
 from ..config.agentic_rag_config import AgenticRAGConfig
 from ..config.settings import Settings
 from ..config.vector_store_config import VectorStoreConfig
+
+if TYPE_CHECKING:
+    from langchain_core.language_models.chat_models import BaseChatModel
 
 
 class AgenticRAG:
@@ -84,6 +94,18 @@ class AgenticRAG:
         provider = config.provider
 
         if provider == Settings.GOOGLE_GEMINI:
+            try:
+                from langchain_google_genai import ChatGoogleGenerativeAI
+            except ModuleNotFoundError as error:
+                from .._optional import optional_import_error
+
+                optional_import_error(
+                    error,
+                    dependency="langchain_google_genai",
+                    extra="gemini",
+                    feature="Google Gemini agent support",
+                )
+
             return ChatGoogleGenerativeAI(
                 model=config.model,
                 google_api_key=config.api_key or Settings.GEMINI_API_KEY,
@@ -91,6 +113,18 @@ class AgenticRAG:
             )
 
         elif provider == Settings.MISTRAL:
+            try:
+                from langchain_mistralai import ChatMistralAI
+            except ModuleNotFoundError as error:
+                from .._optional import optional_import_error
+
+                optional_import_error(
+                    error,
+                    dependency="langchain_mistralai",
+                    extra="mistral",
+                    feature="Mistral agent support",
+                )
+
             return ChatMistralAI(
                 model=config.model,
                 mistral_api_key=config.api_key or Settings.MISTRAL_API_KEY,
@@ -98,6 +132,18 @@ class AgenticRAG:
             )
 
         elif provider == Settings.OPENAI:
+            try:
+                from langchain_openai import ChatOpenAI
+            except ModuleNotFoundError as error:
+                from .._optional import optional_import_error
+
+                optional_import_error(
+                    error,
+                    dependency="langchain_openai",
+                    extra="openai",
+                    feature="OpenAI agent support",
+                )
+
             return ChatOpenAI(
                 model=config.model,
                 base_url=config.api_base or Settings.DEFAULT_OPENAI_CLIENT,
@@ -106,6 +152,18 @@ class AgenticRAG:
             )
 
         elif provider == Settings.OLLAMA:
+            try:
+                from langchain_ollama import ChatOllama
+            except ModuleNotFoundError as error:
+                from .._optional import optional_import_error
+
+                optional_import_error(
+                    error,
+                    dependency="langchain_ollama",
+                    extra="ollama",
+                    feature="Ollama agent support",
+                )
+
             return ChatOllama(
                 model=config.model,
                 base_url=config.api_base or Settings.DEFAULT_OLLAMA_CLIENT,
@@ -113,6 +171,18 @@ class AgenticRAG:
             )
 
         elif provider == Settings.LMSTUDIO:
+            try:
+                from langchain_openai import ChatOpenAI
+            except ModuleNotFoundError as error:
+                from .._optional import optional_import_error
+
+                optional_import_error(
+                    error,
+                    dependency="langchain_openai",
+                    extra="openai",
+                    feature="LM Studio agent support",
+                )
+
             return ChatOpenAI(
                 model=config.model,
                 openai_api_key="not-needed",

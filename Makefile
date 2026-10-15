@@ -1,5 +1,5 @@
 install:
-	uv pip install -e ".[chroma,qdrant]"
+	uv pip install -e ".[agentic,bedrock,chroma,cli,documents,gemini,huggingface,langfuse,legacy,mistral,ollama,openai,qdrant,server,ui]"
 
 install-dev:
 	uv sync --all-extras --group dev

@@ -1,14 +1,18 @@
 from __future__ import annotations
 from typing import Optional, List
-from typing_extensions import override
 
 try:
+    from typing_extensions import override
     from langchain_aws import BedrockEmbeddings
-except ImportError as e:
-    raise ImportError(
-        "AWS Bedrock support requires langchain-aws. "
-        "Install it with: pip install 'raglight[bedrock]'"
-    ) from e
+except ModuleNotFoundError as error:
+    from .._optional import optional_import_error
+
+    optional_import_error(
+        error,
+        dependency=("typing_extensions", "langchain_aws"),
+        extra="bedrock",
+        feature="AWS Bedrock embeddings support",
+    )
 
 from ..config.settings import Settings
 from .embeddings_model import EmbeddingsModel

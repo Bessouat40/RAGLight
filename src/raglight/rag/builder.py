@@ -3,22 +3,12 @@ import logging
 from typing import Optional
 
 from ..config.langfuse_config import LangfuseConfig
-from ..embeddings.ollama_embeddings import OllamaEmbeddingsModel
 from ..cross_encoder.cross_encoder_model import CrossEncoderModel
-from ..cross_encoder.huggingface_cross_encoder import HuggingfaceCrossEncoderModel
 from ..llm.llm import LLM
-from ..llm.ollama_model import OllamaModel
-from ..embeddings.openai_embeddings import OpenAIEmbeddingsModel
-from ..llm.lmstudio_model import LMStudioModel
-from ..llm.mistral_model import MistralModel
-from ..llm.openai_model import OpenAIModel
 from ..vectorstore.vector_store import VectorStore
 from ..config.settings import Settings
 from .rag import RAG
 from ..embeddings.embeddings_model import EmbeddingsModel
-from ..embeddings.huggingface_embeddings import HuggingfaceEmbeddingsModel
-from ..embeddings.gemini_embeddings import GeminiEmbeddingsModel
-from ..llm.gemini_model import GeminiModel
 
 
 class Builder:
@@ -60,13 +50,23 @@ class Builder:
         """
         logging.info("⏳ Creating an Embeddings Model...")
         if type == Settings.HUGGINGFACE:
+            from ..embeddings.huggingface_embeddings import (
+                HuggingfaceEmbeddingsModel,
+            )
+
             kwargs.pop("api_base", None)
             self.embeddings = HuggingfaceEmbeddingsModel(**kwargs)
         elif type == Settings.OLLAMA:
+            from ..embeddings.ollama_embeddings import OllamaEmbeddingsModel
+
             self.embeddings = OllamaEmbeddingsModel(**kwargs)
         elif type in (Settings.VLLM, Settings.OPENAI):
+            from ..embeddings.openai_embeddings import OpenAIEmbeddingsModel
+
             self.embeddings = OpenAIEmbeddingsModel(**kwargs)
         elif type == Settings.GOOGLE_GEMINI:
+            from ..embeddings.gemini_embeddings import GeminiEmbeddingsModel
+
             self.embeddings = GeminiEmbeddingsModel(**kwargs)
         elif type == Settings.AWS_BEDROCK:
             from ..embeddings.bedrock_embeddings import BedrockEmbeddingsModel
@@ -94,6 +94,10 @@ class Builder:
         """
         logging.info("⏳ Creating a Cross Encoder Model...")
         if type == Settings.HUGGINGFACE:
+            from ..cross_encoder.huggingface_cross_encoder import (
+                HuggingfaceCrossEncoderModel,
+            )
+
             self.cross_encoder = HuggingfaceCrossEncoderModel(**kwargs)
         else:
             raise ValueError(f"Unknown Cross Encoder Model type: {type}")
@@ -120,13 +124,8 @@ class Builder:
                 "You need to set an embedding model before setting a vector store"
             )
         elif type == Settings.CHROMA:
-            try:
-                from ..vectorstore.chroma import ChromaVS
-            except ImportError:
-                raise ImportError(
-                    "chromadb is required to use ChromaVS. "
-                    "Install it with: pip install raglight[chroma]"
-                )
+            from ..vectorstore.chroma import ChromaVS
+
             search_type = kwargs.pop("search_type", Settings.SEARCH_HYBRID)
             alpha = kwargs.pop("alpha", 0.5)
             self.vector_store = ChromaVS(
@@ -167,14 +166,24 @@ class Builder:
         """
         logging.info("⏳ Creating an LLM...")
         if type == Settings.OLLAMA:
+            from ..llm.ollama_model import OllamaModel
+
             self.llm = OllamaModel(**kwargs)
         elif type == Settings.LMSTUDIO:
+            from ..llm.lmstudio_model import LMStudioModel
+
             self.llm = LMStudioModel(**kwargs)
         elif type == Settings.MISTRAL:
+            from ..llm.mistral_model import MistralModel
+
             self.llm = MistralModel(**kwargs)
         elif type in (Settings.VLLM, Settings.OPENAI):
+            from ..llm.openai_model import OpenAIModel
+
             self.llm = OpenAIModel(**kwargs)
         elif type == Settings.GOOGLE_GEMINI:
+            from ..llm.gemini_model import GeminiModel
+
             self.llm = GeminiModel(**kwargs)
         elif type == Settings.AWS_BEDROCK:
             from ..llm.bedrock_model import BedrockModel
