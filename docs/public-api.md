@@ -28,17 +28,20 @@ answer: str = pipeline.generate("What is RAGLight?", history=[])
 chunks = pipeline.stream("What is RAGLight?", history=[])
 ```
 
-`PipelineConfig` is immutable and currently owns only `top_k`, which must be
-greater than zero.
+`PipelineConfig` is immutable. It owns `top_k`, which must be greater than zero,
+and optional serializable component selections used by registry-backed
+construction.
 
 ## Domain models
 
 ```python
-from raglight.models import Document
+from raglight.models import ComponentConfig, Document
 ```
 
 `Document(page_content: str, metadata: dict[str, object] = {})` is the value
 exchanged by retrieval, reranking, and document-processing boundaries.
+`ComponentConfig(name, options)` is the provider-independent serialized form
+of one named integration.
 
 ## Extension contracts
 
@@ -80,6 +83,51 @@ Provider modules may require their matching optional extra. Importing the root,
 contracts, or models must not load those dependencies. Undocumented deep paths
 inside `raglight.integrations` are implementation details.
 
+### Integration registries
+
+The registry API is public from the integration namespace:
+
+```python
+from raglight.integrations import (
+    IntegrationRegistries,
+    IntegrationRegistry,
+    default_registries,
+)
+```
+
+Built-in entries are lazy import references. Inspecting registry names does not
+load an integration module or SDK. A registry normalizes names, rejects
+accidental duplicate registration, and reports available names for failed
+lookups.
+
+Custom components can optionally participate in named configuration:
+
+```python
+default_registries.llms.register("my-llm", MyLLM)
+```
+
+Direct injection does not require registration.
+
+### Serializable construction
+
+`PipelineConfig.from_dict(...)` validates an in-memory mapping.
+`PipelineConfig.from_file(...)` supports `.json` and `.toml` files. Named
+construction requires explicit registries so the pipeline never imports a
+concrete provider:
+
+```python
+from raglight import PipelineConfig, RAGPipeline
+from raglight.integrations import default_registries
+
+config = PipelineConfig.from_file("raglight.toml")
+pipeline = RAGPipeline.from_config(config, registries=default_registries)
+```
+
+The required component sections are `llm`, `embeddings`, and `vector_store`;
+`reranker` is optional. Each section contains `name` and an optional `options`
+mapping. The configured embedding instance is injected into the vector-store
+factory as `embeddings_model` and cannot be overridden by serialized data.
+
 ## Stability rules
 
 - A documented implemented name is public.
@@ -97,7 +145,6 @@ server, CLI, and UI are removed and are not v4 aliases or compatibility shims.
 
 The following are not implemented in this change:
 
-- registry-backed serializable construction (#158);
 - structured responses and execution events (#159);
 - isolated conversation sessions (#160);
 - a separately designed agentic API;

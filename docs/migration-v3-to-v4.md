@@ -78,13 +78,21 @@ pipeline = RAGPipeline(rag_config, vector_store_config)
 ```
 
 v4 applications either inject components, as above, or use the explicit
-serializable factory path planned by #158:
+serializable registry path:
 
 ```python
 from raglight import PipelineConfig, RAGPipeline
+from raglight.integrations import default_registries
 
-pipeline = RAGPipeline.from_config(PipelineConfig.from_file("raglight.toml"))
+pipeline = RAGPipeline.from_config(
+    PipelineConfig.from_file("raglight.toml"),
+    registries=default_registries,
+)
 ```
+
+Unlike v3 settings and builder branches, each configured component has a
+registry name and provider-owned options. Custom factories may register a name,
+but custom component instances should normally be injected directly.
 
 `RAGConfig`, `VectorStoreConfig`, and `AgenticRAGConfig` are not carried into
 the standard v4 API as separate overlapping configuration objects.

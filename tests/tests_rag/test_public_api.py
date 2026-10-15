@@ -10,7 +10,7 @@ from dataclasses import FrozenInstanceError
 
 import raglight
 from raglight import PipelineConfig, RAGPipeline
-from raglight.models import Document
+from raglight.models import ComponentConfig, Document
 
 
 class PublicAPITests(unittest.TestCase):
@@ -70,6 +70,26 @@ class PipelineConfigTests(unittest.TestCase):
 
         with self.assertRaises(FrozenInstanceError):
             config.top_k = 4
+
+    def test_serialized_component_names_are_normalized(self):
+        config = PipelineConfig.from_dict(
+            {"llm": {"name": " OpenAI ", "options": {"model_name": "model"}}}
+        )
+
+        self.assertEqual(
+            ComponentConfig(name="openai", options={"model_name": "model"}),
+            config.llm,
+        )
+
+    def test_unknown_serialized_fields_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "unknown pipeline.*unexpected"):
+            PipelineConfig.from_dict({"unexpected": True})
+
+    def test_component_options_are_immutable(self):
+        component = ComponentConfig(name="custom", options={"value": 1})
+
+        with self.assertRaises(TypeError):
+            component.options["value"] = 2
 
 
 class DocumentTests(unittest.TestCase):

@@ -29,7 +29,8 @@ The public API is layered by purpose:
    namespaces and extras.
 
 Direct component injection is canonical. `RAGPipeline.from_config(...)`
-provides the registry-backed, serializable convenience path. `Builder`, the
+provides the registry-backed, serializable convenience path and receives its
+registries explicitly. `Builder`, the
 low-level execution graph, global provider settings, and concrete integrations
 are not root exports.
 

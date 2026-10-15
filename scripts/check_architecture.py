@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = PROJECT_ROOT / "src" / "raglight"
 V4_APPLICATION_DIRECTORY = "pipeline"
 CORE_DIRECTORIES = {"contracts", "models"}
+CORE_FILES = {"registry.py"}
 FORBIDDEN_APPLICATION_PREFIXES = ("raglight.integrations",)
 FORBIDDEN_CORE_PREFIXES = ("raglight.integrations", "raglight.pipeline")
 OPTIONAL_SDK_MODULES = {
@@ -63,7 +64,13 @@ def violations(package_root: Path = PACKAGE_ROOT) -> list[str]:
                 )
                 continue
 
-            is_core = relative.parts and relative.parts[0] in CORE_DIRECTORIES
+            is_core = bool(
+                relative.parts
+                and (
+                    relative.parts[0] in CORE_DIRECTORIES
+                    or relative.as_posix() in CORE_FILES
+                )
+            )
             forbidden_core_dependency = module.startswith(FORBIDDEN_CORE_PREFIXES)
             forbidden_core_sdk = module.split(".", 1)[0] in OPTIONAL_SDK_MODULES
             if is_core and (forbidden_core_dependency or forbidden_core_sdk):

@@ -48,12 +48,15 @@ import sys
 import raglight
 from raglight import PipelineConfig, RAGPipeline
 from raglight.contracts import EmbeddingModel, LLM, VectorStore
-from raglight.models import Document
+from raglight.integrations import default_registries
+from raglight.models import ComponentConfig, Document
 
 assert raglight.__all__ == ["PipelineConfig", "RAGPipeline"]
 assert Path(raglight.__file__).with_name("py.typed").is_file()
 assert PipelineConfig(top_k=1).top_k == 1
+assert ComponentConfig(name="CUSTOM").name == "custom"
 assert Document(page_content="test").page_content == "test"
+assert "ollama" in default_registries.llms.names
 assert all(contract is not None for contract in (EmbeddingModel, LLM, VectorStore))
 unconditional = [item for item in requires("raglight") or [] if "extra ==" not in item]
 assert not unconditional, unconditional
@@ -67,7 +70,14 @@ assert not loaded, loaded
         )
 
         provider = subprocess.run(
-            [str(python), "-c", "import raglight.integrations.ollama"],
+            [
+                str(python),
+                "-c",
+                (
+                    "from raglight.integrations import default_registries; "
+                    "default_registries.llms.create('ollama', model_name='test')"
+                ),
+            ],
             capture_output=True,
             check=False,
             text=True,
