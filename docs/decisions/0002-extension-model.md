@@ -21,16 +21,15 @@ the required methods but do not inherit from the protocols. The v4 signatures
 are documented in `docs/public-api.md`; `raglight.models.Document` is the value
 exchanged by retrieval and reranking contracts.
 
-Legacy abstract base classes remain temporarily available for v3 compatibility.
-Built-in components conform structurally, and the legacy cross encoder exposes
-a `rerank` adapter for the v4 contract.
+The v3 abstract base classes and cross-encoder adapter are removed. Built-in
+components conform structurally to the same protocols as custom components.
 
 ## Consequences
 
 - Custom components work without editing the builder.
 - Registries remain a convenience rather than a privileged internal path.
 - Contract tests become part of integration acceptance.
-- Existing provider classes may require adapters during migration.
+- Provider adapters can evolve internally without changing core contracts.
 
 ## Alternatives considered
 

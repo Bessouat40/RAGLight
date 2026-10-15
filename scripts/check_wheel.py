@@ -67,7 +67,7 @@ assert not loaded, loaded
         )
 
         provider = subprocess.run(
-            [str(python), "-c", "import raglight.llm.ollama_model"],
+            [str(python), "-c", "import raglight.integrations.ollama"],
             capture_output=True,
             check=False,
             text=True,
@@ -75,20 +75,6 @@ assert not loaded, loaded
         if provider.returncode == 0 or "raglight[ollama]" not in provider.stderr:
             print(provider.stderr, file=sys.stderr)
             print("Missing Ollama dependencies were not actionable.", file=sys.stderr)
-            return 1
-
-        executable = environment / (
-            "Scripts/raglight.exe" if sys.platform == "win32" else "bin/raglight"
-        )
-        cli = subprocess.run(
-            [str(executable), "--help"],
-            capture_output=True,
-            check=False,
-            text=True,
-        )
-        if cli.returncode == 0 or "raglight[cli]" not in cli.stderr:
-            print(cli.stderr, file=sys.stderr)
-            print("Missing CLI dependencies were not actionable.", file=sys.stderr)
             return 1
 
     print(f"Validated wheel: {wheels[-1].name}")

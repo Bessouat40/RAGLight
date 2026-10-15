@@ -19,7 +19,7 @@ class CustomVectorStore:
                 page_content="RAGLight supports injected components.",
                 metadata={"source": "custom-store"},
             ),
-            Document(page_content="No Builder registration is required."),
+            Document(page_content="No registry entry is required."),
         ]
         return documents[:k]
 

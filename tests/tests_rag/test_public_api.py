@@ -30,13 +30,10 @@ class PublicAPITests(unittest.TestCase):
             import raglight
 
             forbidden = (
-                "raglight.api",
-                "raglight.cli",
-                "raglight.ui",
-                "raglight.llm.ollama_model",
-                "raglight.llm.openai_model",
-                "raglight.vectorstore.chroma",
-                "raglight.vectorstore.qdrant",
+                "raglight.integrations.ollama",
+                "raglight.integrations.openai",
+                "raglight.integrations.chroma",
+                "raglight.integrations.qdrant",
                 "fastapi",
                 "langchain",
                 "langgraph",
@@ -56,6 +53,11 @@ class PublicAPITests(unittest.TestCase):
         )
 
         self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_removed_v3_packages_are_not_importable(self):
+        for module in ("raglight.rag", "raglight.config", "raglight.api"):
+            with self.subTest(module=module):
+                self.assertIsNone(__import__("importlib.util").util.find_spec(module))
 
 
 class PipelineConfigTests(unittest.TestCase):

@@ -1,11 +1,8 @@
 # Migrating from RAGLight v3 to v4
 
 RAGLight v4 intentionally replaces the overlapping v3 construction APIs with
-one pipeline API. This guide records the target migration before implementation
-so each v4 change has a stable destination.
-
-The examples on this page describe the target v4 API. They will become
-executable as the linked v4 issues land.
+one pipeline API. Implemented replacements are executable today; later
+capabilities are labeled as planned.
 
 ## Construction
 
@@ -32,13 +29,13 @@ from raglight import PipelineConfig, RAGPipeline
 from raglight.integrations.openai import OpenAIEmbeddings, OpenAILLM
 from raglight.integrations.qdrant import QdrantVectorStore
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+embeddings = OpenAIEmbeddings(model_name="text-embedding-3-small")
 pipeline = RAGPipeline(
-    llm=OpenAILLM(model="gpt-4.1-mini"),
+    llm=OpenAILLM(model_name="gpt-4.1-mini"),
     embeddings=embeddings,
     vector_store=QdrantVectorStore(
-        collection="docs",
-        embeddings=embeddings,
+        collection_name="docs",
+        embeddings_model=embeddings,
     ),
     config=PipelineConfig(top_k=5),
 )
@@ -68,8 +65,8 @@ custom_llm: LLM = MyLLM()
 ```
 
 The annotation is optional and no registration or inheritance is required.
-The legacy ABCs remain available only as v3 compatibility scaffolding. See the
-[complete custom-component example](../examples/v4_custom_components.py) for
+The legacy ABCs were removed. See the [complete custom-component
+example](../examples/v4_custom_components.py) for
 LLM, embeddings, vector-store, reranker, and document-processor contracts.
 
 ### Replace the two-config constructor
@@ -92,7 +89,7 @@ pipeline = RAGPipeline.from_config(PipelineConfig.from_file("raglight.toml"))
 `RAGConfig`, `VectorStoreConfig`, and `AgenticRAGConfig` are not carried into
 the standard v4 API as separate overlapping configuration objects.
 
-## Agentic pipelines
+## Agentic pipelines (planned)
 
 Standard RAG and agentic execution have separate v4 entry points. Do not turn a
 standard pipeline into an agent with a mode flag.
@@ -105,7 +102,7 @@ from raglight.rag.simple_agentic_rag_api import AgenticRAGPipeline
 agent = AgenticRAGPipeline(agentic_config, vector_store_config)
 ```
 
-v4:
+Planned v4 API (not implemented yet):
 
 ```python
 from raglight.agentic import AgenticPipeline
@@ -141,7 +138,7 @@ such as tools, MCP servers, execution limits, and termination policy remain in
 | root concrete-provider imports | `raglight.integrations.<provider>` |
 | `Settings.*` provider constants | integration names in configuration, or direct integration constructors |
 
-## Generation results
+## Generation results (planned for #159)
 
 v3 returns generated text directly:
 
@@ -164,8 +161,13 @@ See #159 for the response and execution-event model.
 v3 stores history on the pipeline. A shared pipeline can therefore mix state
 between users.
 
-v4 pipelines are stateless. Pass history explicitly or use an isolated
-session:
+v4 pipelines are stateless and accept explicit history today:
+
+```python
+answer = pipeline.generate(question, history=[{"role": "user", "content": "..."}])
+```
+
+Isolated sessions are planned for #160:
 
 ```python
 session = pipeline.create_session()
@@ -174,7 +176,7 @@ response = session.generate("Remember this conversation")
 
 See #160 for concurrency, session lifetime, and streaming behavior.
 
-## Ingestion
+## Ingestion (planned)
 
 v3 commonly exposes the underlying vector store:
 
@@ -193,12 +195,8 @@ result = pipeline.ingest([FolderSource(path="./docs")])
 This keeps document processing and persistence orchestration out of the public
 vector-store implementation.
 
-## Compatibility during development
+## Compatibility
 
-Before the v4 release, internal compatibility shims may keep v3 tests and
-examples working while packages move. They are migration scaffolding, not v4
-API commitments. The final v4 release removes undocumented deep imports and
-does not load v3 providers from the root package.
-
-Each implementation pull request must update this guide when its actual
-behavior differs from the target examples.
+v4 does not provide compatibility shims for v3 deep imports, builders,
+settings, delivery applications, or agentic orchestration. Migrate to public
+v4 imports before upgrading.

@@ -8,7 +8,7 @@ import os
 import sys
 from unittest.mock import MagicMock
 
-# Ensure src/ is first in sys.path so local raglight (including raglight.api)
+# Ensure src/ is first in sys.path so the local raglight package
 # takes precedence over any installed version in site-packages.
 _src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 if _src not in sys.path:

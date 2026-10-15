@@ -112,20 +112,20 @@ class ExtensionContractTests(unittest.TestCase):
 
 class BuiltInContractTests(unittest.TestCase):
     def test_all_builtin_llms_implement_the_llm_contract(self):
-        from raglight.llm.bedrock_model import BedrockModel
-        from raglight.llm.gemini_model import GeminiModel
-        from raglight.llm.lmstudio_model import LMStudioModel
-        from raglight.llm.mistral_model import MistralModel
-        from raglight.llm.ollama_model import OllamaModel
-        from raglight.llm.openai_model import OpenAIModel
+        from raglight.integrations.bedrock import BedrockLLM
+        from raglight.integrations.gemini import GeminiLLM
+        from raglight.integrations.lmstudio import LMStudioLLM
+        from raglight.integrations.mistral import MistralLLM
+        from raglight.integrations.ollama import OllamaLLM
+        from raglight.integrations.openai import OpenAILLM
 
         implementations = (
-            BedrockModel,
-            GeminiModel,
-            LMStudioModel,
-            MistralModel,
-            OllamaModel,
-            OpenAIModel,
+            BedrockLLM,
+            GeminiLLM,
+            LMStudioLLM,
+            MistralLLM,
+            OllamaLLM,
+            OpenAILLM,
         )
         self._assert_implementations(
             implementations,
@@ -134,20 +134,18 @@ class BuiltInContractTests(unittest.TestCase):
         )
 
     def test_all_builtin_embedding_models_implement_the_embedding_contract(self):
-        from raglight.embeddings.bedrock_embeddings import BedrockEmbeddingsModel
-        from raglight.embeddings.gemini_embeddings import GeminiEmbeddingsModel
-        from raglight.embeddings.huggingface_embeddings import (
-            HuggingfaceEmbeddingsModel,
-        )
-        from raglight.embeddings.ollama_embeddings import OllamaEmbeddingsModel
-        from raglight.embeddings.openai_embeddings import OpenAIEmbeddingsModel
+        from raglight.integrations.bedrock import BedrockEmbeddings
+        from raglight.integrations.gemini import GeminiEmbeddings
+        from raglight.integrations.huggingface import HuggingFaceEmbeddings
+        from raglight.integrations.ollama import OllamaEmbeddings
+        from raglight.integrations.openai import OpenAIEmbeddings
 
         implementations = (
-            BedrockEmbeddingsModel,
-            GeminiEmbeddingsModel,
-            HuggingfaceEmbeddingsModel,
-            OllamaEmbeddingsModel,
-            OpenAIEmbeddingsModel,
+            BedrockEmbeddings,
+            GeminiEmbeddings,
+            HuggingFaceEmbeddings,
+            OllamaEmbeddings,
+            OpenAIEmbeddings,
         )
         self._assert_implementations(
             implementations,
@@ -156,20 +154,22 @@ class BuiltInContractTests(unittest.TestCase):
         )
 
     def test_all_builtin_vector_stores_implement_the_vector_store_contract(self):
-        from raglight.vectorstore.chroma import ChromaVS
-        from raglight.vectorstore.qdrant import QdrantVS
+        from raglight.integrations.chroma import ChromaVectorStore
+        from raglight.integrations.qdrant import QdrantVectorStore
 
         self._assert_implementations(
-            (ChromaVS, QdrantVS),
+            (ChromaVectorStore, QdrantVectorStore),
             VectorStore,
             (("similarity_search", ("question", 3)),),
         )
 
     def test_all_builtin_document_processors_implement_the_processor_contract(self):
-        from raglight.document_processing.code_processor import CodeProcessor
-        from raglight.document_processing.pdf_processor import PDFProcessor
-        from raglight.document_processing.text_processor import TextProcessor
-        from raglight.document_processing.vlm_pdf_processor import VlmPDFProcessor
+        from raglight.integrations.documents import (
+            CodeProcessor,
+            PDFProcessor,
+            TextProcessor,
+            VlmPDFProcessor,
+        )
 
         self._assert_implementations(
             (CodeProcessor, PDFProcessor, TextProcessor, VlmPDFProcessor),
@@ -178,12 +178,10 @@ class BuiltInContractTests(unittest.TestCase):
         )
 
     def test_builtin_cross_encoder_implements_the_reranker_contract(self):
-        from raglight.cross_encoder.huggingface_cross_encoder import (
-            HuggingfaceCrossEncoderModel,
-        )
+        from raglight.integrations.huggingface import HuggingFaceReranker
 
         self._assert_implementations(
-            (HuggingfaceCrossEncoderModel,),
+            (HuggingFaceReranker,),
             Reranker,
             (("rerank", ("question", [], 3)),),
         )

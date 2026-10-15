@@ -12,12 +12,10 @@ TEST_ROOT = PROJECT_ROOT / "tests"
 UNIT_DIRECTORIES = (
     "architecture",
     "contracts",
-    "tests_api",
     "tests_document_processing",
     "tests_embeddings",
     "tests_llm",
     "tests_rag",
-    "tests_scrapper",
     "tests_vector_store",
 )
 TIERS = {

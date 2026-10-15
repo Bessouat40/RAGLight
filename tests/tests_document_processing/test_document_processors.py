@@ -2,8 +2,7 @@ import os
 import tempfile
 import unittest
 
-from raglight.document_processing.text_processor import TextProcessor
-from raglight.document_processing.code_processor import CodeProcessor
+from raglight.integrations.documents import CodeProcessor, TextProcessor
 from raglight.models import Document
 
 
