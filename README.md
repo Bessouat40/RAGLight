@@ -12,6 +12,13 @@
 
 Designed for simplicity and flexibility, RAGLight provides modular components to easily integrate various LLMs, embeddings, and vector stores, making it an ideal tool for building context-aware AI solutions.
 
+> **v4 migration:** the new public API is being implemented incrementally. The
+> root package now exposes only `RAGPipeline` and `PipelineConfig`. The complete
+> provider examples below still use explicit v3 compatibility imports until
+> integrations move to their v4 namespaces. See
+> [`docs/migration-v3-to-v4.md`](docs/migration-v3-to-v4.md) for the migration
+> map.
+
 ---
 
 ## 📚 Table of Contents
@@ -406,13 +413,36 @@ Both support local (on-disk) and remote (HTTP) modes.
 
 ## Quick Start 🚀
 
+The v4 pipeline uses direct component injection:
+
+```python
+from raglight import PipelineConfig, RAGPipeline
+
+pipeline = RAGPipeline(
+    llm=my_llm,
+    embeddings=my_embeddings,
+    vector_store=my_vector_store,
+    config=PipelineConfig(top_k=5),
+)
+
+answer = pipeline.generate("What is RAGLight?")
+```
+
+A complete offline example is available in
+[`examples/v4_custom_components.py`](examples/v4_custom_components.py).
+
+The following provider-based examples document the v3 compatibility paths
+during the integration migration.
+
 ### Knowledge Base
 
 Knowledge Base is a way to define data you want to ingest inside your vector store during the initialization of your RAG.
 It's the data ingest when you call `build` function :
 
 ```python
-from raglight import RAGPipeline
+from raglight.rag.simple_rag_api import RAGPipeline
+from raglight.models.data_source_model import FolderSource, GitHubSource
+from raglight.config.settings import Settings
 pipeline = RAGPipeline(knowledge_base=[
     FolderSource(path="<path to your folder with pdf>/knowledge_base"),
     GitHubSource(url="https://github.com/Bessouat40/RAGLight")
@@ -431,7 +461,7 @@ You can define two different knowledge base :
 All files/folders into this directory will be ingested inside the vector store :
 
 ```python
-from raglight import FolderSource
+from raglight.models.data_source_model import FolderSource
 FolderSource(path="<path to your folder with pdf>/knowledge_base"),
 ```
 
@@ -440,7 +470,7 @@ FolderSource(path="<path to your folder with pdf>/knowledge_base"),
 You can declare Github Repositories you want to store into your vector store :
 
 ```python
-from raglight import GitHubSource
+from raglight.models.data_source_model import GitHubSource
 GitHubSource(url="https://github.com/Bessouat40/RAGLight")
 ```
 

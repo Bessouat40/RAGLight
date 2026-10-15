@@ -40,6 +40,30 @@ Dependencies point toward the core. Delivery layers invoke application use
 cases. Integrations implement core contracts and are injected into the
 application layer.
 
+The target package ownership is:
+
+```text
+raglight.contracts       stable component protocols
+raglight.models          transport-independent values
+raglight.pipeline        application orchestration (internal package)
+raglight.integrations    optional provider adapters and registries
+raglight.agentic         optional agentic application capability
+raglight.server          optional HTTP delivery capability
+raglight.cli             optional command-line delivery capability
+raglight.ui              optional user-interface delivery capability
+```
+
+`raglight.RAGPipeline` is a public facade over the internal application
+package. Package layout and public API are related but not identical: internal
+application modules do not become public merely because the facade delegates
+to them.
+
+`raglight.agentic.AgenticPipeline` is a separate optional application facade.
+It composes the same core contracts where appropriate but owns agent-only tool
+selection, iteration, and termination behavior. It does not inherit from the
+standard pipeline, and the standard pipeline never depends on the agentic
+package.
+
 ### Core
 
 The core owns stable contracts and transport-independent models. It must not
@@ -95,4 +119,3 @@ not rely on prose after the migration lands.
 
 Major decisions belong in `docs/decisions/` and include context, decision,
 consequences, and status.
-

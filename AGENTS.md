@@ -20,6 +20,7 @@ Read the documents relevant to the change before editing code:
 | `docs/testing.md` | TDD workflow and test pyramid |
 | `docs/integrations.md` | Checklist for adding or changing a provider |
 | `docs/public-api.md` | Public API policy and compatibility expectations |
+| `docs/migration-v3-to-v4.md` | Authoritative migration map from legacy APIs |
 | `docs/error-handling.md` | Error ownership and actionable failures |
 | `docs/releasing.md` | Package and release validation |
 | `docs/decisions/` | Architecture decision records |
@@ -157,4 +158,3 @@ documentation checks and relevant static validation still apply.
   tests or fixtures.
 - If another change prevents validation, report the exact command and failure;
   do not silently modify unrelated code to make the tree green.
-

@@ -11,6 +11,18 @@ PACKAGE_ROOT = PROJECT_ROOT / "src" / "raglight"
 DELIVERY_DIRECTORIES = {"api", "cli", "ui"}
 FORBIDDEN_INTERNAL_PREFIXES = ("raglight.api", "raglight.cli", "raglight.ui")
 FORBIDDEN_EXTERNAL_MODULES = {"fastapi", "streamlit"}
+V4_APPLICATION_DIRECTORY = "pipeline"
+FORBIDDEN_V4_APPLICATION_PREFIXES = (
+    "raglight.agentic",
+    "raglight.config",
+    "raglight.cross_encoder",
+    "raglight.document_processing",
+    "raglight.embeddings",
+    "raglight.llm",
+    "raglight.rag",
+    "raglight.scrapper",
+    "raglight.vectorstore",
+)
 
 
 def imported_modules(tree: ast.AST) -> list[tuple[int, str]]:
@@ -38,6 +50,18 @@ def violations(package_root: Path = PACKAGE_ROOT) -> list[str]:
             external_violation = module.split(".", 1)[0] in FORBIDDEN_EXTERNAL_MODULES
             if internal_violation or external_violation:
                 failures.append(f"{relative}:{line}: forbidden dependency on {module}")
+                continue
+
+            is_v4_application = (
+                relative.parts and relative.parts[0] == V4_APPLICATION_DIRECTORY
+            )
+            forbidden_application_dependency = module.startswith(
+                FORBIDDEN_V4_APPLICATION_PREFIXES
+            )
+            if is_v4_application and forbidden_application_dependency:
+                failures.append(
+                    f"{relative}:{line}: v4 application dependency on {module}"
+                )
     return failures
 
 

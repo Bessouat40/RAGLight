@@ -9,7 +9,7 @@ class TestGeminiModel(unittest.TestCase):
     _MOCK_RESPONSE = "Hello! This is a test response."
 
     @patch("raglight.llm.gemini_model.ChatGoogleGenerativeAI")
-    @patch("raglight.Settings.GEMINI_API_KEY", "DUMMY_KEY")
+    @patch("raglight.llm.gemini_model.Settings.GEMINI_API_KEY", "DUMMY_KEY")
     def setUp(self, MockChatGemini):
         mock_lc_client = MagicMock()
         mock_response = MagicMock()
