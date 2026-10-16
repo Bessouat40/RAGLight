@@ -22,6 +22,14 @@ pip install "raglight[ollama,chroma,documents]"
 Available extras are `openai`, `ollama`, `mistral`, `gemini`, `bedrock`,
 `huggingface`, `documents`, `chroma`, `qdrant`, and `agentic-mcp`.
 
+## Copy-paste examples
+
+The [examples index](examples/README.md) contains complete runnable workflows
+for classic RAG with Ollama, OpenAI, and OpenAI-compatible endpoints; recursive
+directory ingestion; Agentic RAG; MCP tools; custom agents; and custom
+components. Each provider example includes its exact installation and execution
+commands, while offline examples require no credentials or external services.
+
 ## Public API
 
 The stable core is deliberately narrow:
@@ -108,8 +116,9 @@ A session commits a turn only after generation or streaming completes. Failed
 or abandoned streams do not leave partial conversation state behind. Separate
 sessions share configured components without sharing history.
 
-See [`examples/v4_custom_components.py`](examples/v4_custom_components.py) for
-a complete executable example.
+See
+[`examples/extending/custom_components.py`](examples/extending/custom_components.py)
+for a complete executable example.
 
 ## Agentic RAG
 
@@ -152,7 +161,7 @@ pip install "raglight[agentic-mcp]"
 ```
 
 `raglight.agentic.mcp.MCPTool` wraps a tool on a caller-managed, connected MCP
-client. See [`examples/v4_agentic_rag.py`](examples/v4_agentic_rag.py) and the
+client. See the [Agentic RAG examples](examples/README.md#agentic-rag) and the
 [public API guide](docs/public-api.md) for complete examples.
 
 ### Directory ingestion
@@ -182,8 +191,8 @@ directories and symlinks are skipped, unsupported extensions are reported,
 and one failed file does not discard successful files. Use
 `ignored_directories`, `recursive`, `chunk_size`, and `chunk_overlap` on each
 `FolderSource` to customize discovery and processing. See
-[`examples/v4_directory_ingestion.py`](examples/v4_directory_ingestion.py) for
-a local Ollama and Chroma example.
+[`examples/classic/directory_ingestion.py`](examples/classic/directory_ingestion.py)
+for a local Ollama and Chroma example.
 
 ## Built-in integrations
 
@@ -269,7 +278,7 @@ default_registries.llms.register("my-llm", MyLLM)
 
 Registration is never required when passing a component instance directly.
 See
-[`examples/v4_registry_configuration.py`](examples/v4_registry_configuration.py)
+[`examples/extending/registry_configuration.py`](examples/extending/registry_configuration.py)
 for an offline custom-registry example.
 
 ## Architecture
@@ -285,8 +294,7 @@ integrations -> registry/contracts/models <- pipeline
 - `pipeline` and `agentic` are separate sibling application layers.
 - neither application layer imports concrete integrations or the other layer.
 - built-in integrations own their optional SDK dependencies.
-- agentic orchestration is intentionally separate from the classic RAG API and
-  will return as a dedicated v4 capability.
+- agentic orchestration is intentionally separate from the classic RAG API.
 
 The detailed boundaries are documented in
 [`docs/architecture.md`](docs/architecture.md), and the v3 migration table is in

@@ -66,7 +66,7 @@ custom_llm: LLM = MyLLM()
 
 The annotation is optional and no registration or inheritance is required.
 The legacy ABCs were removed. See the [complete custom-component
-example](../examples/v4_custom_components.py) for
+example](../examples/extending/custom_components.py) for
 LLM, embeddings, vector-store, reranker, and document-processor contracts.
 
 ### Replace the two-config constructor
