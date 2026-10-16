@@ -16,7 +16,7 @@ from raglight.agentic import (
     FunctionTool,
     ToolResult,
 )
-from raglight.models import Document
+from raglight.models import Document, Eq, MatchNone
 
 
 class FakeLLM:
@@ -45,6 +45,12 @@ class FakeVectorStore:
             Document(page_content="first", metadata={"rank": 1}),
             Document(page_content="second", metadata={"rank": 2}),
         ][:k]
+
+
+class ScopedVectorStore(FakeVectorStore):
+    def similarity_search(self, question, k=5, *, retrieval_filter=None):
+        self.calls.append((question, k, retrieval_filter))
+        return [Document(page_content="scoped", metadata={"owner_id": "alice"})]
 
 
 class RecordingReranker:
@@ -154,6 +160,33 @@ class AgenticPipelineTests(unittest.TestCase):
         self.assertIn("second", observation.content)
         self.assertEqual(2, observation.metadata["retrieved_count"])
         self.assertTrue(observation.metadata["reranked"])
+
+    def test_retrieval_tool_is_bound_to_the_scope_for_one_agentic_run(self):
+        scope = Eq("owner_id", "alice")
+        agent = ScriptedAgent(
+            AgentDecision.call_tool("retrieve", {"query": "architecture"}),
+            AgentDecision.final("Scoped answer."),
+        )
+        store = ScopedVectorStore()
+        pipeline = self.build_pipeline(agent=agent, vector_store=store)
+
+        response = pipeline.generate("Explain it", retrieval_filter=scope)
+
+        self.assertEqual([("architecture", 5, scope)], store.calls)
+        self.assertEqual("scoped", response.sources[0].page_content)
+
+    def test_match_none_agentic_retrieval_does_not_query_the_store(self):
+        agent = ScriptedAgent(
+            AgentDecision.call_tool("retrieve", {"query": "architecture"}),
+            AgentDecision.final("No sources."),
+        )
+        store = ScopedVectorStore()
+        pipeline = self.build_pipeline(agent=agent, vector_store=store)
+
+        response = pipeline.generate("Explain it", retrieval_filter=MatchNone())
+
+        self.assertEqual([], store.calls)
+        self.assertEqual((), response.sources)
 
     def test_tool_failure_is_a_structured_observation_the_agent_can_recover_from(self):
         agent = ScriptedAgent(
@@ -293,6 +326,32 @@ class AgenticPipelineTests(unittest.TestCase):
 
 
 class AgenticSessionTests(unittest.TestCase):
+    def test_session_supplies_a_fresh_retrieval_scope_for_each_turn(self):
+        agent = ScriptedAgent(
+            AgentDecision.call_tool("retrieve", {"query": "first"}),
+            AgentDecision.final("First answer"),
+            AgentDecision.call_tool("retrieve", {"query": "second"}),
+            AgentDecision.final("Second answer"),
+        )
+        store = ScopedVectorStore()
+        pipeline = AgenticPipeline(
+            llm=FakeLLM(),
+            embeddings=FakeEmbeddings(),
+            vector_store=store,
+            agent=agent,
+        )
+        session = pipeline.create_session()
+        first_scope = Eq("file_id", "first")
+        second_scope = Eq("file_id", "second")
+
+        session.generate("First", retrieval_filter=first_scope)
+        session.generate("Second", retrieval_filter=second_scope)
+
+        self.assertEqual(
+            [("first", 5, first_scope), ("second", 5, second_scope)],
+            store.calls,
+        )
+
     def test_sessions_keep_conversation_history_isolated(self):
         class HistoryAgent:
             def __init__(self):

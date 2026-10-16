@@ -69,6 +69,30 @@ The legacy ABCs were removed. See the [complete custom-component
 example](../examples/extending/custom_components.py) for
 LLM, embeddings, vector-store, reranker, and document-processor contracts.
 
+Custom vector stores implement the v4 scoped-retrieval keyword even when they
+do not support filtering yet:
+
+```python
+from raglight.models import Document, RetrievalFilter
+
+
+class MyVectorStore:
+    def similarity_search(
+        self,
+        question: str,
+        k: int = 5,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
+    ) -> list[Document]:
+        if retrieval_filter is not None:
+            raise NotImplementedError("scoped retrieval is not supported")
+        return []
+```
+
+Unrestricted pipeline calls remain compatible with older structural adapters
+because RAGLight omits the keyword when its value is `None`. Supplying a scope
+to an older adapter fails instead of silently searching every document.
+
 ### Replace the two-config constructor
 
 v3:

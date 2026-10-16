@@ -59,6 +59,15 @@ client and never owns transport startup or credentials. Keep the official SDK
 behind the `agentic-mcp` extra and use `AgenticPipeline.agenerate(...)` while
 the client connection is active.
 
+Vector-store integrations translate the provider-independent
+`RetrievalFilter` tree at their SDK boundary. Semantic stores must implement
+the documented `Eq`, `In`, `And`, `Or`, and `MatchNone` behavior consistently.
+`MatchNone` must short-circuit without a provider query. If a search mode
+cannot apply a requested filter before top-k selection, it must raise an
+actionable error instead of ignoring the scope or filtering results afterward.
+Shared integration tests must prove parity with another built-in store and use
+documents whose relevance would expose an accidental unrestricted query.
+
 ## Pull request checklist
 
 - [ ] Core contract identified.
@@ -69,6 +78,7 @@ the client connection is active.
 - [ ] Base `import raglight` works without the provider SDK.
 - [ ] Missing dependency message names the correct extra.
 - [ ] Public import and configuration path is integration tested.
+- [ ] Retrieval-filter operators pass the shared parity suite, when applicable.
 - [ ] Built-in registry entry is lazy and covered by the registry matrix.
 - [ ] Documentation uses public imports only.
 - [ ] No real credentials or required network calls are present.

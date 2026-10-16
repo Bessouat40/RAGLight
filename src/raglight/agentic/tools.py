@@ -7,6 +7,8 @@ import inspect
 from typing import Any
 
 from ..contracts import Reranker, VectorStore
+from ..models import MatchNone, RetrievalFilter
+from ..models.retrieval_filter import normalize_retrieval_filter
 from .contracts import AgentTool
 from .models import ToolResult, ToolSpec
 
@@ -116,6 +118,14 @@ class RetrievalTool:
         self._reranker = reranker
 
     def run(self, arguments: Mapping[str, Any]) -> ToolResult:
+        return self.run_scoped(arguments)
+
+    def run_scoped(
+        self,
+        arguments: Mapping[str, Any],
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
+    ) -> ToolResult:
         query = arguments.get("query")
         if not isinstance(query, str) or not query.strip():
             raise ValueError("retrieve requires a non-empty string 'query'")
@@ -126,10 +136,24 @@ class RetrievalTool:
             raise ValueError("retrieve 'top_k' must be greater than zero")
         effective_top_k = min(requested_top_k, self._top_k)
         normalized_query = query.strip()
-        documents = self._vector_store.similarity_search(
-            normalized_query,
-            k=effective_top_k,
+        normalized_filter = (
+            normalize_retrieval_filter(retrieval_filter)
+            if retrieval_filter is not None
+            else None
         )
+        if isinstance(normalized_filter, MatchNone):
+            documents = []
+        elif normalized_filter is None:
+            documents = self._vector_store.similarity_search(
+                normalized_query,
+                k=effective_top_k,
+            )
+        else:
+            documents = self._vector_store.similarity_search(
+                normalized_query,
+                k=effective_top_k,
+                retrieval_filter=normalized_filter,
+            )
         retrieved_count = len(documents)
         if self._reranker is not None:
             documents = self._reranker.rerank(

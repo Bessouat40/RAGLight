@@ -37,6 +37,44 @@ selections used by registry-backed construction. Reformulation runs only when
 history exists, uses the injected LLM, and records the retrieval query in the
 response metadata.
 
+### Scoped retrieval
+
+Classic generation and streaming accept an optional provider-neutral filter:
+
+```python
+from raglight.models import And, Eq, In, MatchNone, Or
+
+scope = And(
+    Eq("workspace_id", "ws-123"),
+    Or(
+        In("file_id", ["file-a", "file-b"]),
+        Eq("shared", True),
+    ),
+)
+
+response = pipeline.generate(
+    "Summarize the selected knowledge",
+    history=[],
+    retrieval_filter=scope,
+)
+chunks = pipeline.stream("Continue", retrieval_filter=scope)
+```
+
+`Eq` and `In` compare one metadata field with scalar string, number, or boolean
+values. `And` and `Or` compose filters. All filter values are immutable and
+validated without importing a provider SDK.
+
+`retrieval_filter=None` means unrestricted retrieval for trusted standalone
+callers. `MatchNone()` means no documents and never becomes an unrestricted
+query. Query reformulation preserves the supplied filter, and reranking runs
+only over filtered documents. Qdrant and Chroma support these operators in
+semantic mode. BM25 and hybrid modes reject a non-`None` filter until their
+lexical index supports metadata-safe filtering.
+
+RAGLight applies a supplied scope but does not decide authorization. A server
+must derive the filter from its authenticated principal and current ACLs; it
+must not accept an arbitrary browser-provided filter as proof of access.
+
 ## Conversation sessions
 
 ```python
@@ -63,6 +101,9 @@ returns successfully. `stream()` commits the concatenated assistant answer only
 after the stream is fully consumed. If generation fails, streaming fails, or a
 stream is closed early, that turn is not committed. Operations within one
 session are serialized; separate sessions do not share a session lock.
+
+`ConversationSession.generate()` and `stream()` accept `retrieval_filter` per
+turn so an application can re-evaluate authorization before every request.
 
 ## Directory ingestion
 
@@ -125,15 +166,21 @@ loads optional parsing packages.
 
 ```python
 from raglight.models import (
+    And,
     ComponentConfig,
     Document,
+    Eq,
     ExecutionEvent,
     ExecutionStatus,
     FolderSource,
     IngestionFailure,
     IngestionResult,
     IngestionSkip,
+    In,
+    MatchNone,
+    Or,
     RAGResponse,
+    RetrievalFilter,
 )
 ```
 
@@ -188,8 +235,8 @@ inherit from a RAGLight base class and need no registration.
 | --- | --- |
 | `LLM` | `generate(input)`, `generate_streaming(input)` |
 | `EmbeddingModel` | `embed_documents(texts)`, `embed_query(text)` |
-| `VectorStore` | `similarity_search(question, k=5)` |
-| `IngestionVectorStore` | `similarity_search(question, k=5)`, `add_documents(documents)` |
+| `VectorStore` | `similarity_search(question, k=5, *, retrieval_filter=None)` |
+| `IngestionVectorStore` | `similarity_search(question, k=5, *, retrieval_filter=None)`, `add_documents(documents)` |
 | `Reranker` | `rerank(question, documents, top_k)` |
 | `DocumentProcessor` | `process(file_path, chunk_size, chunk_overlap)` |
 | `Tracer` | `observe(name=..., as_type=..., input=..., metadata=..., trace_id=...)` |
@@ -318,7 +365,10 @@ response = agentic.generate("Investigate and answer the question")
 
 `retrieve` is always registered and cannot be replaced by a custom tool. It
 accepts `query` and an optional `top_k`, searches the injected `VectorStore`,
-and applies the optional `Reranker`. Tool source documents accumulate in the
+and applies the optional `Reranker`. `AgenticPipeline.generate()` and
+`agenerate()` accept `retrieval_filter`; the runtime binds that server-supplied
+scope to every invocation of the built-in retrieval tool, and the agent cannot
+override it through tool arguments. Tool source documents accumulate in the
 shared `RAGResponse.sources` value.
 
 The default `LLMPlannerAgent` sends the question, available tool schemas,

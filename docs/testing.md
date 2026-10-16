@@ -42,6 +42,7 @@ Required for new or changed critical public workflows. Exercise only public
 entry points. Representative workflows are:
 
 - ingest documents, retrieve context, and generate a structured response;
+- retrieve equally relevant documents under two scopes and prove isolation;
 - create two sessions and prove their histories are isolated;
 - select an agent tool, observe its result, and produce a bounded final answer;
 - upload, ingest, stream an answer, and inspect sources through the server;
@@ -75,3 +76,8 @@ must be labeled, documented, and excluded from required offline CI.
 Coverage is a diagnostic, not a substitute for behavioral tests. CI may enforce
 changed-code coverage once a trustworthy baseline exists; it must not reward
 tests that execute code without meaningful assertions.
+
+Security-sensitive retrieval tests must include the negative property: a
+document outside the supplied scope is absent even when it is equally or more
+relevant. Every built-in semantic store runs the same filter scenarios, and
+`MatchNone` tests assert that no backend search was issued.

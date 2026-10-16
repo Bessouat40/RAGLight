@@ -7,7 +7,7 @@ from threading import RLock
 from typing import Protocol
 from uuid import uuid4
 
-from ..models import RAGResponse
+from ..models import RAGResponse, RetrievalFilter
 
 
 class _AgenticSessionPipeline(Protocol):
@@ -16,6 +16,7 @@ class _AgenticSessionPipeline(Protocol):
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> RAGResponse: ...
 
 
@@ -50,12 +51,27 @@ class AgenticSession:
         with self._lock:
             self._history.clear()
 
-    def generate(self, question: str) -> RAGResponse:
+    def generate(
+        self,
+        question: str,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
+    ) -> RAGResponse:
         normalized = question.strip()
         if not normalized:
             raise ValueError("question must not be empty")
         with self._lock:
-            response = self._pipeline.generate(normalized, history=self._history)
+            if retrieval_filter is None:
+                response = self._pipeline.generate(
+                    normalized,
+                    history=self._history,
+                )
+            else:
+                response = self._pipeline.generate(
+                    normalized,
+                    history=self._history,
+                    retrieval_filter=retrieval_filter,
+                )
             self._history.extend(
                 (
                     {"role": "user", "content": normalized},

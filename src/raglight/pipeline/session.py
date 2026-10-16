@@ -7,7 +7,7 @@ from threading import RLock
 from typing import Protocol
 from uuid import uuid4
 
-from ..models import RAGResponse
+from ..models import RAGResponse, RetrievalFilter
 
 
 class _SessionPipeline(Protocol):
@@ -16,6 +16,7 @@ class _SessionPipeline(Protocol):
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> RAGResponse: ...
 
     def stream(
@@ -23,6 +24,7 @@ class _SessionPipeline(Protocol):
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> Iterable[str]: ...
 
 
@@ -71,19 +73,36 @@ class ConversationSession:
         with self._lock:
             self._history.clear()
 
-    def generate(self, question: str) -> RAGResponse:
+    def generate(
+        self,
+        question: str,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
+    ) -> RAGResponse:
         """Generate an answer and commit the completed turn to this session."""
 
         normalized_question = self._normalize_question(question)
         with self._lock:
-            response = self._pipeline.generate(
-                normalized_question,
-                history=self._history,
-            )
+            if retrieval_filter is None:
+                response = self._pipeline.generate(
+                    normalized_question,
+                    history=self._history,
+                )
+            else:
+                response = self._pipeline.generate(
+                    normalized_question,
+                    history=self._history,
+                    retrieval_filter=retrieval_filter,
+                )
             self._commit(normalized_question, response.answer)
             return response
 
-    def stream(self, question: str) -> Iterable[str]:
+    def stream(
+        self,
+        question: str,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
+    ) -> Iterable[str]:
         """Yield answer chunks and commit only after the stream completes."""
 
         normalized_question = self._normalize_question(question)
@@ -91,10 +110,19 @@ class ConversationSession:
         def completed_stream() -> Iterable[str]:
             with self._lock:
                 chunks: list[str] = []
-                for chunk in self._pipeline.stream(
-                    normalized_question,
-                    history=self._history,
-                ):
+                stream = (
+                    self._pipeline.stream(
+                        normalized_question,
+                        history=self._history,
+                    )
+                    if retrieval_filter is None
+                    else self._pipeline.stream(
+                        normalized_question,
+                        history=self._history,
+                        retrieval_filter=retrieval_filter,
+                    )
+                )
+                for chunk in stream:
                     chunks.append(chunk)
                     yield chunk
                 self._commit(normalized_question, "".join(chunks))
