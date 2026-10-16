@@ -27,7 +27,7 @@ Set `OPENAI_API_KEY` in your environment; never put it in source code.
 ```bash
 uv sync --extra openai --extra chroma
 export OPENAI_API_KEY="your-key"
-uv run python examples/classic/openai.py
+uv run python examples/classic/openai_models.py
 ```
 
 Change models with `--chat-model` and `--embedding-model` when needed.
@@ -89,7 +89,7 @@ during agent execution, and uses Ollama for planning.
 
 ```bash
 uv sync --extra agentic-mcp --extra ollama --extra chroma
-uv run python examples/agentic/mcp.py \
+uv run python examples/agentic/mcp_tool.py \
   --server-url http://localhost:8000/mcp \
   --tool search \
   --question "Use search when it helps answer the question."
@@ -117,11 +117,11 @@ uv run python examples/extending/registry_configuration.py
 | Example | External requirement |
 | --- | --- |
 | `classic/local_ollama.py` | Running Ollama and pulled models |
-| `classic/openai.py` | Network access and `OPENAI_API_KEY` |
+| `classic/openai_models.py` | Network access and `OPENAI_API_KEY` |
 | `classic/openai_compatible_endpoint.py` | Compatible chat and embedding server |
 | `classic/directory_ingestion.py` | Running Ollama and a readable directory |
 | `agentic/local_ollama.py` | Running Ollama and pulled models |
 | `agentic/custom_agent.py` | None |
-| `agentic/mcp.py` | Running Ollama and a connected MCP server |
+| `agentic/mcp_tool.py` | Running Ollama and a connected MCP server |
 | `extending/custom_components.py` | None |
 | `extending/registry_configuration.py` | None |
