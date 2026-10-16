@@ -61,6 +61,63 @@ after the stream is fully consumed. If generation fails, streaming fails, or a
 stream is closed early, that turn is not committed. Operations within one
 session are serialized; separate sessions do not share a session lock.
 
+## Directory ingestion
+
+`RAGPipeline.ingest(...)` is the single public ingestion workflow. The
+pipeline discovers files and coordinates parsing and persistence; document
+processors and vector stores retain their provider-independent boundaries.
+
+```python
+from raglight import RAGPipeline
+from raglight.integrations import default_registries
+from raglight.models import FolderSource
+
+pipeline = RAGPipeline(
+    llm=my_llm,
+    embeddings=my_embeddings,
+    vector_store=my_vector_store,
+    document_processors=default_registries.document_processors,
+)
+
+result = pipeline.ingest(
+    [
+        FolderSource(
+            path="./knowledge",
+            recursive=True,
+            ignored_directories=(".git", ".venv", "private"),
+            chunk_size=2500,
+            chunk_overlap=250,
+        )
+    ]
+)
+```
+
+`FolderSource` rejects invalid chunk settings. `ingest()` rejects missing and
+non-directory paths before processing them. Traversal order is deterministic;
+symlinks are not followed; unsupported extensions are explicit skips. Built-in
+processor entries cover text, Markdown, HTML, PDF, and supported source-code
+extensions. Register an extension to add or replace processing behavior:
+
+```python
+default_registries.document_processors.register(
+    "rst",
+    MyRstProcessor,
+    replace=True,
+)
+```
+
+`IngestionResult` reports `discovered_count`, successful `processed_count`,
+indexed document-chunk `indexed_count`, `skipped_count`, and `failed_count`.
+`skipped` contains paths and reasons; `failures` contains paths, stages, and
+safe error messages. Processing and indexing failures are isolated per file.
+`to_dict()` produces a transport-friendly value for future delivery layers.
+
+The configured vector store must implement `IngestionVectorStore`, which adds
+`add_documents(documents)` to the retrieval contract. `from_config(...)`
+automatically uses the supplied registries for ingestion. Direct construction
+must pass a document-processor registry explicitly so importing the core never
+loads optional parsing packages.
+
 ## Domain models
 
 ```python
@@ -69,6 +126,10 @@ from raglight.models import (
     Document,
     ExecutionEvent,
     ExecutionStatus,
+    FolderSource,
+    IngestionFailure,
+    IngestionResult,
+    IngestionSkip,
     RAGResponse,
 )
 ```
@@ -108,6 +169,7 @@ the delivery-level streaming event protocol is designed separately.
 from raglight.contracts import (
     DocumentProcessor,
     EmbeddingModel,
+    IngestionVectorStore,
     LLM,
     Reranker,
     VectorStore,
@@ -122,6 +184,7 @@ inherit from a RAGLight base class and need no registration.
 | `LLM` | `generate(input)`, `generate_streaming(input)` |
 | `EmbeddingModel` | `embed_documents(texts)`, `embed_query(text)` |
 | `VectorStore` | `similarity_search(question, k=5)` |
+| `IngestionVectorStore` | `similarity_search(question, k=5)`, `add_documents(documents)` |
 | `Reranker` | `rerank(question, documents, top_k)` |
 | `DocumentProcessor` | `process(file_path, chunk_size, chunk_overlap)` |
 

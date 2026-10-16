@@ -77,7 +77,29 @@ class IntegrationRegistryTests(unittest.TestCase):
         self.assertEqual(("chroma", "qdrant"), default_registries.vector_stores.names)
         self.assertEqual(("huggingface",), default_registries.rerankers.names)
         self.assertEqual(
-            ("code", "pdf", "text", "vlm-pdf"),
+            (
+                "c",
+                "cpp",
+                "cs",
+                "go",
+                "hs",
+                "html",
+                "java",
+                "js",
+                "lua",
+                "md",
+                "pdf",
+                "php",
+                "pl",
+                "py",
+                "rb",
+                "rs",
+                "scala",
+                "sol",
+                "swift",
+                "ts",
+                "txt",
+            ),
             default_registries.document_processors.names,
         )
 

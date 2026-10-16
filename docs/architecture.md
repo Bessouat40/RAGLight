@@ -69,6 +69,13 @@ The pipeline remains reusable and stateless; each session owns its identifier,
 history, and lock. Completed turns are committed atomically, including streamed
 turns, so failures and abandoned streams cannot leave partial history.
 
+Directory ingestion follows the same dependency direction. `RAGPipeline`
+owns deterministic filesystem traversal and per-file orchestration, resolves
+processors by extension through an injected registry, and persists chunks
+through `IngestionVectorStore`. It never imports a processor or storage SDK.
+Concrete vector stores do not traverse directories, and failed files are
+reported without hiding successful work.
+
 Agentic execution will be implemented as a separate capability with its own
 public namespace, dependencies, tools, step budget, and termination behavior.
 It will reuse stable contracts where their semantics match, but will not

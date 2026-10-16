@@ -8,10 +8,17 @@ from typing import Any
 from uuid import uuid4
 
 from ..contracts import EmbeddingModel, LLM, Reranker, VectorStore
-from ..models import Document, ExecutionEvent, RAGResponse
+from ..models import (
+    Document,
+    ExecutionEvent,
+    FolderSource,
+    IngestionResult,
+    RAGResponse,
+)
 from ..registry import IntegrationRegistries
 
 from .config import PipelineConfig
+from .ingestion import DocumentProcessorRegistry, ingest_folders
 from .session import ConversationSession
 
 
@@ -30,12 +37,14 @@ class RAGPipeline:
         vector_store: VectorStore,
         reranker: Reranker | None = None,
         config: PipelineConfig | None = None,
+        document_processors: DocumentProcessorRegistry | None = None,
     ) -> None:
         self._llm = llm
         self._embeddings = embeddings
         self._vector_store = vector_store
         self._reranker = reranker
         self._config = config or PipelineConfig()
+        self._document_processors = document_processors
 
     @classmethod
     def from_config(
@@ -89,6 +98,7 @@ class RAGPipeline:
             vector_store=vector_store,
             reranker=reranker,
             config=config,
+            document_processors=registries.document_processors,
         )
 
     @property
@@ -106,6 +116,15 @@ class RAGPipeline:
         """Create an isolated conversation over this shared pipeline."""
 
         return ConversationSession(self, session_id=session_id, history=history)
+
+    def ingest(self, sources: Sequence[FolderSource]) -> IngestionResult:
+        """Discover, process, and index files from one or more directories."""
+
+        return ingest_folders(
+            sources,
+            vector_store=self._vector_store,
+            processors=self._document_processors,
+        )
 
     def generate(
         self,

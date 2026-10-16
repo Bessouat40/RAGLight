@@ -4,7 +4,7 @@ import uuid
 from typing import List, Dict, Optional, Any
 from typing_extensions import override
 
-from ...contracts import DocumentProcessor, EmbeddingModel
+from ...contracts import EmbeddingModel
 from ...models import Document
 from ._base import VectorStoreAdapter
 
@@ -22,7 +22,6 @@ class QdrantVectorStore(VectorStoreAdapter):
         collection_name: str,
         embeddings_model: EmbeddingModel,
         persist_directory: str = None,
-        custom_processors: Optional[Dict[str, DocumentProcessor]] = None,
         host: str = None,
         port: int = 6333,
         search_type: str = "semantic",
@@ -41,9 +40,7 @@ class QdrantVectorStore(VectorStoreAdapter):
                 feature="Qdrant vector store support",
             )
 
-        super().__init__(
-            persist_directory, embeddings_model, custom_processors, search_type, alpha
-        )
+        super().__init__(persist_directory, embeddings_model, search_type, alpha)
 
         self.collection_name = collection_name
         self._classes_collection_name = f"{collection_name}_classes"

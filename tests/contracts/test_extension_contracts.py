@@ -12,6 +12,7 @@ import raglight.contracts as contracts
 from raglight.contracts import (
     DocumentProcessor,
     EmbeddingModel,
+    IngestionVectorStore,
     LLM,
     Reranker,
     VectorStore,
@@ -40,6 +41,11 @@ class CustomVectorStore:
         return [Document(page_content=question)]
 
 
+class CustomIngestionVectorStore(CustomVectorStore):
+    def add_documents(self, documents: list[Document]) -> None:
+        self.documents = list(documents)
+
+
 class CustomReranker:
     def rerank(
         self, question: str, documents: list[Document], top_k: int
@@ -60,6 +66,7 @@ class ExtensionContractTests(unittest.TestCase):
             [
                 "DocumentProcessor",
                 "EmbeddingModel",
+                "IngestionVectorStore",
                 "LLM",
                 "Reranker",
                 "VectorStore",
@@ -72,6 +79,7 @@ class ExtensionContractTests(unittest.TestCase):
             (CustomLLM(), LLM),
             (CustomEmbeddingModel(), EmbeddingModel),
             (CustomVectorStore(), VectorStore),
+            (CustomIngestionVectorStore(), IngestionVectorStore),
             (CustomReranker(), Reranker),
             (CustomDocumentProcessor(), DocumentProcessor),
         )
@@ -161,6 +169,15 @@ class BuiltInContractTests(unittest.TestCase):
             (ChromaVectorStore, QdrantVectorStore),
             VectorStore,
             (("similarity_search", ("question", 3)),),
+        )
+
+        self._assert_implementations(
+            (ChromaVectorStore, QdrantVectorStore),
+            IngestionVectorStore,
+            (
+                ("similarity_search", ("question", 3)),
+                ("add_documents", ([],)),
+            ),
         )
 
     def test_all_builtin_document_processors_implement_the_processor_contract(self):

@@ -48,10 +48,27 @@ def _builtins() -> IntegrationRegistries:
     )
 
     for name, attribute in (
-        ("code", "CodeProcessor"),
         ("pdf", "PDFProcessor"),
-        ("text", "TextProcessor"),
-        ("vlm-pdf", "VlmPDFProcessor"),
+        ("c", "CodeProcessor"),
+        ("cpp", "CodeProcessor"),
+        ("cs", "CodeProcessor"),
+        ("go", "CodeProcessor"),
+        ("hs", "CodeProcessor"),
+        ("java", "CodeProcessor"),
+        ("js", "CodeProcessor"),
+        ("lua", "CodeProcessor"),
+        ("php", "CodeProcessor"),
+        ("pl", "CodeProcessor"),
+        ("py", "CodeProcessor"),
+        ("rb", "CodeProcessor"),
+        ("rs", "CodeProcessor"),
+        ("scala", "CodeProcessor"),
+        ("sol", "CodeProcessor"),
+        ("swift", "CodeProcessor"),
+        ("ts", "CodeProcessor"),
+        ("html", "TextProcessor"),
+        ("md", "TextProcessor"),
+        ("txt", "TextProcessor"),
     ):
         registries.document_processors.register_lazy(
             name, "raglight.integrations.documents", attribute

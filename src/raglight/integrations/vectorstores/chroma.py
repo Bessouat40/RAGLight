@@ -3,7 +3,7 @@ import logging
 import uuid
 from typing import List, Dict, Optional, Any, cast
 
-from ...contracts import DocumentProcessor, EmbeddingModel
+from ...contracts import EmbeddingModel
 from ...models import Document
 
 try:
@@ -50,15 +50,12 @@ class ChromaVectorStore(VectorStoreAdapter):
         collection_name: str,
         embeddings_model: EmbeddingModel,
         persist_directory: str = None,
-        custom_processors: Optional[Dict[str, DocumentProcessor]] = None,
         host: str = None,
         port: int = None,
         search_type: str = "semantic",
         alpha: float = 0.5,
     ) -> None:
-        super().__init__(
-            persist_directory, embeddings_model, custom_processors, search_type, alpha
-        )
+        super().__init__(persist_directory, embeddings_model, search_type, alpha)
 
         self.persist_directory = persist_directory
         self.host = host

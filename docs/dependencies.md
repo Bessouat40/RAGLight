@@ -12,8 +12,8 @@ the extras required by the integrations an application imports.
 | `bedrock` | AWS Bedrock LLM and embeddings | `langchain-aws` |
 | `huggingface` | Local embeddings and reranking | `sentence-transformers` |
 | `documents` | PDF, text, code, and VLM processors | PyMuPDF, LangChain splitters |
-| `chroma` | Chroma storage and ingestion support | `chromadb`, `rank-bm25` |
-| `qdrant` | Qdrant storage and ingestion support | `qdrant-client`, `rank-bm25` |
+| `chroma` | Chroma vector storage | `chromadb`, `rank-bm25` |
+| `qdrant` | Qdrant vector storage | `qdrant-client`, `rank-bm25` |
 
 Extras compose:
 

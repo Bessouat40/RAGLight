@@ -3511,11 +3511,7 @@ bedrock = [
 ]
 chroma = [
     { name = "chromadb" },
-    { name = "langchain-core" },
-    { name = "langchain-text-splitters" },
-    { name = "pymupdf" },
     { name = "rank-bm25" },
-    { name = "sentence-transformers" },
     { name = "typing-extensions" },
 ]
 documents = [
@@ -3548,12 +3544,8 @@ openai = [
     { name = "typing-extensions" },
 ]
 qdrant = [
-    { name = "langchain-core" },
-    { name = "langchain-text-splitters" },
-    { name = "pymupdf" },
     { name = "qdrant-client" },
     { name = "rank-bm25" },
-    { name = "sentence-transformers" },
     { name = "typing-extensions" },
 ]
 
@@ -3571,29 +3563,21 @@ requires-dist = [
     { name = "chromadb", marker = "extra == 'chroma'", specifier = ">=0.5.23" },
     { name = "langchain-aws", marker = "extra == 'bedrock'", specifier = ">=1.2.1" },
     { name = "langchain-core", marker = "extra == 'bedrock'", specifier = ">=1.2.5" },
-    { name = "langchain-core", marker = "extra == 'chroma'", specifier = ">=1.2.5" },
     { name = "langchain-core", marker = "extra == 'documents'", specifier = ">=1.2.5" },
     { name = "langchain-core", marker = "extra == 'gemini'", specifier = ">=1.2.5" },
     { name = "langchain-core", marker = "extra == 'mistral'", specifier = ">=1.2.5" },
     { name = "langchain-core", marker = "extra == 'ollama'", specifier = ">=1.2.5" },
     { name = "langchain-core", marker = "extra == 'openai'", specifier = ">=1.2.5" },
-    { name = "langchain-core", marker = "extra == 'qdrant'", specifier = ">=1.2.5" },
     { name = "langchain-google-genai", marker = "extra == 'gemini'", specifier = ">=4.1.3" },
     { name = "langchain-mistralai", marker = "extra == 'mistral'", specifier = ">=1.1.1" },
     { name = "langchain-ollama", marker = "extra == 'ollama'", specifier = ">=1.0.1" },
     { name = "langchain-openai", marker = "extra == 'openai'", specifier = ">=1.1.6" },
-    { name = "langchain-text-splitters", marker = "extra == 'chroma'", specifier = ">=1.1.0" },
     { name = "langchain-text-splitters", marker = "extra == 'documents'", specifier = ">=1.1.0" },
-    { name = "langchain-text-splitters", marker = "extra == 'qdrant'", specifier = ">=1.1.0" },
-    { name = "pymupdf", marker = "extra == 'chroma'", specifier = ">=1.26.7" },
     { name = "pymupdf", marker = "extra == 'documents'", specifier = ">=1.26.7" },
-    { name = "pymupdf", marker = "extra == 'qdrant'", specifier = ">=1.26.7" },
     { name = "qdrant-client", marker = "extra == 'qdrant'", specifier = ">=1.17.0" },
     { name = "rank-bm25", marker = "extra == 'chroma'", specifier = ">=0.2.2" },
     { name = "rank-bm25", marker = "extra == 'qdrant'", specifier = ">=0.2.2" },
-    { name = "sentence-transformers", marker = "extra == 'chroma'", specifier = ">=5.1.2" },
     { name = "sentence-transformers", marker = "extra == 'huggingface'", specifier = ">=5.1.2" },
-    { name = "sentence-transformers", marker = "extra == 'qdrant'", specifier = ">=5.1.2" },
     { name = "typing-extensions", marker = "extra == 'bedrock'", specifier = ">=4.15.0" },
     { name = "typing-extensions", marker = "extra == 'chroma'", specifier = ">=4.15.0" },
     { name = "typing-extensions", marker = "extra == 'gemini'", specifier = ">=4.15.0" },

@@ -40,6 +40,12 @@ while populating the registry. Third-party components may call `register(...)`
 when they need name-based configuration; direct injection remains available
 without registration.
 
+Document processor registry names used by directory ingestion are normalized
+file extensions without a leading dot, such as `txt`, `md`, `pdf`, or `py`.
+Registering a custom extension is enough for `RAGPipeline.ingest(...)` to use
+it; the pipeline must not be modified. Processor exceptions should propagate
+to the orchestrator, which records an actionable per-file failure.
+
 The extension contracts are structural. A provider class must not inherit from
 a protocol merely to satisfy RAGLight; matching the documented signature is
 sufficient. Add every built-in implementation to the shared matrix in
