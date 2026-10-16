@@ -4,7 +4,7 @@ from typing import Optional, List
 
 try:
     from typing_extensions import override
-    from langchain_openai import OpenAIEmbeddings
+    from langchain_openai import OpenAIEmbeddings as LangChainOpenAIEmbeddings
 except ModuleNotFoundError as error:
     from ..._optional import optional_import_error
 
@@ -30,8 +30,8 @@ class OpenAIEmbeddings(EmbeddingAdapter):
         super().__init__(model_name, api_base=resolved_api_base)
 
     @override
-    def load(self) -> OpenAIEmbeddings:
-        return OpenAIEmbeddings(
+    def load(self) -> LangChainOpenAIEmbeddings:
+        return LangChainOpenAIEmbeddings(
             model=self.model_name,
             api_key=self.api_key,
             base_url=self.api_base,

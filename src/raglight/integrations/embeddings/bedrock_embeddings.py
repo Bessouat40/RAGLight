@@ -4,7 +4,7 @@ from typing import Optional, List
 
 try:
     from typing_extensions import override
-    from langchain_aws import BedrockEmbeddings
+    from langchain_aws import BedrockEmbeddings as LangChainBedrockEmbeddings
 except ModuleNotFoundError as error:
     from ..._optional import optional_import_error
 
@@ -47,14 +47,14 @@ class BedrockEmbeddings(EmbeddingAdapter):
         super().__init__(model_name)
 
     @override
-    def load(self) -> BedrockEmbeddings:
+    def load(self) -> LangChainBedrockEmbeddings:
         """
         Loads the BedrockEmbeddings client.
 
         Returns:
             BedrockEmbeddings: The LangChain Bedrock embeddings client.
         """
-        return BedrockEmbeddings(
+        return LangChainBedrockEmbeddings(
             model_id=self.model_name,
             region_name=self.region_name,
         )
