@@ -7,7 +7,9 @@ from ..test_config import TestsConfig
 
 class TestBedrockEmbeddings(unittest.TestCase):
 
-    @patch("raglight.integrations.embeddings.bedrock_embeddings.BedrockEmbeddings")
+    @patch(
+        "raglight.integrations.embeddings.bedrock_embeddings.LangChainBedrockEmbeddings"
+    )
     def test_model_load(self, mock_bedrock: MagicMock):
         mock_bedrock.return_value = MagicMock()
         model = BedrockEmbeddings(
@@ -20,7 +22,9 @@ class TestBedrockEmbeddings(unittest.TestCase):
             region_name="us-east-1",
         )
 
-    @patch("raglight.integrations.embeddings.bedrock_embeddings.BedrockEmbeddings")
+    @patch(
+        "raglight.integrations.embeddings.bedrock_embeddings.LangChainBedrockEmbeddings"
+    )
     def test_embed_documents(self, mock_bedrock: MagicMock):
         mock_client = mock_bedrock.return_value
         mock_client.embed_documents.return_value = [[0.1, 0.2], [0.3, 0.4]]
@@ -35,7 +39,9 @@ class TestBedrockEmbeddings(unittest.TestCase):
         self.assertEqual(result[0], [0.1, 0.2])
         mock_client.embed_documents.assert_called_once_with(["text1", "text2"])
 
-    @patch("raglight.integrations.embeddings.bedrock_embeddings.BedrockEmbeddings")
+    @patch(
+        "raglight.integrations.embeddings.bedrock_embeddings.LangChainBedrockEmbeddings"
+    )
     def test_embed_query(self, mock_bedrock: MagicMock):
         mock_client = mock_bedrock.return_value
         mock_client.embed_query.return_value = [0.5, 0.6]

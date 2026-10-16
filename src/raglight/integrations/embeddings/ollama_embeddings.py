@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any
 
 try:
     from typing_extensions import override
-    from langchain_ollama import OllamaEmbeddings
+    from langchain_ollama import OllamaEmbeddings as LangChainOllamaEmbeddings
 except ModuleNotFoundError as error:
     from ..._optional import optional_import_error
 
@@ -33,8 +33,8 @@ class OllamaEmbeddings(EmbeddingAdapter):
             self.options["num_ctx"] = 8192
 
     @override
-    def load(self) -> OllamaEmbeddings:
-        return OllamaEmbeddings(
+    def load(self) -> LangChainOllamaEmbeddings:
+        return LangChainOllamaEmbeddings(
             model=self.model_name,
             base_url=self.api_base,
         )
