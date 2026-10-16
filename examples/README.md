@@ -14,7 +14,7 @@ Install the integrations and pull the default models:
 uv sync --extra ollama --extra chroma
 ollama pull nomic-embed-text:latest
 ollama pull qwen3:0.6b
-uv run python examples/classic/ollama.py
+uv run python examples/classic/local_ollama.py
 ```
 
 The script uses one inline document and an ephemeral Chroma database. Override
@@ -27,7 +27,7 @@ Set `OPENAI_API_KEY` in your environment; never put it in source code.
 ```bash
 uv sync --extra openai --extra chroma
 export OPENAI_API_KEY="your-key"
-uv run python examples/classic/openai.py
+uv run python examples/classic/openai_models.py
 ```
 
 Change models with `--chat-model` and `--embedding-model` when needed.
@@ -69,7 +69,7 @@ instruction-following Ollama model with `--chat-model` if necessary.
 
 ```bash
 uv sync --extra ollama --extra chroma
-uv run python examples/agentic/ollama.py --max-steps 4
+uv run python examples/agentic/local_ollama.py --max-steps 4
 ```
 
 ### Custom agent
@@ -89,7 +89,7 @@ during agent execution, and uses Ollama for planning.
 
 ```bash
 uv sync --extra agentic-mcp --extra ollama --extra chroma
-uv run python examples/agentic/mcp.py \
+uv run python examples/agentic/mcp_tool.py \
   --server-url http://localhost:8000/mcp \
   --tool search \
   --question "Use search when it helps answer the question."
@@ -116,12 +116,12 @@ uv run python examples/extending/registry_configuration.py
 
 | Example | External requirement |
 | --- | --- |
-| `classic/ollama.py` | Running Ollama and pulled models |
-| `classic/openai.py` | Network access and `OPENAI_API_KEY` |
+| `classic/local_ollama.py` | Running Ollama and pulled models |
+| `classic/openai_models.py` | Network access and `OPENAI_API_KEY` |
 | `classic/openai_compatible_endpoint.py` | Compatible chat and embedding server |
 | `classic/directory_ingestion.py` | Running Ollama and a readable directory |
-| `agentic/ollama.py` | Running Ollama and pulled models |
+| `agentic/local_ollama.py` | Running Ollama and pulled models |
 | `agentic/custom_agent.py` | None |
-| `agentic/mcp.py` | Running Ollama and a connected MCP server |
+| `agentic/mcp_tool.py` | Running Ollama and a connected MCP server |
 | `extending/custom_components.py` | None |
 | `extending/registry_configuration.py` | None |

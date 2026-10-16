@@ -3505,7 +3505,7 @@ wheels = [
 [[package]]
 name = "raglight"
 version = "4.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 
 [package.optional-dependencies]
 agentic-mcp = [
@@ -3564,7 +3564,6 @@ dev = [
     { name = "black" },
     { name = "build" },
     { name = "mypy" },
-    { name = "raglight" },
     { name = "ruff" },
 ]
 
@@ -3606,7 +3605,6 @@ dev = [
     { name = "black", specifier = ">=25.12.0" },
     { name = "build", specifier = ">=1.2.2" },
     { name = "mypy", specifier = ">=1.15.0" },
-    { name = "raglight", virtual = "." },
     { name = "ruff", specifier = ">=0.11.0" },
 ]
 

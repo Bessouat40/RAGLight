@@ -13,7 +13,19 @@ class PackagingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         with (PROJECT_ROOT / "pyproject.toml").open("rb") as project_file:
-            cls.project = tomllib.load(project_file)["project"]
+            cls.configuration = tomllib.load(project_file)
+            cls.project = cls.configuration["project"]
+
+    def test_project_declares_its_build_backend(self):
+        self.assertEqual(
+            "setuptools.build_meta",
+            self.configuration["build-system"]["build-backend"],
+        )
+
+    def test_development_group_does_not_depend_on_the_project_itself(self):
+        development_dependencies = self.configuration["dependency-groups"]["dev"]
+
+        self.assertNotIn("raglight", development_dependencies)
 
     def test_core_has_no_mandatory_third_party_dependencies(self):
         self.assertEqual([], self.project["dependencies"])
