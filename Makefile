@@ -1,5 +1,5 @@
 install:
-	uv pip install -e ".[bedrock,chroma,documents,gemini,huggingface,mistral,ollama,openai,qdrant]"
+	uv pip install -e ".[agentic-mcp,bedrock,chroma,documents,gemini,huggingface,mistral,ollama,openai,qdrant]"
 
 install-dev:
 	uv sync --all-extras --group dev
@@ -31,7 +31,7 @@ lint:
 	uv run ruff check .
 
 typecheck:
-	uv run mypy scripts src/raglight/contracts src/raglight/models src/raglight/pipeline src/raglight/registry.py
+	uv run mypy scripts src/raglight/agentic src/raglight/contracts src/raglight/models src/raglight/pipeline src/raglight/registry.py
 
 package-check:
 	uv run python scripts/check_wheel.py

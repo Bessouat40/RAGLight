@@ -29,3 +29,8 @@ documented response without exposing internal tracebacks.
 Every new error path needs a unit test. Publicly observable mappings also need
 integration or end-to-end coverage.
 
+Agentic tool exceptions are converted into failed `tool` execution events and
+error observations so the next bounded decision can recover. They are not
+silently ignored. If no final answer is produced within the configured budget,
+`AgentStepLimitError` exposes the trace identifier and completed immutable
+events. Invalid agent decisions fail immediately with `AgentDecisionError`.

@@ -97,7 +97,7 @@ but custom component instances should normally be injected directly.
 `RAGConfig`, `VectorStoreConfig`, and `AgenticRAGConfig` are not carried into
 the standard v4 API as separate overlapping configuration objects.
 
-## Agentic pipelines (planned)
+## Agentic pipelines
 
 Standard RAG and agentic execution have separate v4 entry points. Do not turn a
 standard pipeline into an agent with a mode flag.
@@ -110,7 +110,7 @@ from raglight.rag.simple_agentic_rag_api import AgenticRAGPipeline
 agent = AgenticRAGPipeline(agentic_config, vector_store_config)
 ```
 
-Planned v4 API (not implemented yet):
+v4:
 
 ```python
 from raglight.agentic import AgenticPipeline
@@ -124,10 +124,16 @@ agent = AgenticPipeline(
 )
 ```
 
-`AgenticPipeline` may reuse the same component implementations, response
-models, events, and session semantics as `RAGPipeline`. Agent-only concepts
-such as tools, MCP servers, execution limits, and termination policy remain in
-`raglight.agentic` and its optional dependency group.
+`AgenticPipeline` reuses the v4 component contracts and `RAGResponse`, but it
+does not inherit from `RAGPipeline`. Retrieval is a built-in agent tool;
+optional reranking runs inside that tool. Custom tools implement `AgentTool`,
+and callers can replace the default LLM planner by injecting any structural
+`Agent` implementation. Agent decisions are bounded by `max_steps`.
+
+Use `agent.create_session(...)` instead of storing history on a shared agentic
+pipeline. Use `await agent.agenerate(...)` for asynchronous tools and install
+`raglight[agentic-mcp]` only when adapting tools from a connected MCP client.
+There is no v3 agent configuration compatibility object or mode flag.
 
 ## Imports
 

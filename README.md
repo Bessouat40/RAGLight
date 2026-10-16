@@ -1,13 +1,13 @@
 # RAGLight
 
-RAGLight 4 is a small, typed Python toolkit for composing retrieval-augmented
-generation pipelines. The core package has no third-party runtime dependency:
-applications inject an LLM, an embedding model, a vector store, and optionally
-a reranker through public protocols.
+RAGLight 4 is a small, typed Python toolkit for composing classic and agentic
+retrieval-augmented generation pipelines. The core package has no third-party
+runtime dependency: applications inject an LLM, an embedding model, a vector
+store, and optional behavior through public structural protocols.
 
-> RAGLight 4 is a breaking release. The v3 builder, global settings, agentic
-> runtime, API server, CLI, and UI have been removed instead of being carried as
-> compatibility layers.
+> RAGLight 4 is a breaking release. The v3 builder, global settings, API server,
+> CLI, UI, and legacy agentic runtime were removed instead of being carried as
+> compatibility layers. The v4 agentic API is a new implementation.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ pip install "raglight[ollama,chroma,documents]"
 ```
 
 Available extras are `openai`, `ollama`, `mistral`, `gemini`, `bedrock`,
-`huggingface`, `documents`, `chroma`, and `qdrant`.
+`huggingface`, `documents`, `chroma`, `qdrant`, and `agentic-mcp`.
 
 ## Public API
 
@@ -110,6 +110,50 @@ sessions share configured components without sharing history.
 
 See [`examples/v4_custom_components.py`](examples/v4_custom_components.py) for
 a complete executable example.
+
+## Agentic RAG
+
+Agentic execution has a deliberately separate public namespace and does not
+change the deterministic `RAGPipeline`:
+
+```python
+from raglight.agentic import AgenticPipeline, FunctionTool
+
+pipeline = AgenticPipeline(
+    llm=llm,
+    embeddings=embeddings,
+    vector_store=vector_store,
+    tools=[
+        FunctionTool(
+            "weather",
+            "Return weather for a city.",
+            lambda arguments: weather_client.lookup(arguments["city"]),
+            {"type": "object", "required": ["city"]},
+        )
+    ],
+    max_steps=4,
+)
+
+response = pipeline.generate("Use the knowledge base and weather tool to answer")
+```
+
+The built-in `retrieve` tool uses the injected vector store and optional
+reranker. The default planner asks the injected LLM for strict JSON decisions.
+Pass `agent=my_agent` to replace it with any object implementing the structural
+`Agent.decide(context)` contract; no inheritance or framework adapter is
+required. Tool failures become observations that the agent can recover from,
+while an unfinished loop raises `AgentStepLimitError` at the configured budget.
+
+Use `pipeline.create_session(...)` for isolated agentic history. Async tools are
+supported through `await pipeline.agenerate(...)`. MCP is an optional adapter:
+
+```bash
+pip install "raglight[agentic-mcp]"
+```
+
+`raglight.agentic.mcp.MCPTool` wraps a tool on a caller-managed, connected MCP
+client. See [`examples/v4_agentic_rag.py`](examples/v4_agentic_rag.py) and the
+[public API guide](docs/public-api.md) for complete examples.
 
 ### Directory ingestion
 
@@ -234,10 +278,12 @@ Dependencies point inward:
 
 ```text
 integrations -> registry/contracts/models <- pipeline
+                                      ^---- agentic
 ```
 
 - registry primitives, contracts, and models are dependency-free.
-- `pipeline` depends only on public contracts and models.
+- `pipeline` and `agentic` are separate sibling application layers.
+- neither application layer imports concrete integrations or the other layer.
 - built-in integrations own their optional SDK dependencies.
 - agentic orchestration is intentionally separate from the classic RAG API and
   will return as a dedicated v4 capability.
