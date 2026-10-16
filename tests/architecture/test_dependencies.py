@@ -33,6 +33,42 @@ class ArchitectureDependencyTests(unittest.TestCase):
                 CHECK_ARCHITECTURE.violations(package),
             )
 
+    def test_classic_pipeline_cannot_depend_on_agentic_runtime(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            pipeline = package / "pipeline"
+            pipeline.mkdir()
+            (pipeline / "pipeline.py").write_text(
+                "from raglight.agentic import AgenticPipeline\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "pipeline/pipeline.py:1: v4 application dependency on "
+                    "raglight.agentic"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
+    def test_agentic_runtime_cannot_import_a_concrete_integration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            agentic = package / "agentic"
+            agentic.mkdir()
+            (agentic / "pipeline.py").write_text(
+                "from raglight.integrations.ollama import OllamaLLM\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                [
+                    "agentic/pipeline.py:1: v4 application dependency on "
+                    "raglight.integrations.ollama"
+                ],
+                CHECK_ARCHITECTURE.violations(package),
+            )
+
     def test_public_contracts_cannot_import_concrete_providers(self):
         with tempfile.TemporaryDirectory() as directory:
             package = Path(directory)

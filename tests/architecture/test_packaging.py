@@ -23,6 +23,7 @@ class PackagingTests(unittest.TestCase):
 
         self.assertEqual(
             {
+                "agentic-mcp",
                 "bedrock",
                 "chroma",
                 "documents",
@@ -35,6 +36,25 @@ class PackagingTests(unittest.TestCase):
             },
             set(extras),
         )
+
+    def test_mcp_sdk_is_owned_only_by_the_agentic_mcp_extra(self):
+        extras = self.project["optional-dependencies"]
+
+        self.assertTrue(
+            any(
+                requirement.startswith("mcp>=") for requirement in extras["agentic-mcp"]
+            )
+        )
+        for name, requirements in extras.items():
+            if name == "agentic-mcp":
+                continue
+            with self.subTest(extra=name):
+                self.assertFalse(
+                    any(
+                        requirement.split(">", 1)[0] == "mcp"
+                        for requirement in requirements
+                    )
+                )
 
     def test_removed_v3_applications_have_no_console_entry_point(self):
         self.assertNotIn("scripts", self.project)

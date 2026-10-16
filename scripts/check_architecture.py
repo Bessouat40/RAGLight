@@ -8,11 +8,18 @@ import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = PROJECT_ROOT / "src" / "raglight"
-V4_APPLICATION_DIRECTORY = "pipeline"
+V4_APPLICATION_DIRECTORIES = {"agentic", "pipeline"}
 CORE_DIRECTORIES = {"contracts", "models"}
 CORE_FILES = {"registry.py"}
-FORBIDDEN_APPLICATION_PREFIXES = ("raglight.integrations",)
-FORBIDDEN_CORE_PREFIXES = ("raglight.integrations", "raglight.pipeline")
+FORBIDDEN_APPLICATION_PREFIXES = {
+    "agentic": ("raglight.integrations", "raglight.pipeline"),
+    "pipeline": ("raglight.agentic", "raglight.integrations"),
+}
+FORBIDDEN_CORE_PREFIXES = (
+    "raglight.agentic",
+    "raglight.integrations",
+    "raglight.pipeline",
+)
 OPTIONAL_SDK_MODULES = {
     "boto3",
     "chromadb",
@@ -52,11 +59,10 @@ def violations(package_root: Path = PACKAGE_ROOT) -> list[str]:
         relative = path.relative_to(package_root)
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for line, module in imported_modules(tree, relative):
-            is_v4_application = (
-                relative.parts and relative.parts[0] == V4_APPLICATION_DIRECTORY
-            )
+            application = relative.parts[0] if relative.parts else ""
+            is_v4_application = application in V4_APPLICATION_DIRECTORIES
             forbidden_application_dependency = module.startswith(
-                FORBIDDEN_APPLICATION_PREFIXES
+                FORBIDDEN_APPLICATION_PREFIXES.get(application, ())
             )
             if is_v4_application and forbidden_application_dependency:
                 failures.append(

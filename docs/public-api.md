@@ -260,17 +260,126 @@ factory as `embeddings_model` and cannot be overridden by serialized data.
 - Incompatible public behavior requires a major release.
 - Every public workflow has offline automated coverage.
 
-The v3 `Builder`, `RAG`, global `Settings`, provider ABCs, agentic runtime,
-server, CLI, and UI are removed and are not v4 aliases or compatibility shims.
+The v3 `Builder`, `RAG`, global `Settings`, provider ABCs, legacy agentic
+runtime, server, CLI, and UI are removed and are not v4 aliases or
+compatibility shims.
+
+## Agentic RAG
+
+Agentic execution is public only from its dedicated namespace:
+
+```python
+from raglight.agentic import AgenticPipeline, FunctionTool
+
+agentic = AgenticPipeline(
+    llm=my_llm,
+    embeddings=my_embeddings,
+    vector_store=my_vector_store,
+    reranker=my_reranker,  # optional, used by the built-in retrieval tool
+    tools=[
+        FunctionTool(
+            name="lookup",
+            description="Look up a value by key.",
+            handler=lambda arguments: lookup(arguments["key"]),
+            input_schema={
+                "type": "object",
+                "properties": {"key": {"type": "string"}},
+                "required": ["key"],
+            },
+        )
+    ],
+    max_steps=4,
+    top_k=5,
+)
+
+response = agentic.generate("Investigate and answer the question")
+```
+
+`retrieve` is always registered and cannot be replaced by a custom tool. It
+accepts `query` and an optional `top_k`, searches the injected `VectorStore`,
+and applies the optional `Reranker`. Tool source documents accumulate in the
+shared `RAGResponse.sources` value.
+
+The default `LLMPlannerAgent` sends the question, available tool schemas,
+history, and completed observations to the injected `LLM`. Each response must
+contain one JSON tool or final decision. A caller can instead inject a custom
+structural agent:
+
+```python
+from raglight.agentic import AgentContext, AgentDecision
+
+
+class MyAgent:
+    def decide(self, context: AgentContext) -> AgentDecision:
+        if not context.steps:
+            return AgentDecision.call_tool("retrieve", {"query": context.question})
+        return AgentDecision.final("A custom final answer")
+
+
+agentic = AgenticPipeline(
+    llm=my_llm,
+    embeddings=my_embeddings,
+    vector_store=my_vector_store,
+    agent=MyAgent(),
+)
+```
+
+No inheritance or agent framework is required. `Agent`, `AgentTool`,
+`AgentContext`, `AgentDecision`, `AgentStep`, `ToolObservation`, `ToolResult`,
+and `ToolSpec` are public from `raglight.agentic`.
+
+Every decision consumes one of `max_steps`. Tool failures are returned to the
+next decision as `ToolObservation(is_error=True)` and recorded as failed
+`ExecutionEvent` values. If the agent does not return a final answer in time,
+`AgentStepLimitError` includes the trace identifier and completed events.
+
+`generate()` is the synchronous entry point. Agents and tools may also return
+awaitables; use `await agenerate(...)` from an async application. Calling
+`generate()` inside an active event loop raises an actionable error.
+
+Agentic conversation state is explicit and isolated:
+
+```python
+session = agentic.create_session(session_id="user-123")
+response = session.generate("Remember this turn")
+history = session.history
+```
+
+Failed turns are not committed. Sessions sharing one configured pipeline never
+share history or a global session lock.
+
+### MCP tools
+
+Install `raglight[agentic-mcp]`, create and connect an official MCP client, then
+adapt a listed server tool while that connection remains active:
+
+```python
+from raglight.agentic.mcp import MCPTool
+
+mcp_tool = MCPTool(
+    client=connected_client,
+    name="remote_search",
+    description="Search the connected MCP server.",
+    input_schema={"type": "object"},
+)
+
+agentic = AgenticPipeline(
+    llm=my_llm,
+    embeddings=my_embeddings,
+    vector_store=my_vector_store,
+    tools=[mcp_tool],
+)
+response = await agentic.agenerate("Use remote search when useful")
+```
+
+RAGLight does not own the MCP connection lifecycle, authentication, or server
+process. MCP error results become ordinary failed tool observations.
 
 ## Planned capabilities
 
-The following are not implemented:
+The following is not implemented:
 
-- a separately designed agentic API;
 - delivery applications built on the v4 core.
 
-Agentic execution will remain distinct from classic `RAGPipeline`: it will not
-use inheritance or an `agentic=True` flag. See
-[`architecture.md`](architecture.md) and
+See [`architecture.md`](architecture.md) and
 [`migration-v3-to-v4.md`](migration-v3-to-v4.md).

@@ -52,6 +52,13 @@ sufficient. Add every built-in implementation to the shared matrix in
 `tests/contracts/test_extension_contracts.py`, then keep provider-specific
 translation behavior in its own unit tests.
 
+Agent tools use the same structural approach inside `raglight.agentic`. MCP is
+different from a provider integration because the caller owns a live client
+connection. `raglight.agentic.mcp.MCPTool` adapts one tool on that initialized
+client and never owns transport startup or credentials. Keep the official SDK
+behind the `agentic-mcp` extra and use `AgenticPipeline.agenerate(...)` while
+the client connection is active.
+
 ## Pull request checklist
 
 - [ ] Core contract identified.

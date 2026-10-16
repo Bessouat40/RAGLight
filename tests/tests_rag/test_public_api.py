@@ -29,6 +29,14 @@ class PublicAPITests(unittest.TestCase):
         )
         self.assertIs(raglight.pipeline.ConversationSession, ConversationSession)
 
+    def test_agentic_api_is_public_only_from_its_dedicated_namespace(self):
+        import raglight.agentic as agentic
+
+        self.assertIn("AgenticPipeline", agentic.__all__)
+        self.assertIn("Agent", agentic.__all__)
+        self.assertIn("AgentTool", agentic.__all__)
+        self.assertFalse(hasattr(raglight, "AgenticPipeline"))
+
     def test_legacy_implementation_types_are_not_root_exports(self):
         for name in ("Builder", "RAG", "Settings", "OllamaModel", "ChromaVS"):
             with self.subTest(name=name):
@@ -47,10 +55,30 @@ class PublicAPITests(unittest.TestCase):
                 "fastapi",
                 "langchain",
                 "langgraph",
+                "mcp",
                 "ollama",
                 "openai",
                 "streamlit",
             )
+            loaded = [name for name in forbidden if name in sys.modules]
+            raise SystemExit(f"unexpected imports: {loaded}" if loaded else 0)
+            """)
+
+        completed = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_importing_classic_pipeline_does_not_load_agentic_or_mcp_modules(self):
+        script = textwrap.dedent("""
+            import sys
+            from raglight import RAGPipeline
+
+            forbidden = ("raglight.agentic", "mcp")
             loaded = [name for name in forbidden if name in sys.modules]
             raise SystemExit(f"unexpected imports: {loaded}" if loaded else 0)
             """)

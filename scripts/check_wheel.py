@@ -47,6 +47,7 @@ import sys
 
 import raglight
 from raglight import PipelineConfig, RAGPipeline
+from raglight.agentic import Agent, AgentTool, AgenticPipeline, FunctionTool
 from raglight.contracts import EmbeddingModel, LLM, VectorStore
 from raglight.integrations import default_registries
 from raglight.models import ComponentConfig, Document, ExecutionEvent, RAGResponse
@@ -61,11 +62,15 @@ event = ExecutionEvent(stage="retrieval", status="completed", duration_ms=0)
 response = RAGResponse(answer="test", trace_id="trace", events=[event])
 assert response.to_dict()["events"][0]["stage"] == "retrieval"
 assert ConversationSession is not None
+assert AgenticPipeline is not None
+assert FunctionTool is not None
+assert Agent is not None
+assert AgentTool is not None
 assert "ollama" in default_registries.llms.names
 assert all(contract is not None for contract in (EmbeddingModel, LLM, VectorStore))
 unconditional = [item for item in requires("raglight") or [] if "extra ==" not in item]
 assert not unconditional, unconditional
-forbidden = ("fastapi", "langchain", "streamlit", "chromadb", "qdrant_client")
+forbidden = ("fastapi", "langchain", "streamlit", "chromadb", "qdrant_client", "mcp")
 loaded = [name for name in forbidden if name in sys.modules]
 assert not loaded, loaded
 """
@@ -90,6 +95,17 @@ assert not loaded, loaded
         if provider.returncode == 0 or "raglight[ollama]" not in provider.stderr:
             print(provider.stderr, file=sys.stderr)
             print("Missing Ollama dependencies were not actionable.", file=sys.stderr)
+            return 1
+
+        mcp = subprocess.run(
+            [str(python), "-c", "import raglight.agentic.mcp"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if mcp.returncode == 0 or "raglight[agentic-mcp]" not in mcp.stderr:
+            print(mcp.stderr, file=sys.stderr)
+            print("Missing MCP dependencies were not actionable.", file=sys.stderr)
             return 1
 
     print(f"Validated wheel: {wheels[-1].name}")

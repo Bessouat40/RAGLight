@@ -11,6 +11,9 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 [project.optional-dependencies]
+agentic-mcp = [
+    "mcp>=2.3.0,<3",
+]
 openai = [
     "langchain-core>=1.2.5",
     "langchain-openai>=1.1.6",
