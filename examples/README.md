@@ -14,7 +14,7 @@ Install the integrations and pull the default models:
 uv sync --extra ollama --extra chroma
 ollama pull nomic-embed-text:latest
 ollama pull qwen3:0.6b
-uv run python examples/classic/ollama.py
+uv run python examples/classic/local_ollama.py
 ```
 
 The script uses one inline document and an ephemeral Chroma database. Override
@@ -69,7 +69,7 @@ instruction-following Ollama model with `--chat-model` if necessary.
 
 ```bash
 uv sync --extra ollama --extra chroma
-uv run python examples/agentic/ollama.py --max-steps 4
+uv run python examples/agentic/local_ollama.py --max-steps 4
 ```
 
 ### Custom agent
@@ -116,11 +116,11 @@ uv run python examples/extending/registry_configuration.py
 
 | Example | External requirement |
 | --- | --- |
-| `classic/ollama.py` | Running Ollama and pulled models |
+| `classic/local_ollama.py` | Running Ollama and pulled models |
 | `classic/openai.py` | Network access and `OPENAI_API_KEY` |
 | `classic/openai_compatible_endpoint.py` | Compatible chat and embedding server |
 | `classic/directory_ingestion.py` | Running Ollama and a readable directory |
-| `agentic/ollama.py` | Running Ollama and pulled models |
+| `agentic/local_ollama.py` | Running Ollama and pulled models |
 | `agentic/custom_agent.py` | None |
 | `agentic/mcp.py` | Running Ollama and a connected MCP server |
 | `extending/custom_components.py` | None |

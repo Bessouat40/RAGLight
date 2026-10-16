@@ -10,12 +10,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES_ROOT = PROJECT_ROOT / "examples"
 EXAMPLE_PATHS = (
     "classic/directory_ingestion.py",
-    "classic/ollama.py",
+    "classic/local_ollama.py",
     "classic/openai.py",
     "classic/openai_compatible_endpoint.py",
     "agentic/custom_agent.py",
     "agentic/mcp.py",
-    "agentic/ollama.py",
+    "agentic/local_ollama.py",
     "extending/custom_components.py",
     "extending/registry_configuration.py",
 )
@@ -54,6 +54,13 @@ class ExampleSuiteTests(unittest.TestCase):
                 source = (EXAMPLES_ROOT / relative_path).read_text(encoding="utf-8")
                 for fragment in forbidden_fragments:
                     self.assertNotIn(fragment, source)
+
+    def test_examples_do_not_shadow_runtime_packages(self) -> None:
+        shadowed_package_names = {"ollama.py"}
+
+        for relative_path in EXAMPLE_PATHS:
+            with self.subTest(example=relative_path):
+                self.assertNotIn(Path(relative_path).name, shadowed_package_names)
 
     def test_examples_index_covers_every_canonical_example(self) -> None:
         index = (EXAMPLES_ROOT / "README.md").read_text(encoding="utf-8")
