@@ -1,11 +1,11 @@
 from __future__ import annotations
 import logging
 import uuid
-from typing import List, Dict, Optional, Any
+from typing import List, Optional, Any
 from typing_extensions import override
 
 from ...contracts import EmbeddingModel
-from ...models import Document
+from ...models import And, Document, Eq, In, Or, RetrievalFilter
 from ._base import VectorStoreAdapter
 
 
@@ -119,28 +119,17 @@ class QdrantVectorStore(VectorStoreAdapter):
         self,
         question: str,
         k: int,
-        filter: Optional[Dict[str, Any]],
+        retrieval_filter: RetrievalFilter | None,
         collection_name: Optional[str] = None,
     ) -> List[Document]:
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
-
         target = collection_name or self.collection_name
         query_vector = self.embeddings_model.embed_query(question)
-
-        qdrant_filter = None
-        if filter:
-            qdrant_filter = Filter(
-                must=[
-                    FieldCondition(key=key, match=MatchValue(value=value))
-                    for key, value in filter.items()
-                ]
-            )
 
         results = self.client.query_points(
             collection_name=target,
             query=query_vector,
             limit=k,
-            query_filter=qdrant_filter,
+            query_filter=_to_qdrant_filter(retrieval_filter),
         ).points
 
         docs = []
@@ -176,14 +165,15 @@ class QdrantVectorStore(VectorStoreAdapter):
         self,
         question: str,
         k: int = 5,
-        filter: Optional[Dict[str, str]] = None,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
         collection_name: Optional[str] = None,
     ) -> List[Document]:
         if collection_name:
             target = f"{collection_name}_classes"
         else:
             target = self._classes_collection_name
-        return self._semantic_search(question, k, filter, target)
+        return self._semantic_search(question, k, retrieval_filter, target)
 
     @override
     def get_available_collections(self) -> List[str]:
@@ -192,3 +182,68 @@ class QdrantVectorStore(VectorStoreAdapter):
         except Exception as e:
             logging.error(f"Error listing Qdrant collections: {e}")
             return []
+
+
+def _to_qdrant_filter(retrieval_filter: RetrievalFilter | None) -> Any:
+    if retrieval_filter is None:
+        return None
+    from qdrant_client.models import Filter
+
+    if isinstance(retrieval_filter, And):
+        return Filter(
+            must=[_to_qdrant_condition(child) for child in retrieval_filter.filters]
+        )
+    if isinstance(retrieval_filter, Or):
+        return Filter(
+            should=[_to_qdrant_condition(child) for child in retrieval_filter.filters]
+        )
+    return Filter(must=[_to_qdrant_condition(retrieval_filter)])
+
+
+def _to_qdrant_condition(retrieval_filter: RetrievalFilter) -> Any:
+    from qdrant_client.models import (
+        FieldCondition,
+        Filter,
+        MatchAny,
+        MatchValue,
+        Range,
+    )
+
+    if isinstance(retrieval_filter, Eq):
+        if isinstance(retrieval_filter.value, float):
+            return FieldCondition(
+                key=retrieval_filter.field,
+                range=Range(
+                    gte=retrieval_filter.value,
+                    lte=retrieval_filter.value,
+                ),
+            )
+        return FieldCondition(
+            key=retrieval_filter.field,
+            match=MatchValue(value=retrieval_filter.value),
+        )
+    if isinstance(retrieval_filter, In):
+        values = retrieval_filter.values
+        match_any_supported = all(type(value) is str for value in values) or all(
+            type(value) is int for value in values
+        )
+        if not match_any_supported:
+            return Filter(
+                should=[
+                    _to_qdrant_condition(Eq(retrieval_filter.field, value))
+                    for value in values
+                ]
+            )
+        return FieldCondition(
+            key=retrieval_filter.field,
+            match=MatchAny(any=list(values)),
+        )
+    if isinstance(retrieval_filter, And):
+        return Filter(
+            must=[_to_qdrant_condition(child) for child in retrieval_filter.filters]
+        )
+    if isinstance(retrieval_filter, Or):
+        return Filter(
+            should=[_to_qdrant_condition(child) for child in retrieval_filter.filters]
+        )
+    raise ValueError("MatchNone must be handled before Qdrant filter translation")

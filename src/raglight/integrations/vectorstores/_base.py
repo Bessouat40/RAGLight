@@ -5,7 +5,8 @@ from typing import Any, List, Dict, Optional
 import logging
 
 from ...contracts import EmbeddingModel
-from ...models import Document
+from ...models import Document, MatchNone, RetrievalFilter
+from ...models.retrieval_filter import normalize_retrieval_filter
 from .bm25_index import BM25Index
 
 
@@ -71,10 +72,13 @@ class VectorStoreAdapter:
         return [doc_map[k] for k in sorted_keys]
 
     def _hybrid_search(
-        self, question: str, k: int, filter: Optional[Dict[str, Any]]
+        self,
+        question: str,
+        k: int,
+        retrieval_filter: RetrievalFilter | None,
     ) -> List[Document]:
         fetch_k = k * 2
-        semantic_docs = self._semantic_search(question, fetch_k, filter)
+        semantic_docs = self._semantic_search(question, fetch_k, retrieval_filter)
         bm25_docs = self._bm25_search(question, fetch_k)
         return self._rrf([semantic_docs, bm25_docs])[:k]
 
@@ -86,7 +90,7 @@ class VectorStoreAdapter:
         self,
         question: str,
         k: int,
-        filter: Optional[Dict[str, Any]],
+        retrieval_filter: RetrievalFilter | None,
         collection_name: Optional[str] = None,
     ) -> List[Document]:
         """Backend-specific dense vector search."""
@@ -99,7 +103,11 @@ class VectorStoreAdapter:
         raise NotImplementedError
 
     def similarity_search_class(
-        self, question: str, k: int = 5, filter: Dict[str, str] = None
+        self,
+        question: str,
+        k: int = 5,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> List[Document]:
         raise NotImplementedError
 
@@ -114,11 +122,24 @@ class VectorStoreAdapter:
         self,
         question: str,
         k: int = 5,
-        filter: Optional[Dict[str, str]] = None,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
         collection_name: Optional[str] = None,
     ) -> List[Document]:
+        if retrieval_filter is not None:
+            retrieval_filter = normalize_retrieval_filter(retrieval_filter)
+            if isinstance(retrieval_filter, MatchNone):
+                return []
         if self.search_type == "bm25":
+            if retrieval_filter is not None:
+                raise NotImplementedError(
+                    "retrieval_filter is not supported for BM25 search yet"
+                )
             return self._bm25_search(question, k)
         elif self.search_type == "hybrid":
-            return self._hybrid_search(question, k, filter)
-        return self._semantic_search(question, k, filter, collection_name)
+            if retrieval_filter is not None:
+                raise NotImplementedError(
+                    "retrieval_filter is not supported for hybrid search yet"
+                )
+            return self._hybrid_search(question, k, retrieval_filter)
+        return self._semantic_search(question, k, retrieval_filter, collection_name)

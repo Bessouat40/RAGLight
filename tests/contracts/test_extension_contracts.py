@@ -20,7 +20,7 @@ from raglight.contracts import (
     Tracer,
     VectorStore,
 )
-from raglight.models import Document
+from raglight.models import Document, RetrievalFilter
 
 
 class CustomLLM:
@@ -40,7 +40,13 @@ class CustomEmbeddingModel:
 
 
 class CustomVectorStore:
-    def similarity_search(self, question: str, k: int = 5) -> list[Document]:
+    def similarity_search(
+        self,
+        question: str,
+        k: int = 5,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
+    ) -> list[Document]:
         return [Document(page_content=question)]
 
 
@@ -187,15 +193,15 @@ class BuiltInContractTests(unittest.TestCase):
         self._assert_implementations(
             (ChromaVectorStore, QdrantVectorStore),
             VectorStore,
-            (("similarity_search", ("question", 3)),),
+            (("similarity_search", ("question", 3), {"retrieval_filter": None}),),
         )
 
         self._assert_implementations(
             (ChromaVectorStore, QdrantVectorStore),
             IngestionVectorStore,
             (
-                ("similarity_search", ("question", 3)),
-                ("add_documents", ([],)),
+                ("similarity_search", ("question", 3), {"retrieval_filter": None}),
+                ("add_documents", ([],), {}),
             ),
         )
 
@@ -210,7 +216,7 @@ class BuiltInContractTests(unittest.TestCase):
         self._assert_implementations(
             (CodeProcessor, PDFProcessor, TextProcessor, VlmPDFProcessor),
             DocumentProcessor,
-            (("process", ("document.txt", 500, 50)),),
+            (("process", ("document.txt", 500, 50), {}),),
         )
 
     def test_builtin_cross_encoder_implements_the_reranker_contract(self):
@@ -219,7 +225,7 @@ class BuiltInContractTests(unittest.TestCase):
         self._assert_implementations(
             (HuggingFaceReranker,),
             Reranker,
-            (("rerank", ("question", [], 3)),),
+            (("rerank", ("question", [], 3), {}),),
         )
 
     def _assert_implementations(self, implementations, contract, method_calls):
@@ -227,9 +233,11 @@ class BuiltInContractTests(unittest.TestCase):
             with self.subTest(implementation=implementation.__name__):
                 instance = object.__new__(implementation)
                 self.assertIsInstance(instance, contract)
-                for method_name, arguments in method_calls:
+                for method_call in method_calls:
+                    method_name, arguments, *keyword_values = method_call
+                    keywords = keyword_values[0] if keyword_values else {}
                     inspect.signature(getattr(implementation, method_name)).bind(
-                        instance, *arguments
+                        instance, *arguments, **keywords
                     )
 
 

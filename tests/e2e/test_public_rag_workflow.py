@@ -8,7 +8,7 @@ from raglight.integrations import (
     IntegrationRegistry,
     default_registries,
 )
-from raglight.models import Document, FolderSource
+from raglight.models import And, Document, Eq, FolderSource, In, MatchNone
 
 
 class FakeEmbeddings:
@@ -26,6 +26,28 @@ class FakeVectorStore:
     def similarity_search(self, question, k=5):
         self.calls.append((question, k))
         return [Document(page_content="RAGLight is a modular RAG library.")]
+
+
+class ScopedVectorStore:
+    def __init__(self):
+        self.calls = []
+        self.documents = [
+            Document("Alice architecture", {"owner_id": "alice", "file_id": "a"}),
+            Document("Bob architecture", {"owner_id": "bob", "file_id": "b"}),
+        ]
+
+    def similarity_search(self, question, k=5, *, retrieval_filter=None):
+        self.calls.append((question, k, retrieval_filter))
+        if isinstance(retrieval_filter, Eq):
+            documents = [
+                document
+                for document in self.documents
+                if document.metadata.get(retrieval_filter.field)
+                == retrieval_filter.value
+            ]
+        else:
+            documents = self.documents
+        return documents[:k]
 
 
 class InMemoryIngestionStore:
@@ -90,6 +112,75 @@ class RecordingTracer:
 
 
 class PublicRAGWorkflowTests(unittest.TestCase):
+    def test_scoped_retrieval_returns_only_documents_in_the_requested_scope(self):
+        store = ScopedVectorStore()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=store,
+            llm=FakeLLM(),
+        )
+
+        alice = pipeline.generate(
+            "Explain the architecture",
+            retrieval_filter=Eq("owner_id", "alice"),
+        )
+        bob = pipeline.generate(
+            "Explain the architecture",
+            retrieval_filter=Eq("owner_id", "bob"),
+        )
+
+        self.assertEqual(
+            ["Alice architecture"], [doc.page_content for doc in alice.sources]
+        )
+        self.assertEqual(
+            ["Bob architecture"], [doc.page_content for doc in bob.sources]
+        )
+
+    def test_reformulation_and_streaming_preserve_the_same_scope(self):
+        scope = And(Eq("workspace_id", "ws-1"), In("file_id", ["file-1"]))
+        llm = ReformulatingLLM()
+        store = ScopedVectorStore()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=store,
+            llm=llm,
+            config=PipelineConfig(reformulate_queries=True),
+        )
+
+        pipeline.generate(
+            "What does it use?",
+            history=[{"role": "user", "content": "Earlier"}],
+            retrieval_filter=scope,
+        )
+        list(pipeline.stream("Stream it", retrieval_filter=scope))
+
+        self.assertEqual(scope, store.calls[0][2])
+        self.assertEqual(scope, store.calls[1][2])
+
+    def test_match_none_never_queries_the_vector_store(self):
+        store = ScopedVectorStore()
+        llm = FakeLLM()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=store,
+            llm=llm,
+        )
+
+        response = pipeline.generate("Question", retrieval_filter=MatchNone())
+
+        self.assertEqual([], store.calls)
+        self.assertEqual((), response.sources)
+
+    def test_scoped_retrieval_does_not_silently_use_a_legacy_adapter(self):
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=FakeVectorStore(),
+            llm=FakeLLM(),
+        )
+
+        with self.assertRaisesRegex(TypeError, "retrieval_filter"):
+            pipeline.generate("Question", retrieval_filter=Eq("owner_id", "alice"))
+
     def test_nested_file_is_ingested_retrieved_and_used_for_generation(self):
         from pathlib import Path
         import tempfile

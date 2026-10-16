@@ -10,6 +10,7 @@ from .ingestion import (
     IngestionSkip,
 )
 from .response import ExecutionEvent, ExecutionStatus, RAGResponse
+from .retrieval_filter import And, Eq, In, MatchNone, Or, RetrievalFilter
 
 __all__ = [
     "ComponentConfig",
@@ -22,4 +23,10 @@ __all__ = [
     "IngestionResult",
     "IngestionSkip",
     "RAGResponse",
+    "And",
+    "Eq",
+    "In",
+    "MatchNone",
+    "Or",
+    "RetrievalFilter",
 ]

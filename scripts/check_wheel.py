@@ -50,7 +50,18 @@ from raglight import PipelineConfig, RAGPipeline
 from raglight.agentic import Agent, AgentTool, AgenticPipeline, FunctionTool
 from raglight.contracts import EmbeddingModel, LLM, VectorStore
 from raglight.integrations import default_registries
-from raglight.models import ComponentConfig, Document, ExecutionEvent, RAGResponse
+from raglight.models import (
+    And,
+    ComponentConfig,
+    Document,
+    Eq,
+    ExecutionEvent,
+    In,
+    MatchNone,
+    Or,
+    RAGResponse,
+    RetrievalFilter,
+)
 from raglight.pipeline import ConversationSession
 
 assert raglight.__all__ == ["PipelineConfig", "RAGPipeline"]
@@ -58,6 +69,9 @@ assert Path(raglight.__file__).with_name("py.typed").is_file()
 assert PipelineConfig(top_k=1).top_k == 1
 assert ComponentConfig(name="CUSTOM").name == "custom"
 assert Document(page_content="test").page_content == "test"
+scope: RetrievalFilter = And(Eq("workspace", "one"), In("file", ["a", "b"]))
+assert scope.filters[0].value == "one"
+assert Or(Eq("shared", True), MatchNone()).filters
 event = ExecutionEvent(stage="retrieval", status="completed", duration_ms=0)
 response = RAGResponse(answer="test", trace_id="trace", events=[event])
 assert response.to_dict()["events"][0]["stage"] == "retrieval"

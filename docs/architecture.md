@@ -49,6 +49,8 @@ import them.
   boundary.
 - conversation history is supplied by the caller or owned by one explicit
   session; it is never pipeline or global state.
+- a requested retrieval scope reaches every built-in retrieval operation or
+  fails closed; it is never silently replaced by an unrestricted search.
 
 These rules are executable in `scripts/check_architecture.py` and
 `tests/architecture/`.
@@ -106,6 +108,27 @@ loads the optional MCP SDK.
 Both application layers depend only on the structural `Tracer` contract.
 Nested observations are no-ops unless a tracer is injected. The optional
 `LangfuseTracer` adapter lives under integrations and owns the Langfuse SDK.
+
+## Scoped retrieval
+
+Retrieval scopes are immutable provider-independent model values: `Eq`, `In`,
+`And`, `Or`, and `MatchNone`. Classic generation, classic streaming, sessions,
+and the built-in agentic retrieval tool accept the same `retrieval_filter`
+value. Optional query reformulation changes only the search text; it never
+changes or drops the scope. Rerankers receive only the already filtered result
+set.
+
+`None` deliberately means unrestricted retrieval for trusted standalone
+library callers. `MatchNone` deliberately means no documents and is handled
+without issuing a provider query. Delivery applications own authentication,
+ACL evaluation, and construction of an authorized scope on every request.
+Browser-supplied filter trees are not authorization decisions.
+
+Qdrant and Chroma translate the shared tree inside their integration
+boundaries. A custom vector store that receives a non-`None` scope must apply
+it or raise; silently ignoring it violates the `VectorStore` contract. BM25
+and hybrid modes currently reject scoped retrieval because their lexical index
+does not yet retain enough metadata to enforce the same constraint safely.
 
 The v3 agentic runtime, API server, CLI, and UI were removed during the v4
 break. The current agentic runtime was rebuilt on v4 boundaries; future

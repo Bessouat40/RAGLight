@@ -7,7 +7,7 @@ from threading import Barrier, Lock
 import unittest
 from uuid import UUID
 
-from raglight.models import RAGResponse
+from raglight.models import Eq, RAGResponse
 from raglight.pipeline import ConversationSession
 
 
@@ -48,7 +48,32 @@ class ConcurrentPipeline:
         yield question
 
 
+class ScopedRecordingPipeline(RecordingPipeline):
+    def __init__(self) -> None:
+        super().__init__()
+        self.filters = []
+
+    def generate(self, question, *, history=(), retrieval_filter=None):
+        self.filters.append(retrieval_filter)
+        return super().generate(question, history=history)
+
+    def stream(self, question, *, history=(), retrieval_filter=None):
+        self.filters.append(retrieval_filter)
+        yield from super().stream(question, history=history)
+
+
 class ConversationSessionTests(unittest.TestCase):
+    def test_scope_is_supplied_per_turn_instead_of_stored_on_the_session(self):
+        pipeline = ScopedRecordingPipeline()
+        session = ConversationSession(pipeline, session_id="conversation-1")
+        first_scope = Eq("file_id", "first")
+        second_scope = Eq("file_id", "second")
+
+        session.generate("First", retrieval_filter=first_scope)
+        list(session.stream("Second", retrieval_filter=second_scope))
+
+        self.assertEqual([first_scope, second_scope], pipeline.filters)
+
     def test_default_session_id_is_a_uuid(self):
         session = ConversationSession(RecordingPipeline())
 

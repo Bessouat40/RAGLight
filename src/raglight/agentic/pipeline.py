@@ -11,7 +11,13 @@ from typing import Any, TypeVar
 from uuid import uuid4
 
 from ..contracts import EmbeddingModel, LLM, Reranker, Tracer, VectorStore
-from ..models import Document, ExecutionEvent, ExecutionStatus, RAGResponse
+from ..models import (
+    Document,
+    ExecutionEvent,
+    ExecutionStatus,
+    RAGResponse,
+    RetrievalFilter,
+)
 from .contracts import Agent, AgentTool
 from .errors import AgentStepLimitError
 from .models import (
@@ -76,13 +82,20 @@ class AgenticPipeline:
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> RAGResponse:
         """Run the bounded loop from synchronous application code."""
 
         try:
             asyncio.get_running_loop()
         except RuntimeError:
-            return asyncio.run(self.agenerate(question, history=history))
+            return asyncio.run(
+                self.agenerate(
+                    question,
+                    history=history,
+                    retrieval_filter=retrieval_filter,
+                )
+            )
         raise RuntimeError(
             "AgenticPipeline.generate() cannot run inside an active event loop; "
             "use 'await pipeline.agenerate(...)' instead."
@@ -93,6 +106,7 @@ class AgenticPipeline:
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> RAGResponse:
         """Run the bounded loop and await asynchronous agents or tools."""
 
@@ -104,7 +118,12 @@ class AgenticPipeline:
             metadata={"max_steps": self._max_steps, "top_k": self._top_k},
             trace_id=trace_id,
         ) as trace:
-            response = await self._execute(question, history=history, trace_id=trace_id)
+            response = await self._execute(
+                question,
+                history=history,
+                retrieval_filter=retrieval_filter,
+                trace_id=trace_id,
+            )
             trace.update(
                 output={"answer": response.answer},
                 metadata={"steps": response.metadata["steps"]},
@@ -116,6 +135,7 @@ class AgenticPipeline:
         question: str,
         *,
         history: Sequence[Mapping[str, str]],
+        retrieval_filter: RetrievalFilter | None,
         trace_id: str,
     ) -> RAGResponse:
         """Execute one agent loop inside an optional active trace."""
@@ -201,7 +221,15 @@ class AgenticPipeline:
             ) as tool_observation:
                 try:
                     tool = self._tools.get(decision.tool_name)
-                    result = await self._resolve(tool.run(decision.arguments))
+                    tool_result: ToolResult | Awaitable[ToolResult]
+                    if isinstance(tool, RetrievalTool):
+                        tool_result = tool.run_scoped(
+                            decision.arguments,
+                            retrieval_filter=retrieval_filter,
+                        )
+                    else:
+                        tool_result = tool.run(decision.arguments)
+                    result = await self._resolve(tool_result)
                     if not isinstance(result, ToolResult):
                         raise TypeError("agent tools must return ToolResult")
                     observation = ToolObservation(

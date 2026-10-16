@@ -15,7 +15,9 @@ from ..models import (
     FolderSource,
     IngestionResult,
     RAGResponse,
+    RetrievalFilter,
 )
+from ..models.retrieval_filter import MatchNone, normalize_retrieval_filter
 from ..registry import IntegrationRegistries
 
 from .config import PipelineConfig
@@ -136,6 +138,7 @@ class RAGPipeline:
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> RAGResponse:
         """Retrieve context and return an observable structured response."""
 
@@ -149,7 +152,7 @@ class RAGPipeline:
             trace_id=trace_id,
         ) as trace:
             payload, documents, events, timings, retrieved_count, retrieval_query = (
-                self._prepare_generation(question, history)
+                self._prepare_generation(question, history, retrieval_filter)
             )
 
             generation_started = perf_counter()
@@ -198,6 +201,7 @@ class RAGPipeline:
         question: str,
         *,
         history: Sequence[Mapping[str, str]] = (),
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> Iterable[str]:
         """Retrieve context and yield generated text chunks in order."""
 
@@ -209,7 +213,9 @@ class RAGPipeline:
             metadata={"top_k": self._config.top_k},
             trace_id=trace_id,
         ) as trace:
-            payload, _, _, _, _, _ = self._prepare_generation(question, history)
+            payload, _, _, _, _, _ = self._prepare_generation(
+                question, history, retrieval_filter
+            )
             chunks: list[str] = []
             with self._observe(
                 name="raglight.generation",
@@ -227,6 +233,7 @@ class RAGPipeline:
         self,
         question: str,
         history: Sequence[Mapping[str, str]],
+        retrieval_filter: RetrievalFilter | None,
     ) -> tuple[
         dict[str, Any],
         Sequence[Document],
@@ -276,10 +283,24 @@ class RAGPipeline:
             as_type="retriever",
             input={"query": retrieval_query, "top_k": self._config.top_k},
         ) as retrieval:
-            documents = self._vector_store.similarity_search(
-                retrieval_query,
-                k=self._config.top_k,
+            normalized_filter = (
+                normalize_retrieval_filter(retrieval_filter)
+                if retrieval_filter is not None
+                else None
             )
+            if isinstance(normalized_filter, MatchNone):
+                documents = []
+            elif normalized_filter is None:
+                documents = self._vector_store.similarity_search(
+                    retrieval_query,
+                    k=self._config.top_k,
+                )
+            else:
+                documents = self._vector_store.similarity_search(
+                    retrieval_query,
+                    k=self._config.top_k,
+                    retrieval_filter=normalized_filter,
+                )
             retrieval.update(output=self._documents_payload(documents))
         retrieval_duration = self._elapsed_ms(retrieval_started)
         retrieved_count = len(documents)

@@ -4,7 +4,7 @@ import uuid
 from typing import List, Dict, Optional, Any, cast
 
 from ...contracts import EmbeddingModel
-from ...models import Document
+from ...models import And, Document, Eq, In, Or, RetrievalFilter
 
 try:
     from typing_extensions import override
@@ -137,7 +137,7 @@ class ChromaVectorStore(VectorStoreAdapter):
         self,
         question: str,
         k: int,
-        filter: Optional[Dict[str, Any]],
+        retrieval_filter: RetrievalFilter | None,
         collection_name: Optional[str] = None,
     ) -> List[Document]:
         target_collection = self.collection
@@ -145,14 +145,20 @@ class ChromaVectorStore(VectorStoreAdapter):
             target_collection = self.client.get_or_create_collection(
                 name=collection_name, embedding_function=self.embedding_function
             )
-        return self._query_collection(target_collection, question, k, filter)
+        return self._query_collection(
+            target_collection,
+            question,
+            k,
+            _to_chroma_filter(retrieval_filter),
+        )
 
     @override
     def similarity_search_class(
         self,
         question: str,
         k: int = 5,
-        filter: Optional[Dict[str, str]] = None,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
         collection_name: Optional[str] = None,
     ) -> List[Document]:
         target_collection = self.collection_classes
@@ -164,12 +170,25 @@ class ChromaVectorStore(VectorStoreAdapter):
                     name=class_col_name, embedding_function=self.embedding_function
                 )
 
-        return self._query_collection(target_collection, question, k, filter)
+        return self._query_collection(
+            target_collection,
+            question,
+            k,
+            _to_chroma_filter(retrieval_filter),
+        )
 
     def _query_collection(
-        self, collection: Any, question: str, k: int, filter: Optional[Dict[str, Any]]
+        self,
+        collection: Any,
+        question: str,
+        k: int,
+        provider_filter: Optional[Dict[str, Any]],
     ) -> List[Document]:
-        results = collection.query(query_texts=[question], n_results=k, where=filter)
+        results = collection.query(
+            query_texts=[question],
+            n_results=k,
+            where=provider_filter,
+        )
 
         found_docs: List[Document] = []
         if results["documents"] and results["documents"][0]:
@@ -193,3 +212,34 @@ class ChromaVectorStore(VectorStoreAdapter):
         except Exception as e:
             logging.error(f"Error listing collections: {e}")
             return []
+
+
+def _to_chroma_filter(
+    retrieval_filter: RetrievalFilter | None,
+) -> Dict[str, Any] | None:
+    if retrieval_filter is None:
+        return None
+    if isinstance(retrieval_filter, Eq):
+        return {retrieval_filter.field: {"$eq": retrieval_filter.value}}
+    if isinstance(retrieval_filter, In):
+        return {retrieval_filter.field: {"$in": list(retrieval_filter.values)}}
+    if isinstance(retrieval_filter, And):
+        return {
+            "$and": [
+                _required_chroma_filter(child) for child in retrieval_filter.filters
+            ]
+        }
+    if isinstance(retrieval_filter, Or):
+        return {
+            "$or": [
+                _required_chroma_filter(child) for child in retrieval_filter.filters
+            ]
+        }
+    raise ValueError("MatchNone must be handled before Chroma filter translation")
+
+
+def _required_chroma_filter(retrieval_filter: RetrievalFilter) -> Dict[str, Any]:
+    translated = _to_chroma_filter(retrieval_filter)
+    if translated is None:
+        raise TypeError("a concrete retrieval filter is required")
+    return translated

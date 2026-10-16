@@ -10,7 +10,7 @@ from collections.abc import Iterable, Mapping
 from contextlib import AbstractContextManager
 from typing import Any, Protocol, runtime_checkable
 
-from ..models import Document
+from ..models import Document, RetrievalFilter
 
 
 @runtime_checkable
@@ -54,8 +54,10 @@ class VectorStore(Protocol):
         self,
         question: str,
         k: int = 5,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> list[Document]:
-        """Return at most ``k`` documents ordered by relevance."""
+        """Return relevant documents inside the optional metadata scope."""
 
         ...
 

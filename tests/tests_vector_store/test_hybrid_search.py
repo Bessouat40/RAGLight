@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from raglight.integrations.chroma import ChromaVectorStore
-from raglight.models import Document
+from raglight.models import Document, Eq, MatchNone
 from raglight.integrations.vectorstores.bm25_index import BM25Index
 
 
@@ -99,6 +99,15 @@ class TestBM25SearchMode(unittest.TestCase):
         vs.similarity_search("some text", k=1)
         vs._query_collection.assert_not_called()
 
+    def test_bm25_rejects_scoped_retrieval_until_its_index_preserves_metadata(self):
+        vs = _make_chroma("bm25")
+
+        with self.assertRaisesRegex(NotImplementedError, "BM25"):
+            vs.similarity_search(
+                "query",
+                retrieval_filter=Eq("owner_id", "alice"),
+            )
+
 
 class TestHybridSearchMode(unittest.TestCase):
     def test_hybrid_calls_both_semantic_and_bm25(self):
@@ -123,6 +132,32 @@ class TestHybridSearchMode(unittest.TestCase):
         results = vs.similarity_search("shared", k=5)
         contents = [d.page_content for d in results]
         self.assertEqual(len(contents), len(set(contents)))
+
+    def test_hybrid_rejects_scope_instead_of_merging_unfiltered_bm25_results(self):
+        vs = _make_chroma("hybrid")
+
+        with self.assertRaisesRegex(NotImplementedError, "hybrid"):
+            vs.similarity_search(
+                "query",
+                retrieval_filter=Eq("owner_id", "alice"),
+            )
+
+    def test_match_none_short_circuits_every_search_mode(self):
+        for search_type in ("semantic", "bm25", "hybrid"):
+            with self.subTest(search_type=search_type):
+                vs = _make_chroma(search_type)
+                vs._semantic_search = MagicMock()
+                vs._bm25_search = MagicMock()
+
+                self.assertEqual(
+                    [],
+                    vs.similarity_search(
+                        "query",
+                        retrieval_filter=MatchNone(),
+                    ),
+                )
+                vs._semantic_search.assert_not_called()
+                vs._bm25_search.assert_not_called()
 
 
 class TestSemanticModeUnchanged(unittest.TestCase):

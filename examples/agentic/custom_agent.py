@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 
 from raglight.agentic import AgentContext, AgentDecision, AgenticPipeline
-from raglight.models import Document
+from raglight.models import Document, RetrievalFilter
 
 
 class CustomAgent:
@@ -41,7 +41,15 @@ class ExampleEmbeddings:
 
 
 class ExampleVectorStore:
-    def similarity_search(self, question: str, k: int = 5) -> list[Document]:
+    def similarity_search(
+        self,
+        question: str,
+        k: int = 5,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
+    ) -> list[Document]:
+        if retrieval_filter is not None:
+            raise NotImplementedError("this example store does not support filtering")
         return [
             Document(
                 page_content="A custom agent only implements decide(context).",

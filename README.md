@@ -44,7 +44,18 @@ from raglight.contracts import (
     Reranker,
     VectorStore,
 )
-from raglight.models import Document, ExecutionEvent, FolderSource, RAGResponse
+from raglight.models import (
+    And,
+    Document,
+    Eq,
+    ExecutionEvent,
+    FolderSource,
+    In,
+    MatchNone,
+    Or,
+    RAGResponse,
+    RetrievalFilter,
+)
 ```
 
 The contracts are structural protocols. Custom components do not inherit from
@@ -52,7 +63,7 @@ RAGLight classes and do not need registry entries.
 
 ```python
 from raglight import PipelineConfig, RAGPipeline
-from raglight.models import Document
+from raglight.models import Document, RetrievalFilter
 
 
 class MyLLM:
@@ -70,8 +81,14 @@ class MyEmbeddings:
 
 class MyVectorStore:
     def similarity_search(
-        self, question: str, k: int = 5, filter: dict[str, object] | None = None
+        self,
+        question: str,
+        k: int = 5,
+        *,
+        retrieval_filter: RetrievalFilter | None = None,
     ) -> list[Document]:
+        if retrieval_filter is not None:
+            raise NotImplementedError("this store does not support filtering")
         return [Document(page_content="RAGLight uses dependency injection.")][:k]
 
     def add_documents(self, documents: list[Document]) -> None:
@@ -96,6 +113,24 @@ structured execution `events`, per-stage `timings`, `metadata`, and `trace_id`
 can be consumed directly or converted into transport-friendly values with
 `response.to_dict()`. Streaming continues to yield text chunks through
 `pipeline.stream(...)`.
+
+Use provider-neutral filters when retrieval must stay inside an application
+scope. Qdrant and Chroma translate the same filter tree at their integration
+boundaries:
+
+```python
+from raglight.models import And, Eq, In
+
+scope = And(
+    Eq("workspace_id", "ws-123"),
+    In("file_id", ["file-a", "file-b"]),
+)
+response = pipeline.generate("Summarize these files", retrieval_filter=scope)
+```
+
+`None` keeps trusted standalone retrieval unrestricted. `MatchNone()` always
+returns no sources without querying a backend. Applications must calculate
+authorization scopes server-side; RAGLight does not implement users or ACLs.
 
 The pipeline itself is stateless and safe to share between users. Pass
 `history` explicitly for stateless requests, or create an isolated session when
