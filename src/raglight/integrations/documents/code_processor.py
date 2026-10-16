@@ -1,7 +1,6 @@
 import os
 import ast
 import re
-import logging
 from typing import List, Dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 
@@ -29,39 +28,37 @@ class CodeProcessor:
         if not language:
             return {"chunks": [], "classes": []}
 
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                code = f.read()
+        with open(file_path, "r", encoding="utf-8") as file:
+            code = file.read()
 
-            if not code.strip():
-                return {"chunks": [], "classes": []}
-
-            class_signatures = self._extract_class_signatures(code, language)
-            class_docs = [
-                Document(page_content=sig, metadata={"source": file_path})
-                for sig in class_signatures
-            ]
-
-            splitter = RecursiveCharacterTextSplitter.from_language(
-                language=language, chunk_size=chunk_size, chunk_overlap=chunk_overlap
-            )
-            split_documents = splitter.create_documents([code])
-
-            class_names_str = ", ".join(class_signatures)
-            code_chunks = []
-            for chunk in split_documents:
-                metadata = dict(chunk.metadata)
-                metadata["source"] = file_path
-                if class_names_str:
-                    metadata["classes"] = class_names_str
-                code_chunks.append(
-                    Document(page_content=chunk.page_content, metadata=metadata)
-                )
-
-            return {"chunks": code_chunks, "classes": class_docs}
-        except Exception as e:
-            logging.error(f"Failed to process code file {file_path}. Error: {e}")
+        if not code.strip():
             return {"chunks": [], "classes": []}
+
+        class_signatures = self._extract_class_signatures(code, language)
+        class_docs = [
+            Document(page_content=signature, metadata={"source": file_path})
+            for signature in class_signatures
+        ]
+
+        splitter = RecursiveCharacterTextSplitter.from_language(
+            language=language,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+        split_documents = splitter.create_documents([code])
+
+        class_names = ", ".join(class_signatures)
+        code_chunks = []
+        for chunk in split_documents:
+            metadata = dict(chunk.metadata)
+            metadata["source"] = file_path
+            if class_names:
+                metadata["classes"] = class_names
+            code_chunks.append(
+                Document(page_content=chunk.page_content, metadata=metadata)
+            )
+
+        return {"chunks": code_chunks, "classes": class_docs}
 
     def _extract_class_signatures(self, code: str, language: Language) -> List[str]:
         """Dispatcher method to extract class signatures based on language."""

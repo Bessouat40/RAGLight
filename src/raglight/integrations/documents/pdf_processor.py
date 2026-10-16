@@ -1,4 +1,3 @@
-import logging
 import fitz
 from typing import List, Dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -11,11 +10,10 @@ class PDFProcessor:
     def process(
         self, file_path: str, chunk_size: int, chunk_overlap: int
     ) -> Dict[str, List[Document]]:
-        try:
-            doc = fitz.open(file_path)
+        with fitz.open(file_path) as pdf:
             raw_documents = []
 
-            for page_index, page in enumerate(doc):
+            for page_index, page in enumerate(pdf):
                 blocks = page.get_text("dict")["blocks"]
                 page_text_parts = []
 
@@ -36,26 +34,18 @@ class PDFProcessor:
                     )
                     raw_documents.append(document)
 
-            doc.close()
-
-            if not raw_documents:
-                logging.warning(f"PyMuPDF returned no text for {file_path}.")
-                return {"chunks": [], "classes": []}
-
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=chunk_size, chunk_overlap=chunk_overlap
-            )
-            split_documents = text_splitter.split_documents(raw_documents)
-            chunks = []
-            for chunk in split_documents:
-                metadata = dict(chunk.metadata)
-                metadata["source"] = file_path
-                chunks.append(
-                    Document(page_content=chunk.page_content, metadata=metadata)
-                )
-
-            return {"chunks": chunks, "classes": []}
-
-        except Exception as e:
-            logging.error(f"Failed to process PDF {file_path}. Error: {e}")
+        if not raw_documents:
             return {"chunks": [], "classes": []}
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+        split_documents = text_splitter.split_documents(raw_documents)
+        chunks = []
+        for chunk in split_documents:
+            metadata = dict(chunk.metadata)
+            metadata["source"] = file_path
+            chunks.append(Document(page_content=chunk.page_content, metadata=metadata))
+
+        return {"chunks": chunks, "classes": []}

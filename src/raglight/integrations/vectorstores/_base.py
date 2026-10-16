@@ -1,35 +1,26 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Dict, Optional
-import os
+from typing import Any, List, Dict, Optional
 import logging
-import copy
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from ...contracts import DocumentProcessor, EmbeddingModel
+from ...contracts import EmbeddingModel
 from ...models import Document
 from .bm25_index import BM25Index
-
-if TYPE_CHECKING:
-    from ..documents.document_processor_factory import (
-        DocumentProcessorFactory,
-    )
 
 
 class VectorStoreAdapter:
     """
     Abstract base class for vector store implementations.
 
-    This class provides a shared ingestion pipeline, BM25/hybrid search logic,
-    and defines the abstract methods that concrete implementations must provide.
+    This class provides shared BM25/hybrid search logic and defines the
+    storage methods that concrete implementations must provide.
     """
 
     def __init__(
         self,
         persist_directory: str,
         embeddings_model: EmbeddingModel,
-        custom_processors: Optional[Dict[str, DocumentProcessor]] = None,
         search_type: str = "semantic",
         alpha: float = 0.5,
     ) -> None:
@@ -37,7 +28,6 @@ class VectorStoreAdapter:
         self.persist_directory: str = persist_directory
         self.vector_store: Any = None
         self.vector_store_classes: Any = None
-        self.custom_processors: Dict[str, DocumentProcessor] = custom_processors or {}
         self.search_type = search_type
         self.alpha = alpha
         self._bm25 = BM25Index()
@@ -132,97 +122,3 @@ class VectorStoreAdapter:
         elif self.search_type == "hybrid":
             return self._hybrid_search(question, k, filter)
         return self._semantic_search(question, k, filter, collection_name)
-
-    # ------------------------------------------------------------------
-    # Ingestion pipeline (shared)
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _process_file(
-        file_path: str, factory: DocumentProcessorFactory, flatten_metadata
-    ):
-        processor = factory.get_processor(file_path)
-        if not processor:
-            return [], []
-        try:
-            processed_docs = processor.process(
-                file_path, chunk_size=2500, chunk_overlap=250
-            )
-            chunks = flatten_metadata(processed_docs.get("chunks", []))
-            classes = flatten_metadata(processed_docs.get("classes", []))
-            return chunks, classes
-        except Exception as e:
-            logging.warning(f"⚠️ Error processing {file_path}: {e}")
-            return [], []
-
-    def ingest(self, data_path: str, ignore_folders: List[str] = None) -> None:
-        from ..documents.document_processor_factory import (
-            DocumentProcessorFactory,
-        )
-
-        if not os.path.isdir(data_path):
-            logging.error(f"Provided data_path '{data_path}' is not a valid directory.")
-            return
-
-        if ignore_folders is None:
-            ignore_folders = [
-                ".git",
-                ".venv",
-                "__pycache__",
-                "build",
-                "dist",
-                "node_modules",
-                "venv",
-            ]
-
-        factory = DocumentProcessorFactory(custom_processors=self.custom_processors)
-
-        logging.info(f"⏳ Starting ingestion from '{data_path}'...")
-
-        files_to_process = []
-        for root, dirs, files in os.walk(data_path, topdown=True):
-            dirs[:] = [
-                d
-                for d in dirs
-                if not self._should_ignore(os.path.join(root, d), ignore_folders)
-            ]
-            for file in files:
-                file_path = os.path.join(root, file)
-                processor = factory.get_processor(file_path)
-                if processor:
-                    logging.info(
-                        f"  -> Queuing '{file_path}' with {processor.__class__.__name__}"
-                    )
-                    files_to_process.append((file_path, processor))
-
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            futures = [
-                executor.submit(
-                    self._process_file, file_path, factory, self._flatten_metadata
-                )
-                for file_path, _ in files_to_process
-            ]
-
-            for future in as_completed(futures):
-                try:
-                    chunks, classes = future.result()
-                    if chunks:
-                        self.add_documents(chunks)
-                    if classes:
-                        self.add_class_documents(classes)
-                except Exception as e:
-                    logging.warning(f"⚠️ Future raised an exception: {e}")
-
-        logging.info("🎉 Ingestion process completed successfully!")
-
-    def _flatten_metadata(self, documents: List[Document]) -> List[Document]:
-        cloned_documents = copy.deepcopy(documents)
-        for doc in cloned_documents:
-            for key, value in doc.metadata.items():
-                if not isinstance(value, (str, int, float, bool)):
-                    doc.metadata[key] = str(value)
-        return cloned_documents
-
-    def _should_ignore(self, path: str, ignore_folders: List[str]) -> bool:
-        normalized_path = os.path.normpath(path)
-        return any(folder in normalized_path.split(os.sep) for folder in ignore_folders)

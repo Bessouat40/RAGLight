@@ -47,20 +47,12 @@ documents = [
 ]
 chroma = [
     "chromadb>=0.5.23",
-    "langchain-core>=1.2.5",
-    "langchain-text-splitters>=1.1.0",
-    "pymupdf>=1.26.7",
     "rank_bm25>=0.2.2",
-    "sentence-transformers>=5.1.2",
     "typing-extensions>=4.15.0",
 ]
 qdrant = [
-    "langchain-core>=1.2.5",
-    "langchain-text-splitters>=1.1.0",
-    "pymupdf>=1.26.7",
     "qdrant-client>=1.17.0",
     "rank_bm25>=0.2.2",
-    "sentence-transformers>=5.1.2",
     "typing-extensions>=4.15.0",
 ]
 [tool.setuptools.packages.find]

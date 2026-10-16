@@ -2,8 +2,12 @@ import unittest
 from uuid import UUID
 
 from raglight import PipelineConfig, RAGPipeline
-from raglight.integrations import IntegrationRegistries, IntegrationRegistry
-from raglight.models import Document
+from raglight.integrations import (
+    IntegrationRegistries,
+    IntegrationRegistry,
+    default_registries,
+)
+from raglight.models import Document, FolderSource
 
 
 class FakeEmbeddings:
@@ -21,6 +25,17 @@ class FakeVectorStore:
     def similarity_search(self, question, k=5):
         self.calls.append((question, k))
         return [Document(page_content="RAGLight is a modular RAG library.")]
+
+
+class InMemoryIngestionStore:
+    def __init__(self):
+        self.documents = []
+
+    def add_documents(self, documents):
+        self.documents.extend(documents)
+
+    def similarity_search(self, question, k=5):
+        return self.documents[:k]
 
 
 class FakeLLM:
@@ -47,6 +62,36 @@ class FakeReranker:
 
 
 class PublicRAGWorkflowTests(unittest.TestCase):
+    def test_nested_file_is_ingested_retrieved_and_used_for_generation(self):
+        from pathlib import Path
+        import tempfile
+
+        store = InMemoryIngestionStore()
+        llm = FakeLLM()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=store,
+            llm=llm,
+            document_processors=default_registries.document_processors,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            nested = Path(directory) / "nested"
+            nested.mkdir()
+            path = nested / "knowledge.txt"
+            path.write_text(
+                "Directory ingestion reaches the public RAG workflow.",
+                encoding="utf-8",
+            )
+
+            ingestion = pipeline.ingest([FolderSource(path=directory)])
+            response = pipeline.generate("What reaches the workflow?")
+
+        self.assertEqual(1, ingestion.processed_count)
+        self.assertEqual(1, ingestion.indexed_count)
+        self.assertEqual("RAGLight is modular.", response.answer)
+        self.assertIn("Directory ingestion reaches", llm.inputs[0]["question"])
+
     def test_question_to_answer_workflow_uses_public_import(self):
         embeddings = FakeEmbeddings()
         vector_store = FakeVectorStore()

@@ -1,7 +1,11 @@
 """Run the v4 public pipeline with structural custom components."""
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from raglight import PipelineConfig, RAGPipeline
-from raglight.models import Document
+from raglight.integrations import IntegrationRegistry
+from raglight.models import Document, FolderSource
 
 
 class CustomEmbeddings:
@@ -13,15 +17,20 @@ class CustomEmbeddings:
 
 
 class CustomVectorStore:
-    def similarity_search(self, question: str, k: int = 5) -> list[Document]:
-        documents = [
+    def __init__(self) -> None:
+        self.documents = [
             Document(
                 page_content="RAGLight supports injected components.",
                 metadata={"source": "custom-store"},
             ),
             Document(page_content="No registry entry is required."),
         ]
-        return documents[:k]
+
+    def similarity_search(self, question: str, k: int = 5) -> list[Document]:
+        return self.documents[:k]
+
+    def add_documents(self, documents: list[Document]) -> None:
+        self.documents.extend(documents)
 
 
 class CustomReranker:
@@ -59,13 +68,22 @@ class CustomLLM:
 
 
 def main() -> None:
+    processors = IntegrationRegistry("document processor")
+    processors.register("custom", CustomDocumentProcessor)
     pipeline = RAGPipeline(
         llm=CustomLLM(),
         embeddings=CustomEmbeddings(),
         vector_store=CustomVectorStore(),
         reranker=CustomReranker(),
         config=PipelineConfig(top_k=2),
+        document_processors=processors,
     )
+
+    with TemporaryDirectory() as directory:
+        source = Path(directory) / "notes.custom"
+        source.write_text("Custom processor input.", encoding="utf-8")
+        ingestion = pipeline.ingest([FolderSource(path=directory)])
+        print(f"Indexed chunks: {ingestion.indexed_count}")
 
     response = pipeline.generate("Can I use custom components?")
     print(response.answer)

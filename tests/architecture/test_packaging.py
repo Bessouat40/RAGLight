@@ -39,6 +39,23 @@ class PackagingTests(unittest.TestCase):
     def test_removed_v3_applications_have_no_console_entry_point(self):
         self.assertNotIn("scripts", self.project)
 
+    def test_vector_store_extras_do_not_bundle_document_processing(self):
+        extras = self.project["optional-dependencies"]
+        document_dependencies = {
+            "langchain-core",
+            "langchain-text-splitters",
+            "pymupdf",
+            "sentence-transformers",
+        }
+
+        for extra in ("chroma", "qdrant"):
+            with self.subTest(extra=extra):
+                dependency_names = {
+                    requirement.split(">", 1)[0].split("=", 1)[0]
+                    for requirement in extras[extra]
+                }
+                self.assertTrue(document_dependencies.isdisjoint(dependency_names))
+
 
 if __name__ == "__main__":
     unittest.main()

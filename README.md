@@ -16,7 +16,7 @@ a reranker through public protocols.
 
 ```bash
 pip install raglight
-pip install "raglight[ollama,chroma]"
+pip install "raglight[ollama,chroma,documents]"
 ```
 
 Available extras are `openai`, `ollama`, `mistral`, `gemini`, `bedrock`,
@@ -31,11 +31,12 @@ from raglight import PipelineConfig, RAGPipeline
 from raglight.contracts import (
     DocumentProcessor,
     EmbeddingModel,
+    IngestionVectorStore,
     LLM,
     Reranker,
     VectorStore,
 )
-from raglight.models import Document, ExecutionEvent, RAGResponse
+from raglight.models import Document, ExecutionEvent, FolderSource, RAGResponse
 ```
 
 The contracts are structural protocols. Custom components do not inherit from
@@ -110,6 +111,36 @@ sessions share configured components without sharing history.
 See [`examples/v4_custom_components.py`](examples/v4_custom_components.py) for
 a complete executable example.
 
+### Directory ingestion
+
+Directory ingestion belongs to the public pipeline, not to a vector-store
+adapter. Inject the lazy document-processor registry, then pass one or more
+folder sources:
+
+```python
+from raglight.integrations import default_registries
+from raglight.models import FolderSource
+
+pipeline = RAGPipeline(
+    llm=llm,
+    embeddings=embeddings,
+    vector_store=vector_store,
+    document_processors=default_registries.document_processors,
+)
+result = pipeline.ingest([FolderSource(path="./knowledge")])
+
+print(result.processed_count, result.indexed_count)
+print(result.skipped, result.failures)
+```
+
+Traversal is recursive and deterministic by default. Common generated
+directories and symlinks are skipped, unsupported extensions are reported,
+and one failed file does not discard successful files. Use
+`ignored_directories`, `recursive`, `chunk_size`, and `chunk_overlap` on each
+`FolderSource` to customize discovery and processing. See
+[`examples/v4_directory_ingestion.py`](examples/v4_directory_ingestion.py) for
+a local Ollama and Chroma example.
+
 ## Built-in integrations
 
 Import integrations explicitly so importing `raglight` never loads an optional
@@ -118,6 +149,7 @@ provider SDK:
 ```python
 from raglight.integrations.ollama import OllamaEmbeddings, OllamaLLM
 from raglight.integrations.chroma import ChromaVectorStore
+from raglight.integrations import default_registries
 
 embeddings = OllamaEmbeddings(model_name="nomic-embed-text")
 vector_store = ChromaVectorStore(
@@ -131,6 +163,7 @@ pipeline = RAGPipeline(
     llm=llm,
     embeddings=embeddings,
     vector_store=vector_store,
+    document_processors=default_registries.document_processors,
 )
 ```
 
@@ -147,7 +180,7 @@ Provider modules and public classes:
 | `raglight.integrations.huggingface` | `HuggingFaceEmbeddings`, `HuggingFaceReranker` |
 | `raglight.integrations.chroma` | `ChromaVectorStore` |
 | `raglight.integrations.qdrant` | `QdrantVectorStore` |
-| `raglight.integrations.documents` | document processors and their factory |
+| `raglight.integrations.documents` | `TextProcessor`, `CodeProcessor`, `PDFProcessor`, `VlmPDFProcessor` |
 
 ### Registry-backed configuration
 

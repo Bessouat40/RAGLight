@@ -196,7 +196,7 @@ sessions. Generation failures and incomplete streams do not commit partial
 turns. Use `session.history` for a detached snapshot and `session.clear()` to
 reset the messages without changing the session identifier.
 
-## Ingestion (planned)
+## Directory ingestion
 
 v3 commonly exposes the underlying vector store:
 
@@ -207,13 +207,25 @@ pipeline.vector_store.ingest(data_path="./docs")
 v4 owns ingestion at the application boundary:
 
 ```python
+from raglight import RAGPipeline
+from raglight.integrations import default_registries
 from raglight.models import FolderSource
+
+pipeline = RAGPipeline(
+    llm=llm,
+    embeddings=embeddings,
+    vector_store=vector_store,
+    document_processors=default_registries.document_processors,
+)
 
 result = pipeline.ingest([FolderSource(path="./docs")])
 ```
 
 This keeps document processing and persistence orchestration out of the public
-vector-store implementation.
+vector-store implementation. The result explicitly reports processed,
+indexed, skipped, and failed files; adapter-level `ingest(...)` and
+`custom_processors` constructor arguments were removed. Register a custom
+processor under its file extension in the injected processor registry.
 
 ## Compatibility
 

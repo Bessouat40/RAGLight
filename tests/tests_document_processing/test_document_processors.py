@@ -49,6 +49,14 @@ class TestTextProcessor(unittest.TestCase):
         finally:
             os.unlink(path)
 
+    def test_file_errors_are_reported_to_the_ingestion_orchestrator(self):
+        with self.assertRaises(FileNotFoundError):
+            self.processor.process(
+                "/missing/raglight-document.txt",
+                chunk_size=100,
+                chunk_overlap=0,
+            )
+
 
 class TestCodeProcessor(unittest.TestCase):
     def setUp(self):

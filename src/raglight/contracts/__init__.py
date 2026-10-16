@@ -60,6 +60,16 @@ class VectorStore(Protocol):
 
 
 @runtime_checkable
+class IngestionVectorStore(VectorStore, Protocol):
+    """Retrieve documents and persist processed document chunks."""
+
+    def add_documents(self, documents: list[Document]) -> None:
+        """Persist document chunks for subsequent retrieval."""
+
+        ...
+
+
+@runtime_checkable
 class Reranker(Protocol):
     """Reorder retrieved documents for a question."""
 
@@ -92,6 +102,7 @@ class DocumentProcessor(Protocol):
 __all__ = [
     "DocumentProcessor",
     "EmbeddingModel",
+    "IngestionVectorStore",
     "LLM",
     "Reranker",
     "VectorStore",
