@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from contextlib import AbstractContextManager, nullcontext
 from time import perf_counter
 from typing import Any
 from uuid import uuid4
 
-from ..contracts import EmbeddingModel, LLM, Reranker, VectorStore
+from ..contracts import EmbeddingModel, LLM, Reranker, Tracer, VectorStore
 from ..models import (
     Document,
     ExecutionEvent,
@@ -38,6 +39,7 @@ class RAGPipeline:
         reranker: Reranker | None = None,
         config: PipelineConfig | None = None,
         document_processors: DocumentProcessorRegistry | None = None,
+        tracer: Tracer | None = None,
     ) -> None:
         self._llm = llm
         self._embeddings = embeddings
@@ -45,6 +47,7 @@ class RAGPipeline:
         self._reranker = reranker
         self._config = config or PipelineConfig()
         self._document_processors = document_processors
+        self._tracer = tracer
 
     @classmethod
     def from_config(
@@ -52,6 +55,7 @@ class RAGPipeline:
         config: PipelineConfig,
         *,
         registries: IntegrationRegistries,
+        tracer: Tracer | None = None,
     ) -> RAGPipeline:
         """Construct a pipeline from names resolved by explicit registries."""
 
@@ -99,6 +103,7 @@ class RAGPipeline:
             reranker=reranker,
             config=config,
             document_processors=registries.document_processors,
+            tracer=tracer,
         )
 
     @property
@@ -136,36 +141,57 @@ class RAGPipeline:
 
         trace_id = str(uuid4())
         total_started = perf_counter()
-        payload, documents, events, timings, retrieved_count = self._prepare_generation(
-            question, history
-        )
-
-        generation_started = perf_counter()
-        answer = self._llm.generate(payload)
-        generation_duration = self._elapsed_ms(generation_started)
-        timings["generation"] = generation_duration
-        events.append(
-            ExecutionEvent(
-                stage="generation",
-                status="completed",
-                duration_ms=generation_duration,
-                metrics={"answer_characters": len(answer)},
-                message="Generated the final answer.",
+        with self._observe(
+            name="raglight.rag",
+            as_type="chain",
+            input={"question": question, "history": list(history)},
+            metadata={"top_k": self._config.top_k},
+            trace_id=trace_id,
+        ) as trace:
+            payload, documents, events, timings, retrieved_count, retrieval_query = (
+                self._prepare_generation(question, history)
             )
-        )
-        timings["total"] = self._elapsed_ms(total_started)
-        return RAGResponse(
-            answer=answer,
-            sources=documents,
-            events=events,
-            timings=timings,
-            metadata={
+
+            generation_started = perf_counter()
+            with self._observe(
+                name="raglight.generation",
+                as_type="generation",
+                input=payload,
+            ) as generation:
+                answer = self._llm.generate(payload)
+                generation.update(output=answer)
+            generation_duration = self._elapsed_ms(generation_started)
+            timings["generation"] = generation_duration
+            events.append(
+                ExecutionEvent(
+                    stage="generation",
+                    status="completed",
+                    duration_ms=generation_duration,
+                    metrics={"answer_characters": len(answer)},
+                    message="Generated the final answer.",
+                )
+            )
+            timings["total"] = self._elapsed_ms(total_started)
+            metadata: dict[str, Any] = {
                 "top_k": self._config.top_k,
                 "retrieved_count": retrieved_count,
                 "reranked": self._reranker is not None,
-            },
-            trace_id=trace_id,
-        )
+            }
+            if retrieval_query != question.strip():
+                metadata["retrieval_query"] = retrieval_query
+            response = RAGResponse(
+                answer=answer,
+                sources=documents,
+                events=events,
+                timings=timings,
+                metadata=metadata,
+                trace_id=trace_id,
+            )
+            trace.update(
+                output={"answer": answer},
+                metadata={"retrieved_count": retrieved_count},
+            )
+            return response
 
     def stream(
         self,
@@ -175,8 +201,27 @@ class RAGPipeline:
     ) -> Iterable[str]:
         """Retrieve context and yield generated text chunks in order."""
 
-        payload, _, _, _, _ = self._prepare_generation(question, history)
-        yield from self._llm.generate_streaming(payload)
+        trace_id = str(uuid4())
+        with self._observe(
+            name="raglight.rag.stream",
+            as_type="chain",
+            input={"question": question, "history": list(history)},
+            metadata={"top_k": self._config.top_k},
+            trace_id=trace_id,
+        ) as trace:
+            payload, _, _, _, _, _ = self._prepare_generation(question, history)
+            chunks: list[str] = []
+            with self._observe(
+                name="raglight.generation",
+                as_type="generation",
+                input=payload,
+            ) as generation:
+                for chunk in self._llm.generate_streaming(payload):
+                    chunks.append(chunk)
+                    yield chunk
+                answer = "".join(chunks)
+                generation.update(output=answer)
+            trace.update(output={"answer": answer})
 
     def _prepare_generation(
         self,
@@ -188,6 +233,7 @@ class RAGPipeline:
         list[ExecutionEvent],
         dict[str, float],
         int,
+        str,
     ]:
         normalized_question = question.strip()
         if not normalized_question:
@@ -195,11 +241,46 @@ class RAGPipeline:
 
         events: list[ExecutionEvent] = []
         timings: dict[str, float] = {}
+        normalized_history = [dict(message) for message in history]
+        retrieval_query = normalized_question
+        if self._config.reformulate_queries and normalized_history:
+            reformulation_started = perf_counter()
+            reformulation_input = {
+                "question": self._build_reformulation_prompt(
+                    normalized_question, normalized_history
+                ),
+                "history": [],
+            }
+            with self._observe(
+                name="raglight.reformulation",
+                as_type="generation",
+                input=reformulation_input,
+            ) as reformulation:
+                retrieval_query = self._llm.generate(reformulation_input).strip()
+                if not retrieval_query:
+                    raise ValueError("query reformulation returned an empty query")
+                reformulation.update(output=retrieval_query)
+            reformulation_duration = self._elapsed_ms(reformulation_started)
+            timings["reformulation"] = reformulation_duration
+            events.append(
+                ExecutionEvent(
+                    stage="reformulation",
+                    status="completed",
+                    duration_ms=reformulation_duration,
+                    message="Rewrote the conversational query for retrieval.",
+                )
+            )
         retrieval_started = perf_counter()
-        documents = self._vector_store.similarity_search(
-            normalized_question,
-            k=self._config.top_k,
-        )
+        with self._observe(
+            name="raglight.retrieval",
+            as_type="retriever",
+            input={"query": retrieval_query, "top_k": self._config.top_k},
+        ) as retrieval:
+            documents = self._vector_store.similarity_search(
+                retrieval_query,
+                k=self._config.top_k,
+            )
+            retrieval.update(output=self._documents_payload(documents))
         retrieval_duration = self._elapsed_ms(retrieval_started)
         retrieved_count = len(documents)
         timings["retrieval"] = retrieval_duration
@@ -217,11 +298,17 @@ class RAGPipeline:
         )
         if self._reranker is not None:
             reranking_started = perf_counter()
-            documents = self._reranker.rerank(
-                normalized_question,
-                documents,
-                self._config.top_k,
-            )
+            with self._observe(
+                name="raglight.reranking",
+                as_type="span",
+                input=self._documents_payload(documents),
+            ) as reranking:
+                documents = self._reranker.rerank(
+                    retrieval_query,
+                    documents,
+                    self._config.top_k,
+                )
+                reranking.update(output=self._documents_payload(documents))
             reranking_duration = self._elapsed_ms(reranking_started)
             timings["reranking"] = reranking_duration
             events.append(
@@ -236,12 +323,41 @@ class RAGPipeline:
         return (
             {
                 "question": self._build_prompt(normalized_question, documents),
-                "history": [dict(message) for message in history],
+                "history": normalized_history,
             },
             documents,
             events,
             timings,
             retrieved_count,
+            retrieval_query,
+        )
+
+    def _observe(self, **values: Any) -> AbstractContextManager[Any]:
+        if self._tracer is None:
+            return nullcontext(_NullObservation())
+        return self._tracer.observe(**values)
+
+    @staticmethod
+    def _documents_payload(documents: Sequence[Document]) -> list[dict[str, Any]]:
+        return [
+            {"page_content": document.page_content, "metadata": document.metadata}
+            for document in documents
+        ]
+
+    @staticmethod
+    def _build_reformulation_prompt(
+        question: str,
+        history: Sequence[Mapping[str, str]],
+    ) -> str:
+        transcript = "\n".join(
+            f"{message.get('role', 'user')}: {message.get('content', '')}"
+            for message in history
+        )
+        return (
+            "Rewrite the follow-up question as one standalone retrieval query. "
+            "Preserve names, constraints, and intent. Return only the query.\n\n"
+            f"Conversation:\n{transcript}\n\n"
+            f"Follow-up question:\n{question}"
         )
 
     @staticmethod
@@ -257,3 +373,8 @@ class RAGPipeline:
             f"Question:\n{question}\n\n"
             "Answer:"
         )
+
+
+class _NullObservation:
+    def update(self, **values: Any) -> None:
+        del values

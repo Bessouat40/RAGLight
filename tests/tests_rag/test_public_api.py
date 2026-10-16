@@ -55,6 +55,7 @@ class PublicAPITests(unittest.TestCase):
                 "fastapi",
                 "langchain",
                 "langgraph",
+                "langfuse",
                 "mcp",
                 "ollama",
                 "openai",
@@ -108,6 +109,11 @@ class PipelineConfigTests(unittest.TestCase):
 
         with self.assertRaises(FrozenInstanceError):
             config.top_k = 4
+
+    def test_query_reformulation_is_explicit_and_serializable(self):
+        self.assertFalse(PipelineConfig().reformulate_queries)
+        config = PipelineConfig.from_dict({"reformulate_queries": True})
+        self.assertTrue(config.reformulate_queries)
 
     def test_serialized_component_names_are_normalized(self):
         config = PipelineConfig.from_dict(

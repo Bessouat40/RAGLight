@@ -1,4 +1,5 @@
 import unittest
+from contextlib import contextmanager
 from uuid import UUID
 
 from raglight import PipelineConfig, RAGPipeline
@@ -59,6 +60,33 @@ class FakeReranker:
     def rerank(self, question, documents, top_k):
         self.calls.append((question, documents, top_k))
         return list(reversed(documents))[:top_k]
+
+
+class ReformulatingLLM(FakeLLM):
+    def generate(self, input):
+        self.inputs.append(input)
+        if "Rewrite the follow-up question" in input["question"]:
+            return "Which vector store does this project use?"
+        return "The project uses Qdrant."
+
+
+class RecordedObservation:
+    def __init__(self, record):
+        self.record = record
+
+    def update(self, **values):
+        self.record.setdefault("updates", []).append(values)
+
+
+class RecordingTracer:
+    def __init__(self):
+        self.records = []
+
+    @contextmanager
+    def observe(self, **values):
+        record = {**values, "updates": []}
+        self.records.append(record)
+        yield RecordedObservation(record)
 
 
 class PublicRAGWorkflowTests(unittest.TestCase):
@@ -146,6 +174,76 @@ class PublicRAGWorkflowTests(unittest.TestCase):
         self.assertEqual(history, llm.inputs[0]["history"])
         self.assertFalse(hasattr(pipeline, "state"))
 
+    def test_reformulation_uses_history_for_retrieval_and_preserves_original_question(
+        self,
+    ):
+        llm = ReformulatingLLM()
+        vector_store = FakeVectorStore()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=vector_store,
+            llm=llm,
+            config=PipelineConfig(reformulate_queries=True),
+        )
+        history = [{"role": "user", "content": "This project uses Qdrant."}]
+
+        response = pipeline.generate("What does it use?", history=history)
+
+        self.assertEqual(
+            [("Which vector store does this project use?", 5)],
+            vector_store.calls,
+        )
+        self.assertIn("Question:\nWhat does it use?", llm.inputs[1]["question"])
+        self.assertEqual(history, llm.inputs[1]["history"])
+        self.assertEqual(
+            ["reformulation", "retrieval", "generation"],
+            [event.stage for event in response.events],
+        )
+        self.assertEqual(
+            "Which vector store does this project use?",
+            response.metadata["retrieval_query"],
+        )
+
+    def test_reformulation_skips_the_extra_call_without_history(self):
+        llm = ReformulatingLLM()
+        vector_store = FakeVectorStore()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=vector_store,
+            llm=llm,
+            config=PipelineConfig(reformulate_queries=True),
+        )
+
+        response = pipeline.generate("Standalone question")
+
+        self.assertEqual([("Standalone question", 5)], vector_store.calls)
+        self.assertEqual(1, len(llm.inputs))
+        self.assertNotIn("retrieval_query", response.metadata)
+
+    def test_tracer_receives_root_and_stage_observations(self):
+        tracer = RecordingTracer()
+        pipeline = RAGPipeline(
+            embeddings=FakeEmbeddings(),
+            vector_store=FakeVectorStore(),
+            llm=FakeLLM(),
+            tracer=tracer,
+        )
+
+        response = pipeline.generate("What is RAGLight?")
+
+        self.assertEqual(
+            ["raglight.rag", "raglight.retrieval", "raglight.generation"],
+            [record["name"] for record in tracer.records],
+        )
+        self.assertEqual(response.trace_id, tracer.records[0]["trace_id"])
+        self.assertEqual("chain", tracer.records[0]["as_type"])
+        self.assertEqual("retriever", tracer.records[1]["as_type"])
+        self.assertEqual("generation", tracer.records[2]["as_type"])
+        self.assertEqual(
+            response.answer,
+            tracer.records[0]["updates"][-1]["output"]["answer"],
+        )
+
     def test_streaming_uses_the_same_public_pipeline(self):
         pipeline = RAGPipeline(
             embeddings=FakeEmbeddings(),
@@ -219,6 +317,7 @@ class PublicRAGWorkflowTests(unittest.TestCase):
         self.assertEqual([], vector_store.calls)
 
     def test_serialized_names_build_the_public_pipeline(self):
+        tracer = RecordingTracer()
         registries = IntegrationRegistries(
             llms=IntegrationRegistry("LLM"),
             embeddings=IntegrationRegistry("embedding"),
@@ -240,9 +339,14 @@ class PublicRAGWorkflowTests(unittest.TestCase):
             }
         )
 
-        pipeline = RAGPipeline.from_config(config, registries=registries)
+        pipeline = RAGPipeline.from_config(
+            config,
+            registries=registries,
+            tracer=tracer,
+        )
 
         self.assertEqual("RAGLight is modular.", pipeline.generate("Question").answer)
+        self.assertEqual("raglight.rag", tracer.records[0]["name"])
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from threading import Barrier
 import unittest
 
@@ -63,6 +64,21 @@ class ScriptedAgent:
     def decide(self, context):
         self.contexts.append(context)
         return self.decisions.pop(0)
+
+
+class RecordingTracer:
+    def __init__(self):
+        self.records = []
+
+    @contextmanager
+    def observe(self, **values):
+        self.records.append(values)
+
+        class Observation:
+            def update(self, **updates):
+                values["updates"] = updates
+
+        yield Observation()
 
 
 class AgenticPipelineTests(unittest.TestCase):
@@ -247,6 +263,22 @@ class AgenticPipelineTests(unittest.TestCase):
         response = asyncio.run(pipeline.agenerate("Run asynchronously"))
 
         self.assertEqual("async-ready", response.answer)
+
+    def test_agentic_pipeline_emits_a_native_trace(self):
+        tracer = RecordingTracer()
+        pipeline = self.build_pipeline(
+            agent=ScriptedAgent(AgentDecision.final("traced answer")),
+            tracer=tracer,
+        )
+
+        response = pipeline.generate("Trace this")
+
+        self.assertEqual("raglight.agentic", tracer.records[0]["name"])
+        self.assertEqual("agent", tracer.records[0]["as_type"])
+        self.assertEqual(response.trace_id, tracer.records[0]["trace_id"])
+        self.assertEqual(
+            {"answer": "traced answer"}, tracer.records[0]["updates"]["output"]
+        )
 
     def test_sync_generate_has_actionable_error_inside_an_event_loop(self):
         pipeline = self.build_pipeline(

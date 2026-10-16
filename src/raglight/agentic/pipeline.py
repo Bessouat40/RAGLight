@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Mapping, Sequence
+from contextlib import AbstractContextManager, nullcontext
 import inspect
 from time import perf_counter
 from typing import Any, TypeVar
 from uuid import uuid4
 
-from ..contracts import EmbeddingModel, LLM, Reranker, VectorStore
+from ..contracts import EmbeddingModel, LLM, Reranker, Tracer, VectorStore
 from ..models import Document, ExecutionEvent, ExecutionStatus, RAGResponse
 from .contracts import Agent, AgentTool
 from .errors import AgentStepLimitError
@@ -41,6 +42,7 @@ class AgenticPipeline:
         reranker: Reranker | None = None,
         max_steps: int = 4,
         top_k: int = 5,
+        tracer: Tracer | None = None,
     ) -> None:
         if max_steps < 1:
             raise ValueError("max_steps must be greater than zero")
@@ -53,6 +55,7 @@ class AgenticPipeline:
         self._agent = agent or LLMPlannerAgent(llm)
         self._max_steps = max_steps
         self._top_k = top_k
+        self._tracer = tracer
         self._tools = ToolRegistry()
         self._tools.register(
             RetrievalTool(vector_store, top_k=top_k, reranker=reranker)
@@ -93,10 +96,33 @@ class AgenticPipeline:
     ) -> RAGResponse:
         """Run the bounded loop and await asynchronous agents or tools."""
 
+        trace_id = str(uuid4())
+        with self._observe(
+            name="raglight.agentic",
+            as_type="agent",
+            input={"question": question, "history": list(history)},
+            metadata={"max_steps": self._max_steps, "top_k": self._top_k},
+            trace_id=trace_id,
+        ) as trace:
+            response = await self._execute(question, history=history, trace_id=trace_id)
+            trace.update(
+                output={"answer": response.answer},
+                metadata={"steps": response.metadata["steps"]},
+            )
+            return response
+
+    async def _execute(
+        self,
+        question: str,
+        *,
+        history: Sequence[Mapping[str, str]],
+        trace_id: str,
+    ) -> RAGResponse:
+        """Execute one agent loop inside an optional active trace."""
+
         normalized_question = question.strip()
         if not normalized_question:
             raise ValueError("question must not be empty")
-        trace_id = str(uuid4())
         total_started = perf_counter()
         steps: list[AgentStep] = []
         events: list[ExecutionEvent] = []
@@ -111,7 +137,18 @@ class AgenticPipeline:
                 steps=steps,
             )
             decision_started = perf_counter()
-            decision = await self._resolve(self._agent.decide(context))
+            with self._observe(
+                name="raglight.agentic.decision",
+                as_type="agent",
+                input={"question": normalized_question, "step": step_number},
+            ) as decision_observation:
+                decision = await self._resolve(self._agent.decide(context))
+                decision_observation.update(
+                    output={
+                        "type": getattr(decision, "type", None),
+                        "tool_name": getattr(decision, "tool_name", None),
+                    }
+                )
             if not isinstance(decision, AgentDecision):
                 raise TypeError("agents must return AgentDecision")
             decision_duration = self._elapsed_ms(decision_started)
@@ -157,31 +194,41 @@ class AgenticPipeline:
 
             assert decision.tool_name is not None
             tool_started = perf_counter()
-            try:
-                tool = self._tools.get(decision.tool_name)
-                result = await self._resolve(tool.run(decision.arguments))
-                if not isinstance(result, ToolResult):
-                    raise TypeError("agent tools must return ToolResult")
-                observation = ToolObservation(
-                    tool_name=decision.tool_name,
-                    content=result.content,
-                    sources=result.sources,
-                    metadata=result.metadata,
-                )
-                sources.extend(result.sources)
-                status: ExecutionStatus = "completed"
-                message = f"Tool '{decision.tool_name}' completed."
-                metrics = {"source_count": len(result.sources)}
-            except Exception as error:
-                observation = ToolObservation(
-                    tool_name=decision.tool_name,
-                    content=f"{type(error).__name__}: {error}",
-                    metadata={"error_type": type(error).__name__},
-                    is_error=True,
-                )
-                status = "failed"
-                message = f"Tool '{decision.tool_name}' failed."
-                metrics = {"source_count": 0}
+            with self._observe(
+                name=f"raglight.tool.{decision.tool_name}",
+                as_type="tool",
+                input=dict(decision.arguments),
+            ) as tool_observation:
+                try:
+                    tool = self._tools.get(decision.tool_name)
+                    result = await self._resolve(tool.run(decision.arguments))
+                    if not isinstance(result, ToolResult):
+                        raise TypeError("agent tools must return ToolResult")
+                    observation = ToolObservation(
+                        tool_name=decision.tool_name,
+                        content=result.content,
+                        sources=result.sources,
+                        metadata=result.metadata,
+                    )
+                    sources.extend(result.sources)
+                    status: ExecutionStatus = "completed"
+                    message = f"Tool '{decision.tool_name}' completed."
+                    metrics = {"source_count": len(result.sources)}
+                    tool_observation.update(output=result.content)
+                except Exception as error:
+                    observation = ToolObservation(
+                        tool_name=decision.tool_name,
+                        content=f"{type(error).__name__}: {error}",
+                        metadata={"error_type": type(error).__name__},
+                        is_error=True,
+                    )
+                    status = "failed"
+                    message = f"Tool '{decision.tool_name}' failed."
+                    metrics = {"source_count": 0}
+                    tool_observation.update(
+                        level="ERROR",
+                        status_message=str(error),
+                    )
             tool_duration = self._elapsed_ms(tool_started)
             timings[f"tool_{step_number}"] = tool_duration
             events.append(
@@ -211,6 +258,16 @@ class AgenticPipeline:
             return await value
         return value
 
+    def _observe(self, **values: Any) -> AbstractContextManager[Any]:
+        if self._tracer is None:
+            return nullcontext(_NullObservation())
+        return self._tracer.observe(**values)
+
     @staticmethod
     def _elapsed_ms(started: float) -> float:
         return max(0.0, (perf_counter() - started) * 1000)
+
+
+class _NullObservation:
+    def update(self, **values: Any) -> None:
+        del values
