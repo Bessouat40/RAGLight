@@ -175,6 +175,23 @@ Use `response.to_dict()` when a transport-friendly representation is needed.
 Execution events report completed retrieval, optional reranking, and generation
 stages without exposing implementation logs.
 
+Enable the v4 reformulation stage explicitly with
+`PipelineConfig(reformulate_queries=True)`. It runs only when history is present
+and adds a `reformulation` event plus `metadata["retrieval_query"]`.
+
+Native Langfuse tracing is injected instead of being stored in the RAG config:
+
+```python
+from raglight.integrations.langfuse import LangfuseTracer
+
+pipeline = RAGPipeline(
+    llm=llm,
+    embeddings=embeddings,
+    vector_store=vector_store,
+    tracer=LangfuseTracer(),
+)
+```
+
 ## Conversation history
 
 v3 stores history on the pipeline. A shared pipeline can therefore mix state

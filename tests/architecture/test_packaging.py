@@ -29,6 +29,7 @@ class PackagingTests(unittest.TestCase):
                 "documents",
                 "gemini",
                 "huggingface",
+                "langfuse",
                 "mistral",
                 "ollama",
                 "openai",

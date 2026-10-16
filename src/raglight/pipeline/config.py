@@ -17,6 +17,7 @@ class PipelineConfig:
     """Control retrieval and optionally select registered integrations."""
 
     top_k: int = 5
+    reformulate_queries: bool = False
     llm: ComponentConfig | None = None
     embeddings: ComponentConfig | None = None
     vector_store: ComponentConfig | None = None
@@ -30,7 +31,14 @@ class PipelineConfig:
     def from_dict(cls, value: Mapping[str, Any]) -> PipelineConfig:
         """Create validated pipeline configuration from serialized values."""
 
-        fields = {"top_k", "llm", "embeddings", "vector_store", "reranker"}
+        fields = {
+            "top_k",
+            "reformulate_queries",
+            "llm",
+            "embeddings",
+            "vector_store",
+            "reranker",
+        }
         unknown = set(value) - fields
         if unknown:
             names = ", ".join(sorted(unknown))
@@ -46,6 +54,7 @@ class PipelineConfig:
 
         return cls(
             top_k=int(value.get("top_k", 5)),
+            reformulate_queries=bool(value.get("reformulate_queries", False)),
             llm=component("llm"),
             embeddings=component("embeddings"),
             vector_store=component("vector_store"),

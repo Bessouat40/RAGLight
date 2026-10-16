@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+from contextlib import contextmanager
 import subprocess
 import sys
 import textwrap
@@ -15,6 +16,8 @@ from raglight.contracts import (
     IngestionVectorStore,
     LLM,
     Reranker,
+    TraceObservation,
+    Tracer,
     VectorStore,
 )
 from raglight.models import Document
@@ -60,6 +63,18 @@ class CustomDocumentProcessor:
         return {"chunks": [Document(page_content=file_path)], "classes": []}
 
 
+class CustomObservation:
+    def update(self, **values):
+        self.values = values
+
+
+class CustomTracer:
+    @contextmanager
+    def observe(self, **values):
+        self.values = values
+        yield CustomObservation()
+
+
 class ExtensionContractTests(unittest.TestCase):
     def test_contract_namespace_exports_only_supported_extension_points(self):
         self.assertEqual(
@@ -69,6 +84,8 @@ class ExtensionContractTests(unittest.TestCase):
                 "IngestionVectorStore",
                 "LLM",
                 "Reranker",
+                "TraceObservation",
+                "Tracer",
                 "VectorStore",
             ],
             contracts.__all__,
@@ -82,6 +99,8 @@ class ExtensionContractTests(unittest.TestCase):
             (CustomIngestionVectorStore(), IngestionVectorStore),
             (CustomReranker(), Reranker),
             (CustomDocumentProcessor(), DocumentProcessor),
+            (CustomObservation(), TraceObservation),
+            (CustomTracer(), Tracer),
         )
 
         for component, contract in components:

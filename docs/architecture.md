@@ -58,7 +58,7 @@ These rules are executable in `scripts/check_architecture.py` and
 The classic v4 API contains one deterministic flow:
 
 ```text
-question -> retrieve -> optional rerank -> generate -> RAGResponse
+question -> optional reformulation -> retrieve -> optional rerank -> generate -> RAGResponse
 ```
 
 The pipeline records each completed stage as an `ExecutionEvent` and returns
@@ -66,6 +66,10 @@ the generated answer, final source documents, timings, metadata, and a trace
 identifier together. These transport-independent models live in
 `raglight.models`, so delivery and agentic layers can reuse them without
 depending on the classic pipeline implementation.
+
+Reformulation is explicit through `PipelineConfig.reformulate_queries` and
+only runs for calls with conversation history. It changes the retrieval and
+reranking query without replacing the original generation question.
 
 `ConversationSession` is an application-layer wrapper around `RAGPipeline`.
 The pipeline remains reusable and stateless; each session owns its identifier,
@@ -98,6 +102,10 @@ imports or inherits from the other, and there is no `agentic` mode flag.
 Agentic sessions own history independently. Async tools use `agenerate()`;
 MCP adaptation lives in `raglight.agentic.mcp` and is the only module that
 loads the optional MCP SDK.
+
+Both application layers depend only on the structural `Tracer` contract.
+Nested observations are no-ops unless a tracer is injected. The optional
+`LangfuseTracer` adapter lives under integrations and owns the Langfuse SDK.
 
 The v3 agentic runtime, API server, CLI, and UI were removed during the v4
 break. The current agentic runtime was rebuilt on v4 boundaries; future

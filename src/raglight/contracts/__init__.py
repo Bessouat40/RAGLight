@@ -6,7 +6,8 @@ to inherit from these protocols or from any RAGLight base class.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from contextlib import AbstractContextManager
 from typing import Any, Protocol, runtime_checkable
 
 from ..models import Document
@@ -99,11 +100,42 @@ class DocumentProcessor(Protocol):
         ...
 
 
+@runtime_checkable
+class TraceObservation(Protocol):
+    """Update one active provider-neutral tracing observation."""
+
+    def update(
+        self,
+        *,
+        output: Any | None = None,
+        metadata: Mapping[str, Any] | None = None,
+        level: str | None = None,
+        status_message: str | None = None,
+    ) -> Any: ...
+
+
+@runtime_checkable
+class Tracer(Protocol):
+    """Create nested observations without coupling pipelines to a vendor SDK."""
+
+    def observe(
+        self,
+        *,
+        name: str,
+        as_type: str = "span",
+        input: Any | None = None,
+        metadata: Mapping[str, Any] | None = None,
+        trace_id: str | None = None,
+    ) -> AbstractContextManager[TraceObservation]: ...
+
+
 __all__ = [
     "DocumentProcessor",
     "EmbeddingModel",
     "IngestionVectorStore",
     "LLM",
     "Reranker",
+    "TraceObservation",
+    "Tracer",
     "VectorStore",
 ]

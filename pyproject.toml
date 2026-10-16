@@ -14,6 +14,9 @@ dependencies = []
 agentic-mcp = [
     "mcp>=2.3.0,<3",
 ]
+langfuse = [
+    "langfuse>=4,<6",
+]
 openai = [
     "langchain-core>=1.2.5",
     "langchain-openai>=1.1.6",

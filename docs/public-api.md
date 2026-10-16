@@ -22,7 +22,8 @@ pipeline = RAGPipeline(
     embeddings=my_embeddings,
     vector_store=my_vector_store,
     reranker=my_reranker,  # optional
-    config=PipelineConfig(top_k=5),  # optional
+    config=PipelineConfig(top_k=5, reformulate_queries=True),  # optional
+    tracer=my_tracer,  # optional
 )
 
 response = pipeline.generate("What is RAGLight?", history=[])
@@ -31,8 +32,10 @@ chunks = pipeline.stream("What is RAGLight?", history=[])
 ```
 
 `PipelineConfig` is immutable. It owns `top_k`, which must be greater than zero,
-and optional serializable component selections used by registry-backed
-construction.
+the opt-in `reformulate_queries` behavior, and optional serializable component
+selections used by registry-backed construction. Reformulation runs only when
+history exists, uses the injected LLM, and records the retrieval query in the
+response metadata.
 
 ## Conversation sessions
 
@@ -172,6 +175,8 @@ from raglight.contracts import (
     IngestionVectorStore,
     LLM,
     Reranker,
+    TraceObservation,
+    Tracer,
     VectorStore,
 )
 ```
@@ -187,10 +192,25 @@ inherit from a RAGLight base class and need no registration.
 | `IngestionVectorStore` | `similarity_search(question, k=5)`, `add_documents(documents)` |
 | `Reranker` | `rerank(question, documents, top_k)` |
 | `DocumentProcessor` | `process(file_path, chunk_size, chunk_overlap)` |
+| `Tracer` | `observe(name=..., as_type=..., input=..., metadata=..., trace_id=...)` |
 
 The LLM input contains `question` and `history`. Vector stores and rerankers
 exchange `Document` values. A processor returns a dictionary with `chunks` and
 `classes` document lists.
+
+`RAGPipeline` and `AgenticPipeline` accept any structural `Tracer`. With no
+tracer, observations are dependency-free no-ops. The built-in native adapter
+is imported explicitly:
+
+```python
+from raglight.integrations.langfuse import LangfuseTracer
+
+tracer = LangfuseTracer()
+```
+
+Install it with `raglight[langfuse]`. It maps RAGLight trace IDs to Langfuse
+trace contexts and creates nested observations for classic stages, agent
+decisions, and tools. `flush()` is explicit for short-lived processes.
 
 ## Built-in integrations
 
@@ -290,6 +310,7 @@ agentic = AgenticPipeline(
     ],
     max_steps=4,
     top_k=5,
+    tracer=my_tracer,
 )
 
 response = agentic.generate("Investigate and answer the question")

@@ -20,7 +20,7 @@ pip install "raglight[ollama,chroma,documents]"
 ```
 
 Available extras are `openai`, `ollama`, `mistral`, `gemini`, `bedrock`,
-`huggingface`, `documents`, `chroma`, `qdrant`, and `agentic-mcp`.
+`huggingface`, `documents`, `chroma`, `qdrant`, `langfuse`, and `agentic-mcp`.
 
 ## Copy-paste examples
 
@@ -111,6 +111,22 @@ chunks = list(session.stream("What did I ask?"))
 print(session.history)
 session.clear()
 ```
+
+Conversational query reformulation is opt-in and uses the configured LLM only
+when history is present:
+
+```python
+pipeline = RAGPipeline(
+    llm=llm,
+    embeddings=embeddings,
+    vector_store=vector_store,
+    config=PipelineConfig(top_k=5, reformulate_queries=True),
+)
+```
+
+The rewritten value is used for retrieval and reranking; generation still sees
+the original question and history. Successful responses expose the rewritten
+query in `response.metadata["retrieval_query"]` and add a `reformulation` event.
 
 A session commits a turn only after generation or streaming completes. Failed
 or abandoned streams do not leave partial conversation state behind. Separate
@@ -234,6 +250,30 @@ Provider modules and public classes:
 | `raglight.integrations.chroma` | `ChromaVectorStore` |
 | `raglight.integrations.qdrant` | `QdrantVectorStore` |
 | `raglight.integrations.documents` | `TextProcessor`, `CodeProcessor`, `PDFProcessor`, `VlmPDFProcessor` |
+| `raglight.integrations.langfuse` | `LangfuseTracer` |
+
+### Native Langfuse tracing
+
+```bash
+pip install "raglight[langfuse]"
+```
+
+```python
+from raglight.integrations.langfuse import LangfuseTracer
+
+tracer = LangfuseTracer()
+pipeline = RAGPipeline(
+    llm=llm,
+    embeddings=embeddings,
+    vector_store=vector_store,
+    tracer=tracer,
+)
+```
+
+The SDK reads its standard `LANGFUSE_*` environment variables. Classic RAG
+creates nested reformulation, retrieval, reranking, and generation observations.
+Agentic RAG creates decision and tool observations through the same `tracer=`
+argument. Call `tracer.flush()` before a short-lived process exits.
 
 ### Registry-backed configuration
 
@@ -243,6 +283,7 @@ provider-specific branches in the pipeline:
 
 ```toml
 top_k = 3
+reformulate_queries = true
 
 [llm]
 name = "ollama"
